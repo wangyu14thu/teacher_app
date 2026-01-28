@@ -60,19 +60,21 @@
 
 .tools-list {
   display: flex;
-  flex-direction: column;
-  gap: 12rpx;
+  flex-wrap: wrap;
+  gap: 20rpx;
 }
 
 .tool-card {
+  width: calc(50% - 10rpx);
   background-color: white;
   padding: 30rpx;
   border-radius: 16rpx;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
   transition: all 0.3s;
+  position: relative;
+  min-height: 180rpx;
 }
 
 .tool-card:active {
@@ -84,24 +86,31 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding-bottom: 50rpx;
 }
 
 .tool-title {
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: bold;
   color: #333;
   margin-bottom: 8rpx;
+  line-height: 1.4;
 }
 
 .tool-subtitle {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #999;
+  line-height: 1.4;
 }
 
 .tool-right {
+  position: absolute;
+  bottom: 20rpx;
+  left: 30rpx;
+  right: 30rpx;
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  justify-content: space-between;
 }
 
 .tool-points {
@@ -113,18 +122,18 @@
 }
 
 .points-icon {
-  font-size: 24rpx;
+  font-size: 20rpx;
   margin-right: 6rpx;
 }
 
 .points-text {
-  font-size: 24rpx;
+  font-size: 22rpx;
   font-weight: bold;
   color: #ff9800;
 }
 
 .tool-arrow {
-  font-size: 44rpx;
+  font-size: 40rpx;
   color: #ccc;
 }
 

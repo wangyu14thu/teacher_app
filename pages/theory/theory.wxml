@@ -12,24 +12,12 @@
       wx:key="id"
       bindtap="viewCategory"
       data-id="{{item.id}}"
-      style="border-left: 8rpx solid {{item.color}};"
+      style="background: linear-gradient(135deg, {{item.color}} 0%, {{item.color}}cc 100%);"
     >
-      <view class="category-header">
-        <text class="category-icon">{{item.icon}}</text>
-        <view class="category-info">
-          <text class="category-name">{{item.name}}</text>
-          <text class="category-count">{{item.materials.length}}份资料</text>
-        </view>
-        <text class="category-arrow">›</text>
-      </view>
-      <view class="category-preview">
-        <text class="preview-item" wx:for="{{item.materials}}" wx:for-item="material" wx:key="id" wx:if="{{index < 3}}">
-          · {{material.title}}
-        </text>
-        <text class="preview-more" wx:if="{{item.materials.length > 3}}">
-          还有{{item.materials.length - 3}}份资料...
-        </text>
-      </view>
+      <text class="category-icon">{{item.icon}}</text>
+      <text class="category-name">{{item.name}}</text>
+      <text class="category-count">{{item.materials.length}}份资料</text>
+      <view class="category-arrow">→</view>
     </view>
   </view>
 </view>
