@@ -1,0 +1,46 @@
+<!--pages/theory-detail/theory-detail.wxml-->
+<view class="detail-container">
+  <view class="detail-header" style="background: linear-gradient(135deg, {{category.color}} 0%, {{category.color}}cc 100%);">
+    <text class="header-icon">{{category.icon}}</text>
+    <text class="header-title">{{category.name}}</text>
+    <text class="header-subtitle">共{{materials.length}}份资料</text>
+  </view>
+
+  <view class="points-bar">
+    <view class="points-info">
+      <text class="points-icon">💎</text>
+      <text class="points-text">当前积分：{{teacherPoints}}</text>
+    </view>
+  </view>
+
+  <view class="materials-list">
+    <view class="material-card" wx:for="{{materials}}" wx:key="id">
+      <view class="material-header">
+        <view class="material-type {{item.type}}">{{item.type.toUpperCase()}}</view>
+        <view class="material-status {{item.purchased ? 'purchased' : ''}}">
+          {{item.purchased ? '已购买' : '未购买'}}
+        </view>
+      </view>
+      <text class="material-title">{{item.title}}</text>
+      <view class="material-footer">
+        <view class="material-points">
+          <text class="points-icon-small">💎</text>
+          <text class="points-value">{{item.points}}积分</text>
+        </view>
+        <button 
+          class="btn-purchase {{item.purchased ? 'btn-download' : ''}}" 
+          bindtap="{{item.purchased ? 'downloadMaterial' : 'purchaseMaterial'}}"
+          data-index="{{index}}"
+        >
+          {{item.purchased ? '下载' : '兑换'}}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <view class="tips-box">
+    <text class="tips-icon">💡</text>
+    <text class="tips-text">上传优质项目可获得积分，积分可用于兑换资料</text>
+  </view>
+</view>
+

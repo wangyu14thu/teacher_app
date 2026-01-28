@@ -1,0 +1,10 @@
+<!--pages/lecture/lecture.wxml-->
+<view class="lecture-container">
+  <view class="coming-soon">
+    <text class="soon-icon">🎤</text>
+    <text class="soon-title">专题讲座</text>
+    <text class="soon-text">敬请期待</text>
+    <text class="soon-subtitle">精彩内容即将上线</text>
+  </view>
+</view>
+

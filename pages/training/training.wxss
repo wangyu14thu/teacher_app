@@ -1,0 +1,190 @@
+/* pages/training/training.wxss */
+.training-container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.header-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 60rpx 30rpx;
+  text-align: center;
+}
+
+.banner-icon {
+  font-size: 100rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.banner-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: white;
+  display: block;
+  margin-bottom: 12rpx;
+  line-height: 1.5;
+}
+
+.banner-subtitle {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.9);
+  display: block;
+}
+
+.content-card {
+  margin: 30rpx;
+  background-color: white;
+  padding: 40rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.section {
+  margin-bottom: 50rpx;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-icon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.section-content {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.8;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.list-item {
+  display: flex;
+  margin-bottom: 12rpx;
+  padding-left: 20rpx;
+}
+
+.bullet {
+  font-size: 28rpx;
+  color: #4A90E2;
+  margin-right: 12rpx;
+}
+
+.list-text {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  flex: 1;
+}
+
+.subsection {
+  margin-top: 30rpx;
+}
+
+.subsection-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #4A90E2;
+  display: block;
+  margin-bottom: 20rpx;
+  padding-left: 20rpx;
+  border-left: 6rpx solid #4A90E2;
+}
+
+.course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.course-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #f5f7fa;
+  border-radius: 12rpx;
+}
+
+.course-badge {
+  padding: 8rpx 20rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 24rpx;
+  font-weight: bold;
+  border-radius: 20rpx;
+  margin-right: 16rpx;
+  white-space: nowrap;
+}
+
+.course-badge.guidance {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.course-title {
+  font-size: 28rpx;
+  color: #333;
+  flex: 1;
+  line-height: 1.5;
+}
+
+.contact-card {
+  margin: 0 30rpx 30rpx;
+  background-color: white;
+  padding: 30rpx;
+  border-radius: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #f5f7fa;
+  border-radius: 12rpx;
+  transition: all 0.3s;
+}
+
+.contact-item:active {
+  background-color: #e8f4ff;
+}
+
+.contact-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.contact-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 6rpx;
+}
+
+.contact-value {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #4A90E2;
+}
+

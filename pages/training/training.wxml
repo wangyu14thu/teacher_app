@@ -1,0 +1,89 @@
+<!--pages/training/training.wxml-->
+<view class="training-container">
+  <view class="header-banner">
+    <text class="banner-icon">🎓</text>
+    <text class="banner-title">{{courseInfo.title}}</text>
+    <text class="banner-subtitle">{{courseInfo.subtitle}}</text>
+  </view>
+
+  <view class="content-card">
+    <view class="section">
+      <view class="section-header">
+        <text class="section-icon">📋</text>
+        <text class="section-title">课程定位</text>
+      </view>
+      <text class="section-content">实用性、实操性、创生性、科学性</text>
+    </view>
+
+    <view class="section">
+      <view class="section-header">
+        <text class="section-icon">👥</text>
+        <text class="section-title">面向对象</text>
+      </view>
+      <text class="section-content">根据教师对PBL的熟悉程度划分：</text>
+      <view class="list-item">
+        <text class="bullet">•</text>
+        <text class="list-text">适用于零基础的PBL教师</text>
+      </view>
+      <view class="list-item">
+        <text class="bullet">•</text>
+        <text class="list-text">适用于有一定基础、想要实践PBL的教师</text>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-header">
+        <text class="section-icon">📚</text>
+        <text class="section-title">课程大纲</text>
+      </view>
+      
+      <!-- 设计培训 -->
+      <view class="subsection">
+        <text class="subsection-title">设计培训</text>
+        <view class="course-list">
+          <view class="course-item" wx:for="{{courseInfo.designTraining}}" wx:key="session">
+            <view class="course-badge">{{item.session}}</view>
+            <text class="course-title">{{item.title}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 实施指导 -->
+      <view class="subsection">
+        <text class="subsection-title">实施指导</text>
+        <view class="course-list">
+          <view class="course-item" wx:for="{{courseInfo.implementationGuidance}}" wx:key="session">
+            <view class="course-badge guidance">{{item.session}}</view>
+            <text class="course-title">{{item.title}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-header">
+        <text class="section-icon">💡</text>
+        <text class="section-title">温馨提示</text>
+      </view>
+      <text class="section-content">若有需要请联系我们！</text>
+    </view>
+  </view>
+
+  <view class="contact-card">
+    <view class="contact-item" bindtap="makeCall" data-phone="{{contactInfo.phone}}">
+      <text class="contact-icon">☎️</text>
+      <view class="contact-info">
+        <text class="contact-label">电话</text>
+        <text class="contact-value">{{contactInfo.phone}}</text>
+      </view>
+    </view>
+    <view class="contact-item" bindtap="makeCall" data-phone="{{contactInfo.mobile}}">
+      <text class="contact-icon">📱</text>
+      <view class="contact-info">
+        <text class="contact-label">手机</text>
+        <text class="contact-value">{{contactInfo.mobile}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+

@@ -1,0 +1,53 @@
+<!--pages/tool-detail/tool-detail.wxml-->
+<view class="detail-container">
+  <view class="detail-header">
+    <text class="tool-title">{{tool.title}}</text>
+    <text class="tool-subtitle">{{tool.subtitle}}</text>
+  </view>
+
+  <view class="points-card">
+    <view class="points-info">
+      <text class="points-label">所需积分</text>
+      <view class="points-value-wrapper">
+        <text class="points-icon">💎</text>
+        <text class="points-value">{{tool.points}}</text>
+      </view>
+    </view>
+    <view class="points-info">
+      <text class="points-label">当前积分</text>
+      <view class="points-value-wrapper">
+        <text class="points-icon">💎</text>
+        <text class="points-value">{{teacherPoints}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="content-card">
+    <view class="content-section">
+      <text class="section-title">工具说明</text>
+      <text class="section-text">该工具可帮助教师在项目式学习中更好地组织和管理教学活动。</text>
+    </view>
+    
+    <view class="content-section">
+      <text class="section-title">使用场景</text>
+      <text class="section-text">适用于课堂讨论、团队协作、项目管理等多种教学场景。</text>
+    </view>
+
+    <view class="content-section">
+      <text class="section-title">注意事项</text>
+      <text class="section-text">请根据实际教学情况灵活运用该工具，结合学生特点进行调整。</text>
+    </view>
+  </view>
+
+  <view class="action-bar">
+    <button class="btn-purchase {{purchased ? 'btn-purchased' : ''}}" bindtap="purchaseTool">
+      {{purchased ? '已兑换' : '立即兑换'}}
+    </button>
+  </view>
+
+  <view class="tips-box">
+    <text class="tips-icon">💡</text>
+    <text class="tips-text">上传优质项目可获得积分用于兑换工具</text>
+  </view>
+</view>
+

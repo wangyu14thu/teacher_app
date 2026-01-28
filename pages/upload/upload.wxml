@@ -1,0 +1,118 @@
+<!--pages/upload/upload.wxml-->
+<view class="upload-container">
+  <view class="page-header">
+    <text class="header-title">上传我的作品</text>
+    <text class="header-subtitle">分享您的项目经验</text>
+  </view>
+
+  <view class="upload-form">
+    <!-- 项目标题 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">项目标题</text>
+        <text class="required">*</text>
+      </view>
+      <input 
+        class="input" 
+        type="text" 
+        placeholder="请输入项目标题"
+        value="{{formData.title}}"
+        bindinput="onTitleInput"
+      />
+    </view>
+
+    <!-- 年级 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">适用年级</text>
+        <text class="required">*</text>
+      </view>
+      <picker 
+        mode="selector" 
+        range="{{gradeList}}" 
+        value="{{gradeIndex}}" 
+        bindchange="onGradeChange"
+      >
+        <view class="picker {{gradeIndex === -1 ? 'placeholder' : ''}}">
+          {{gradeIndex === -1 ? '请选择年级' : gradeList[gradeIndex]}}
+          <text class="arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 学科 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">学科</text>
+        <text class="required">*</text>
+      </view>
+      <picker 
+        mode="selector" 
+        range="{{subjectList}}" 
+        value="{{subjectIndex}}" 
+        bindchange="onSubjectChange"
+      >
+        <view class="picker {{subjectIndex === -1 ? 'placeholder' : ''}}">
+          {{subjectIndex === -1 ? '请选择学科' : subjectList[subjectIndex]}}
+          <text class="arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 项目描述 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">项目描述</text>
+        <text class="required">*</text>
+      </view>
+      <textarea 
+        class="textarea" 
+        placeholder="请简要描述项目内容、目标、实施过程等"
+        value="{{formData.description}}"
+        bindinput="onDescInput"
+        maxlength="500"
+        show-confirm-bar="{{false}}"
+      />
+      <text class="char-count">{{formData.description.length}}/500</text>
+    </view>
+
+    <!-- 上传文件 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">项目文件</text>
+        <text class="required">*</text>
+      </view>
+      <text class="label-tip">支持上传文档、图片、视频等，最多{{maxFiles}}个文件</text>
+      
+      <view class="files-grid">
+        <view class="file-item" wx:for="{{formData.files}}" wx:key="index">
+          <view class="file-icon">📄</view>
+          <text class="file-name">{{item.name}}</text>
+          <view class="file-remove" bindtap="removeFile" data-index="{{index}}">
+            <text class="remove-icon">×</text>
+          </view>
+        </view>
+        <view class="file-add" wx:if="{{formData.files.length < maxFiles}}" bindtap="chooseFiles">
+          <text class="add-icon">+</text>
+          <text class="add-text">添加文件</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提示 -->
+    <view class="form-tip">
+      <text class="tip-icon">💡</text>
+      <text class="tip-text">作品通过审核后，您将获得积分奖励</text>
+    </view>
+
+    <!-- 提交按钮 -->
+    <button 
+      class="btn-submit {{canSubmit ? '' : 'btn-disabled'}}" 
+      bindtap="submitWork"
+      disabled="{{!canSubmit}}"
+    >
+      提交作品
+    </button>
+  </view>
+</view>
+

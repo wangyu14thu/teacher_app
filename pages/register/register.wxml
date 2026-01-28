@@ -1,0 +1,115 @@
+<!--pages/register/register.wxml-->
+<view class="register-container">
+  <!-- Header -->
+  <view class="register-header">
+    <text class="header-icon">👨‍🏫</text>
+    <text class="header-title">教师注册</text>
+    <text class="header-subtitle">欢迎加入PBL营</text>
+  </view>
+
+  <!-- Form -->
+  <view class="register-form">
+    <!-- 昵称 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">昵称</text>
+        <text class="required">*</text>
+      </view>
+      <input 
+        class="input" 
+        type="text" 
+        placeholder="请输入您的昵称"
+        value="{{formData.nickname}}"
+        bindinput="onNicknameInput"
+      />
+    </view>
+
+    <!-- 年级 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">年级</text>
+        <text class="required">*</text>
+      </view>
+      <picker 
+        mode="selector" 
+        range="{{gradeList}}" 
+        value="{{gradeIndex}}" 
+        bindchange="onGradeChange"
+      >
+        <view class="picker {{gradeIndex === -1 ? 'placeholder' : ''}}">
+          {{gradeIndex === -1 ? '请选择任教年级' : gradeList[gradeIndex]}}
+          <text class="arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 学科 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">学科</text>
+        <text class="required">*</text>
+      </view>
+      <picker 
+        mode="selector" 
+        range="{{subjectList}}" 
+        value="{{subjectIndex}}" 
+        bindchange="onSubjectChange"
+      >
+        <view class="picker {{subjectIndex === -1 ? 'placeholder' : ''}}">
+          {{subjectIndex === -1 ? '请选择任教学科' : subjectList[subjectIndex]}}
+          <text class="arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 地区 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">地区</text>
+        <text class="required">*</text>
+      </view>
+      <picker 
+        mode="region" 
+        value="{{formData.region}}" 
+        bindchange="onRegionChange"
+      >
+        <view class="picker {{formData.region.length === 0 ? 'placeholder' : ''}}">
+          {{formData.region.length === 0 ? '请选择所在地区' : formData.region.join(' ')}}
+          <text class="arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 手机号 -->
+    <view class="form-item">
+      <view class="label">
+        <text class="label-text">手机号</text>
+        <text class="required">*</text>
+      </view>
+      <input 
+        class="input" 
+        type="number" 
+        maxlength="11" 
+        placeholder="请输入手机号"
+        value="{{formData.phone}}"
+        bindinput="onPhoneInput"
+      />
+    </view>
+
+    <!-- 提示 -->
+    <view class="form-tip">
+      <text class="tip-icon">ℹ️</text>
+      <text class="tip-text">请确保信息准确，用于后续身份验证</text>
+    </view>
+
+    <!-- 提交按钮 -->
+    <button 
+      class="btn-submit {{canSubmit ? '' : 'btn-disabled'}}" 
+      bindtap="submitRegister"
+      disabled="{{!canSubmit}}"
+    >
+      立即注册
+    </button>
+  </view>
+</view>
+

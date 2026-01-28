@@ -1,0 +1,41 @@
+<!--pages/case-detail/case-detail.wxml-->
+<view class="detail-container">
+  <view class="detail-header" style="background: linear-gradient(135deg, {{grade.color}} 0%, {{grade.color}}cc 100%);">
+    <text class="header-icon">{{grade.icon}}</text>
+    <text class="header-title">{{grade.name}}</text>
+    <text class="header-subtitle">共{{cases.length}}个案例</text>
+  </view>
+
+  <view class="points-bar">
+    <view class="points-info">
+      <text class="points-icon">💎</text>
+      <text class="points-text">当前积分：{{teacherPoints}}</text>
+    </view>
+  </view>
+
+  <view class="cases-list">
+    <view 
+      class="case-card" 
+      wx:for="{{cases}}" 
+      wx:key="id"
+      bindtap="viewCase"
+      data-index="{{index}}"
+    >
+      <view class="case-header">
+        <text class="case-title">{{item.title}}</text>
+      </view>
+      <view class="case-tags">
+        <view class="tag subject-tag">{{item.subject}}</view>
+        <view class="tag difficulty-tag {{item.difficulty}}">{{item.difficulty}}</view>
+      </view>
+      <view class="case-footer">
+        <view class="case-points">
+          <text class="points-icon-small">💎</text>
+          <text class="points-value">15积分</text>
+        </view>
+        <text class="case-arrow">›</text>
+      </view>
+    </view>
+  </view>
+</view>
+

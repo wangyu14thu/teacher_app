@@ -1,0 +1,36 @@
+<!--pages/theory/theory.wxml-->
+<view class="theory-container">
+  <view class="page-header">
+    <text class="header-title">专业理论</text>
+    <text class="header-subtitle">系统化理论学习资料</text>
+  </view>
+
+  <view class="categories-list">
+    <view 
+      class="category-card" 
+      wx:for="{{categories}}" 
+      wx:key="id"
+      bindtap="viewCategory"
+      data-id="{{item.id}}"
+      style="border-left: 8rpx solid {{item.color}};"
+    >
+      <view class="category-header">
+        <text class="category-icon">{{item.icon}}</text>
+        <view class="category-info">
+          <text class="category-name">{{item.name}}</text>
+          <text class="category-count">{{item.materials.length}}份资料</text>
+        </view>
+        <text class="category-arrow">›</text>
+      </view>
+      <view class="category-preview">
+        <text class="preview-item" wx:for="{{item.materials}}" wx:for-item="material" wx:key="id" wx:if="{{index < 3}}">
+          · {{material.title}}
+        </text>
+        <text class="preview-more" wx:if="{{item.materials.length > 3}}">
+          还有{{item.materials.length - 3}}份资料...
+        </text>
+      </view>
+    </view>
+  </view>
+</view>
+

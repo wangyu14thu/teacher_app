@@ -1,0 +1,51 @@
+/* pages/lecture/lecture.wxss */
+.lecture-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+}
+
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.soon-icon {
+  font-size: 160rpx;
+  margin-bottom: 40rpx;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20rpx);
+  }
+}
+
+.soon-title {
+  font-size: 56rpx;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 20rpx;
+}
+
+.soon-text {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 16rpx;
+}
+
+.soon-subtitle {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+

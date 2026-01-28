@@ -1,0 +1,24 @@
+<!--pages/cases/cases.wxml-->
+<view class="cases-container">
+  <view class="page-header">
+    <text class="header-title">项目案例</text>
+    <text class="header-subtitle">各年级优秀实践案例</text>
+  </view>
+
+  <view class="grades-grid">
+    <view 
+      class="grade-card" 
+      wx:for="{{grades}}" 
+      wx:key="id"
+      bindtap="viewGrade"
+      data-id="{{item.id}}"
+      style="background: linear-gradient(135deg, {{item.color}} 0%, {{item.color}}cc 100%);"
+    >
+      <text class="grade-icon">{{item.icon}}</text>
+      <text class="grade-name">{{item.name}}</text>
+      <text class="grade-count">{{item.cases.length}}个案例</text>
+      <view class="grade-arrow">→</view>
+    </view>
+  </view>
+</view>
+

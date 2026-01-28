@@ -1,0 +1,20 @@
+<!--pages/message/message.wxml-->
+<view class="message-container">
+  <view class="empty-state" wx:if="{{messages.length === 0}}">
+    <text class="empty-icon">📭</text>
+    <text class="empty-text">暂无消息</text>
+    <text class="empty-tip">新消息会在这里显示</text>
+  </view>
+
+  <!-- 消息列表 -->
+  <view class="message-list" wx:else>
+    <view class="message-item" wx:for="{{messages}}" wx:key="id">
+      <view class="message-content">
+        <text class="message-title">{{item.title}}</text>
+        <text class="message-text">{{item.content}}</text>
+        <text class="message-time">{{item.time}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+

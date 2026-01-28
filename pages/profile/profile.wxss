@@ -1,0 +1,222 @@
+/* pages/profile/profile.wxss */
+.profile-container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 30rpx;
+}
+
+.profile-header {
+  position: relative;
+  padding-top: 100rpx;
+  margin-bottom: 30rpx;
+}
+
+.header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 0 0 50rpx 50rpx;
+}
+
+.user-card {
+  position: relative;
+  margin: 0 30rpx;
+  background-color: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+}
+
+.avatar-icon {
+  font-size: 64rpx;
+}
+
+.user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.user-detail {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 6rpx;
+}
+
+.user-region {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.btn-edit {
+  padding: 12rpx 28rpx;
+  background-color: #4A90E2;
+  color: white;
+  font-size: 26rpx;
+  border-radius: 30rpx;
+  border: none;
+}
+
+.points-card {
+  margin: 0 30rpx 30rpx;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  padding: 30rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8rpx 20rpx rgba(240, 147, 251, 0.3);
+}
+
+.points-left {
+  display: flex;
+  align-items: center;
+}
+
+.points-icon {
+  font-size: 64rpx;
+  margin-right: 20rpx;
+}
+
+.points-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.points-value {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: white;
+  line-height: 1;
+  margin-bottom: 8rpx;
+}
+
+.points-label {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.btn-points-info {
+  padding: 16rpx 24rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 24rpx;
+  border-radius: 30rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(10rpx);
+}
+
+.btn-points-info .arrow {
+  margin-left: 8rpx;
+  font-size: 32rpx;
+}
+
+.stats-section {
+  margin: 0 30rpx 30rpx;
+  background-color: white;
+  padding: 40rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-number {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #4A90E2;
+  line-height: 1;
+  margin-bottom: 12rpx;
+}
+
+.stat-label {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.stat-divider {
+  width: 2rpx;
+  height: 80rpx;
+  background-color: #e0e0e0;
+}
+
+.menu-section {
+  padding: 0 30rpx;
+}
+
+.menu-group {
+  background-color: white;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: all 0.3s;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:active {
+  background-color: #f5f5f5;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+}
+
+.menu-icon {
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+
+.menu-title {
+  font-size: 30rpx;
+  color: #333;
+}
+
+.menu-arrow {
+  font-size: 48rpx;
+  color: #ccc;
+}
+
