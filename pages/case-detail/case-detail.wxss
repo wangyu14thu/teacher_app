@@ -104,15 +104,15 @@
   color: white;
 }
 
-.difficulty-tag.基础 {
+.difficulty-tag.basic {
   background-color: #4caf50;
 }
 
-.difficulty-tag.进阶 {
+.difficulty-tag.intermediate {
   background-color: #ff9800;
 }
 
-.difficulty-tag.高级 {
+.difficulty-tag.advanced {
   background-color: #f44336;
 }
 

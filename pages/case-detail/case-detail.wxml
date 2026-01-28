@@ -1,4 +1,20 @@
 <!--pages/case-detail/case-detail.wxml-->
+<wxs module="utils">
+  var difficultyMap = {
+    'basic': '基础',
+    'intermediate': '进阶',
+    'advanced': '高级'
+  }
+  
+  function getDifficultyText(difficulty) {
+    return difficultyMap[difficulty] || difficulty
+  }
+  
+  module.exports = {
+    getDifficultyText: getDifficultyText
+  }
+</wxs>
+
 <view class="detail-container">
   <view class="detail-header" style="background: linear-gradient(135deg, {{grade.color}} 0%, {{grade.color}}cc 100%);">
     <text class="header-icon">{{grade.icon}}</text>
@@ -26,7 +42,7 @@
       </view>
       <view class="case-tags">
         <view class="tag subject-tag">{{item.subject}}</view>
-        <view class="tag difficulty-tag {{item.difficulty}}">{{item.difficulty}}</view>
+        <view class="tag difficulty-tag {{item.difficulty}}">{{utils.getDifficultyText(item.difficulty)}}</view>
       </view>
       <view class="case-footer">
         <view class="case-points">

@@ -5,7 +5,17 @@ Page({
   data: {
     grade: null,
     cases: [],
-    teacherPoints: 0
+    teacherPoints: 0,
+    difficultyMap: {
+      'basic': '基础',
+      'intermediate': '进阶',
+      'advanced': '高级'
+    }
+  },
+
+  // 获取难度中文名称
+  getDifficultyText(difficulty) {
+    return this.data.difficultyMap[difficulty] || difficulty
   },
 
   onLoad(options) {
@@ -23,10 +33,11 @@ Page({
   viewCase(e) {
     const index = e.currentTarget.dataset.index
     const caseItem = this.data.cases[index]
+    const difficultyText = this.getDifficultyText(caseItem.difficulty)
 
     wx.showModal({
       title: caseItem.title,
-      content: `学科：${caseItem.subject}\n难度：${caseItem.difficulty}\n\n该案例需要15积分兑换\n当前积分：${this.data.teacherPoints}`,
+      content: `学科：${caseItem.subject}\n难度：${difficultyText}\n\n该案例需要15积分兑换\n当前积分：${this.data.teacherPoints}`,
       confirmText: '兑换',
       cancelText: '取消',
       success: (res) => {
