@@ -31,36 +31,50 @@
 
 .message-list {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 20rpx;
 }
 
 .message-item {
+  width: calc(50% - 10rpx);
   background-color: white;
   padding: 30rpx;
   border-radius: 20rpx;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  min-height: 200rpx;
 }
 
 .message-title {
-  font-size: 32rpx;
+  font-size: 28rpx;
   font-weight: bold;
   color: #333;
   display: block;
   margin-bottom: 12rpx;
+  line-height: 1.4;
 }
 
 .message-text {
-  font-size: 28rpx;
+  font-size: 24rpx;
   color: #666;
-  line-height: 1.6;
+  line-height: 1.5;
   display: block;
   margin-bottom: 16rpx;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .message-time {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #999;
   display: block;
+  margin-top: auto;
+  padding-top: 12rpx;
+  border-top: 1rpx solid #f0f0f0;
 }
 
