@@ -45,31 +45,6 @@
     </view>
   </view>
 
-  <!-- 快捷入口 -->
-  <view class="quick-actions">
-    <view class="section-title">
-      <text class="title-text">快捷入口</text>
-    </view>
-    <view class="actions-grid">
-      <view class="action-item" bindtap="quickDesign">
-        <text class="action-icon">🎨</text>
-        <text class="action-text">快速设计</text>
-      </view>
-      <view class="action-item" bindtap="quickSearch">
-        <text class="action-icon">🔍</text>
-        <text class="action-text">搜索案例</text>
-      </view>
-      <view class="action-item" bindtap="quickHot">
-        <text class="action-icon">🔥</text>
-        <text class="action-text">热门推荐</text>
-      </view>
-      <view class="action-item" bindtap="quickPoints">
-        <text class="action-icon">💎</text>
-        <text class="action-text">我的积分</text>
-      </view>
-    </view>
-  </view>
-
   <!-- 提示卡片 -->
   <view class="tips-card">
     <text class="tips-icon">💡</text>

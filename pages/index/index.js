@@ -49,33 +49,5 @@ Page({
     wx.navigateTo({
       url: '/pages/my-projects/my-projects'
     })
-  },
-
-  // 快速设计
-  quickDesign() {
-    wx.navigateTo({
-      url: '/pages/my-projects/my-projects?tab=design'
-    })
-  },
-
-  // 快速搜索
-  quickSearch() {
-    wx.navigateTo({
-      url: '/pages/cases/cases?action=search'
-    })
-  },
-
-  // 热门推荐
-  quickHot() {
-    wx.navigateTo({
-      url: '/pages/hot-projects/hot-projects'
-    })
-  },
-
-  // 我的积分
-  quickPoints() {
-    wx.switchTab({
-      url: '/pages/profile/profile'
-    })
   }
 })
