@@ -1,0 +1,297 @@
+<!--pages/project-design/project-design.wxml-->
+<view class="design-container">
+  <view class="page-title">生成你的专属项目吧！</view>
+
+  <!-- 一键导入 -->
+  <view class="import-section">
+    <button class="btn-import" bindtap="importProject">
+      <text class="btn-icon">📥</text>
+      <text>支持一键导入</text>
+    </button>
+    <text class="import-tip">提示：也可以自主编写项目！</text>
+  </view>
+
+  <!-- 项目基本信息 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>项目基本信息</text>
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">项目名称</text>
+      <input class="form-input" placeholder="请输入项目名称" value="{{formData.projectName}}" bindinput="onInputChange" data-field="projectName" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">涉及学科</text>
+      <input class="form-input" placeholder="请输入涉及学科" value="{{formData.subjects}}" bindinput="onInputChange" data-field="subjects" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">年级</text>
+      <input class="form-input" placeholder="请输入年级" value="{{formData.grade}}" bindinput="onInputChange" data-field="grade" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">课时</text>
+      <input class="form-input" placeholder="请输入课时" value="{{formData.hours}}" bindinput="onInputChange" data-field="hours" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">项目概述</text>
+      <textarea class="form-textarea" placeholder="提示：现实背景+解决的问题+涉及的知识+预计的成果+展示的形式" value="{{formData.overview}}" bindinput="onInputChange" data-field="overview" />
+    </view>
+  </view>
+
+  <!-- 项目立项依据 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>项目立项依据</text>
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">依据现实世界</text>
+      <textarea class="form-textarea" placeholder="提示：简明扼要说出问题来源的现实背景" value="{{formData.basisWorld}}" bindinput="onInputChange" data-field="basisWorld" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">依据课标教材</text>
+      <textarea class="form-textarea" placeholder="提示：重点全面分析出为解决项目的问题所涉及到的学科核心素养、核心知识和要学到的教材课文资源等，按学科类别进行描述" value="{{formData.basisCurriculum}}" bindinput="onInputChange" data-field="basisCurriculum" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">依据学生实际</text>
+      <textarea class="form-textarea" placeholder="提示：分析学生对当前问题的认知情况" value="{{formData.basisStudents}}" bindinput="onInputChange" data-field="basisStudents" />
+    </view>
+  </view>
+
+  <!-- 跨学科概念 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>跨学科概念</text>
+    </view>
+    
+    <view class="form-item-with-btn">
+      <textarea class="form-textarea-ai" placeholder="点击右侧按钮生成跨学科概念" value="{{formData.interdisciplinaryConcept}}" bindinput="onInputChange" data-field="interdisciplinaryConcept" />
+      <button class="btn-generate" bindtap="generateContent" data-type="interdisciplinaryConcept">
+        <text class="btn-generate-icon">✨</text>
+        <text>生成跨学科概念</text>
+      </button>
+    </view>
+    <text class="form-tip">温馨提示：仅供参考，教师可自行评估修改。</text>
+  </view>
+
+  <!-- 项目框架 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>项目框架</text>
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">驱动性问题</text>
+    </view>
+    <view class="form-item-with-btn">
+      <textarea class="form-textarea-ai" placeholder="点击右侧按钮生成驱动性问题" value="{{formData.drivingQuestion}}" bindinput="onInputChange" data-field="drivingQuestion" />
+      <button class="btn-generate" bindtap="generateContent" data-type="drivingQuestion">
+        <text class="btn-generate-icon">✨</text>
+        <text>生成驱动性问题</text>
+      </button>
+    </view>
+    <text class="form-tip">温馨提示：仅供参考，教师可自行评估修改。</text>
+
+    <view class="form-item" style="margin-top: 32rpx;">
+      <text class="form-label">子问题链</text>
+    </view>
+    <view class="form-item-with-btn">
+      <textarea class="form-textarea-ai" placeholder="点击右侧按钮生成子问题链" value="{{formData.subQuestions}}" bindinput="onInputChange" data-field="subQuestions" />
+      <button class="btn-generate" bindtap="generateContent" data-type="subQuestions">
+        <text class="btn-generate-icon">✨</text>
+        <text>生成子问题链</text>
+      </button>
+    </view>
+    <text class="form-tip">温馨提示：仅供参考，教师可自行评估修改。</text>
+
+    <view class="form-item" style="margin-top: 32rpx;">
+      <text class="form-label">最终成果</text>
+      <textarea class="form-textarea" placeholder="请输入最终成果" value="{{formData.finalOutcome}}" bindinput="onInputChange" data-field="finalOutcome" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">成果展示形式</text>
+      <textarea class="form-textarea" placeholder="请输入成果展示形式" value="{{formData.presentationForm}}" bindinput="onInputChange" data-field="presentationForm" />
+    </view>
+  </view>
+
+  <!-- 项目启动 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>项目启动</text>
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">教学目标</text>
+      <textarea class="form-textarea" placeholder="请输入教学目标" value="{{formData.launchGoals}}" bindinput="onInputChange" data-field="launchGoals" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">所需课时</text>
+      <input class="form-input" placeholder="请输入所需课时" value="{{formData.launchHours}}" bindinput="onInputChange" data-field="launchHours" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">入项活动</text>
+      <textarea class="form-textarea" placeholder="请输入入项活动" value="{{formData.launchActivity}}" bindinput="onInputChange" data-field="launchActivity" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">本节课成果</text>
+      <textarea class="form-textarea" placeholder="请输入本节课成果" value="{{formData.launchOutcome}}" bindinput="onInputChange" data-field="launchOutcome" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">过程性评价</text>
+      <textarea class="form-textarea" placeholder="请输入过程性评价" value="{{formData.launchEvaluation}}" bindinput="onInputChange" data-field="launchEvaluation" />
+    </view>
+
+    <button class="btn-generate-section" bindtap="generateContent" data-type="launchPhase">
+      <text class="btn-generate-icon">✨</text>
+      <text>生成启动阶段</text>
+    </button>
+    <text class="form-tip">温馨提示：仅供参考，教师可自行评估修改。</text>
+  </view>
+
+  <!-- 项目探究 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>项目探究</text>
+    </view>
+    
+    <view class="inquiry-item" wx:for="{{inquiryPhases}}" wx:key="index">
+      <view class="inquiry-header">
+        <text class="inquiry-title">子问题{{index + 1}}</text>
+        <button class="btn-delete" wx:if="{{inquiryPhases.length > 1}}" bindtap="deleteInquiry" data-index="{{index}}">删除</button>
+      </view>
+
+      <view class="form-item">
+        <input class="form-input" placeholder="请输入子问题" value="{{item.question}}" bindinput="onInquiryInputChange" data-index="{{index}}" data-field="question" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">教学目标</text>
+        <textarea class="form-textarea" placeholder="请输入教学目标" value="{{item.goals}}" bindinput="onInquiryInputChange" data-index="{{index}}" data-field="goals" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">所需课时</text>
+        <input class="form-input" placeholder="请输入所需课时" value="{{item.hours}}" bindinput="onInquiryInputChange" data-index="{{index}}" data-field="hours" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">探究活动</text>
+        <textarea class="form-textarea" placeholder="请输入探究活动" value="{{item.activity}}" bindinput="onInquiryInputChange" data-index="{{index}}" data-field="activity" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">本节课成果</text>
+        <textarea class="form-textarea" placeholder="请输入本节课成果" value="{{item.outcome}}" bindinput="onInquiryInputChange" data-index="{{index}}" data-field="outcome" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">过程性评价</text>
+        <textarea class="form-textarea" placeholder="请输入过程性评价" value="{{item.evaluation}}" bindinput="onInquiryInputChange" data-index="{{index}}" data-field="evaluation" />
+      </view>
+
+      <button class="btn-generate-section" bindtap="generateContent" data-type="inquiryPhase" data-index="{{index}}">
+        <text class="btn-generate-icon">✨</text>
+        <text>生成子问题{{index + 1}}探究阶段</text>
+      </button>
+      <text class="form-tip">温馨提示：仅供参考，教师可自行评估修改。</text>
+    </view>
+
+    <button class="btn-add-inquiry" bindtap="addInquiry">
+      <text class="btn-add-icon">+</text>
+      <text>继续添加子问题</text>
+    </button>
+  </view>
+
+  <!-- 项目目标 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>项目目标</text>
+    </view>
+    
+    <view class="form-item-with-btn">
+      <textarea class="form-textarea-ai" placeholder="点击右侧按钮生成项目目标" value="{{formData.projectGoals}}" bindinput="onInputChange" data-field="projectGoals" />
+      <button class="btn-generate" bindtap="generateContent" data-type="projectGoals">
+        <text class="btn-generate-icon">✨</text>
+        <text>生成项目目标</text>
+      </button>
+    </view>
+    <text class="form-tip">温馨提示：项目目标最多分为4条，包含探究任务、用到的知识、生成的成果、培育的素养。</text>
+  </view>
+
+  <!-- 底部操作按钮 -->
+  <view class="bottom-actions">
+    <button class="btn-action btn-save" bindtap="saveProject">
+      <text class="btn-action-icon">💾</text>
+      <text>保存</text>
+    </button>
+    <button class="btn-action btn-evaluate" bindtap="applyEvaluation">
+      <text class="btn-action-icon">🎓</text>
+      <text>申请专家评估</text>
+      <text class="btn-action-sub">(首次免费/SVIP专属)</text>
+    </button>
+    <button class="btn-action btn-publish" bindtap="publishProject">
+      <text class="btn-action-icon">🚀</text>
+      <text>发布项目</text>
+    </button>
+  </view>
+
+  <!-- 审核标准说明弹窗 -->
+  <view class="modal-mask" wx:if="{{showStandardModal}}" bindtap="closeStandardModal">
+    <view class="modal-container" catchtap="preventClose">
+      <view class="modal-header">
+        <text class="modal-title">审核标准说明</text>
+        <text class="modal-close" bindtap="closeStandardModal">×</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="standard-item">
+          <text class="standard-title">1. 项目完整性</text>
+          <text class="standard-desc">项目信息完整，包含所有必填字段</text>
+        </view>
+        <view class="standard-item">
+          <text class="standard-title">2. 教学设计合理性</text>
+          <text class="standard-desc">教学目标明确，活动设计符合学生认知水平</text>
+        </view>
+        <view class="standard-item">
+          <text class="standard-title">3. 跨学科融合度</text>
+          <text class="standard-desc">跨学科概念清晰，学科融合自然合理</text>
+        </view>
+        <view class="standard-item">
+          <text class="standard-title">4. 创新性与实践性</text>
+          <text class="standard-desc">项目设计具有创新性，可操作性强</text>
+        </view>
+        <view class="standard-highlight">
+          ⚠️ 重要说明：发布成功后，该项目产生的积分（如有）将计入您的个人账户，与所在学校无关。
+        </view>
+      </scroll-view>
+      <view class="modal-footer">
+        <checkbox-group bindchange="onAgreeChange">
+          <label class="agreement-label">
+            <checkbox value="agree" checked="{{agreed}}" />
+            <text>我已阅读并同意</text>
+          </label>
+        </checkbox-group>
+        <button class="btn-modal-confirm" disabled="{{!agreed}}" bindtap="confirmAction">确认{{actionType === 'evaluate' ? '申请评估' : '发布'}}</button>
+      </view>
+    </view>
+  </view>
+</view>
+

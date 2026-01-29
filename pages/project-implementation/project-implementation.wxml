@@ -1,0 +1,239 @@
+<!--pages/project-implementation/project-implementation.wxml-->
+<view class="implementation-container">
+  <view class="page-title">记录项目实施过程吧！</view>
+
+  <!-- 项目信息卡片 -->
+  <view class="project-info-card">
+    <text class="project-name">{{projectName || '未命名项目'}}</text>
+    <text class="project-desc">记录每个精彩瞬间，见证成长历程</text>
+  </view>
+
+  <!-- 项目启动 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>项目启动</text>
+    </view>
+
+    <view class="upload-item">
+      <view class="upload-label">
+        <text class="label-text">启动过程</text>
+        <text class="label-count">{{launchProcess.length}}/9</text>
+      </view>
+      <view class="upload-grid">
+        <view 
+          class="image-item" 
+          wx:for="{{launchProcess}}" 
+          wx:key="index"
+          bindlongpress="deleteImage"
+          data-type="launchProcess"
+          data-index="{{index}}"
+        >
+          <image class="uploaded-image" src="{{item}}" mode="aspectFill" />
+          <view class="image-delete" catchtap="deleteImage" data-type="launchProcess" data-index="{{index}}">×</view>
+        </view>
+        <view 
+          class="upload-btn" 
+          wx:if="{{launchProcess.length < 9}}"
+          bindtap="chooseImage"
+          data-type="launchProcess"
+        >
+          <text class="upload-icon">+</text>
+          <text class="upload-text">上传照片</text>
+        </view>
+      </view>
+      <text class="upload-tip">提示：记录项目启动时的情景，如学生讨论、小组分工等</text>
+    </view>
+
+    <view class="upload-item">
+      <view class="upload-label">
+        <text class="label-text">阶段成果</text>
+        <text class="label-count">{{launchOutcome.length}}/9</text>
+      </view>
+      <view class="upload-grid">
+        <view 
+          class="image-item" 
+          wx:for="{{launchOutcome}}" 
+          wx:key="index"
+          bindlongpress="deleteImage"
+          data-type="launchOutcome"
+          data-index="{{index}}"
+        >
+          <image class="uploaded-image" src="{{item}}" mode="aspectFill" />
+          <view class="image-delete" catchtap="deleteImage" data-type="launchOutcome" data-index="{{index}}">×</view>
+        </view>
+        <view 
+          class="upload-btn" 
+          wx:if="{{launchOutcome.length < 9}}"
+          bindtap="chooseImage"
+          data-type="launchOutcome"
+        >
+          <text class="upload-icon">+</text>
+          <text class="upload-text">上传照片</text>
+        </view>
+      </view>
+      <text class="upload-tip">提示：展示启动阶段的成果，如初步方案、思维导图等</text>
+    </view>
+  </view>
+
+  <!-- 项目探究 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>项目探究</text>
+    </view>
+
+    <view class="inquiry-item" wx:for="{{inquiryPhases}}" wx:key="index" wx:for-item="phase" wx:for-index="phaseIndex">
+      <view class="inquiry-header">
+        <text class="inquiry-title">子问题{{phaseIndex + 1}}</text>
+        <button 
+          class="btn-delete" 
+          wx:if="{{inquiryPhases.length > 1}}"
+          bindtap="deleteInquiryPhase"
+          data-index="{{phaseIndex}}"
+        >
+          删除
+        </button>
+      </view>
+
+      <view class="inquiry-question">
+        <input 
+          class="question-input" 
+          placeholder="请输入子问题{{phaseIndex + 1}}" 
+          value="{{phase.question}}"
+          bindinput="onQuestionInput"
+          data-index="{{phaseIndex}}"
+        />
+      </view>
+
+      <view class="upload-item">
+        <view class="upload-label">
+          <text class="label-text">探究过程</text>
+          <text class="label-count">{{phase.process.length}}/9</text>
+        </view>
+        <view class="upload-grid">
+          <view 
+            class="image-item" 
+            wx:for="{{phase.process}}" 
+            wx:key="imgIndex"
+            wx:for-item="img"
+            wx:for-index="imgIndex"
+          >
+            <image class="uploaded-image" src="{{img}}" mode="aspectFill" />
+            <view 
+              class="image-delete" 
+              catchtap="deleteInquiryImage"
+              data-phase-index="{{phaseIndex}}"
+              data-type="process"
+              data-img-index="{{imgIndex}}"
+            >
+              ×
+            </view>
+          </view>
+          <view 
+            class="upload-btn" 
+            wx:if="{{phase.process.length < 9}}"
+            bindtap="chooseInquiryImage"
+            data-phase-index="{{phaseIndex}}"
+            data-type="process"
+          >
+            <text class="upload-icon">+</text>
+            <text class="upload-text">上传照片</text>
+          </view>
+        </view>
+        <text class="upload-tip">提示：记录探究过程，如实验操作、数据收集等</text>
+      </view>
+
+      <view class="upload-item">
+        <view class="upload-label">
+          <text class="label-text">阶段成果</text>
+          <text class="label-count">{{phase.outcome.length}}/9</text>
+        </view>
+        <view class="upload-grid">
+          <view 
+            class="image-item" 
+            wx:for="{{phase.outcome}}" 
+            wx:key="imgIndex"
+            wx:for-item="img"
+            wx:for-index="imgIndex"
+          >
+            <image class="uploaded-image" src="{{img}}" mode="aspectFill" />
+            <view 
+              class="image-delete" 
+              catchtap="deleteInquiryImage"
+              data-phase-index="{{phaseIndex}}"
+              data-type="outcome"
+              data-img-index="{{imgIndex}}"
+            >
+              ×
+            </view>
+          </view>
+          <view 
+            class="upload-btn" 
+            wx:if="{{phase.outcome.length < 9}}"
+            bindtap="chooseInquiryImage"
+            data-phase-index="{{phaseIndex}}"
+            data-type="outcome"
+          >
+            <text class="upload-icon">+</text>
+            <text class="upload-text">上传照片</text>
+          </view>
+        </view>
+        <text class="upload-tip">提示：展示本阶段的成果，如调查报告、作品原型等</text>
+      </view>
+    </view>
+
+    <button class="btn-add-inquiry" bindtap="addInquiryPhase">
+      <text class="btn-add-icon">+</text>
+      <text>继续添加子问题</text>
+    </button>
+  </view>
+
+  <!-- 项目展示 -->
+  <view class="form-section">
+    <view class="section-title">
+      <text class="title-dot">●</text>
+      <text>项目展示</text>
+    </view>
+
+    <view class="upload-item">
+      <view class="upload-label">
+        <text class="label-text">展示过程</text>
+        <text class="label-count">{{presentationProcess.length}}/9</text>
+      </view>
+      <view class="upload-grid">
+        <view 
+          class="image-item" 
+          wx:for="{{presentationProcess}}" 
+          wx:key="index"
+        >
+          <image class="uploaded-image" src="{{item}}" mode="aspectFill" />
+          <view class="image-delete" catchtap="deleteImage" data-type="presentationProcess" data-index="{{index}}">×</view>
+        </view>
+        <view 
+          class="upload-btn" 
+          wx:if="{{presentationProcess.length < 9}}"
+          bindtap="chooseImage"
+          data-type="presentationProcess"
+        >
+          <text class="upload-icon">+</text>
+          <text class="upload-text">上传照片</text>
+        </view>
+      </view>
+      <text class="upload-tip">提示：记录项目展示的精彩瞬间，如答辩、展览、演出等</text>
+    </view>
+  </view>
+
+  <!-- 底部操作按钮 -->
+  <view class="bottom-actions">
+    <button class="btn-action btn-save" bindtap="saveImplementation">
+      <text class="btn-action-icon">💾</text>
+      <text>保存记录</text>
+    </button>
+    <button class="btn-action btn-preview" bindtap="previewImplementation">
+      <text class="btn-action-icon">👁️</text>
+      <text>预览</text>
+    </button>
+  </view>
+</view>
+
