@@ -53,10 +53,43 @@ Page({
     })
   },
 
-  // 上传作品
-  uploadWork() {
-    wx.navigateTo({
-      url: '/pages/upload/upload'
+  // 我的积分
+  goToPointsRecord() {
+    wx.showModal({
+      title: '我的积分',
+      content: '功能开发中，敬请期待！',
+      showCancel: false,
+      confirmText: '知道了'
+    })
+  },
+
+  // 创建学校团队
+  createSchoolTeam() {
+    wx.showModal({
+      title: '创建学校团队',
+      content: '功能开发中，敬请期待！',
+      showCancel: false,
+      confirmText: '知道了'
+    })
+  },
+
+  // 我的学校
+  goToMySchool() {
+    wx.showModal({
+      title: '我的学校',
+      content: '功能开发中，敬请期待！',
+      showCancel: false,
+      confirmText: '知道了'
+    })
+  },
+
+  // 管理后台
+  goToAdminDashboard() {
+    wx.showModal({
+      title: '管理后台',
+      content: '功能开发中，敬请期待！',
+      showCancel: false,
+      confirmText: '知道了'
     })
   },
 
@@ -74,7 +107,7 @@ Page({
   showPointsInfo() {
     wx.showModal({
       title: '积分说明',
-      content: '1. 上传项目并通过审核可获得积分\n2. 积分可用于兑换资料\n3. 不同资料需要不同积分数',
+      content: '1. 发布项目并通过审核可获得积分\n2. 1积分=1元\n3. 积分可用于兑换资源',
       showCancel: false,
       confirmText: '我知道了'
     })

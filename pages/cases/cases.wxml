@@ -26,67 +26,59 @@
     </view>
   </view>
 
-  <!-- 年级选择 -->
-  <view class="grade-section">
-    <view class="grade-header">
-      <text class="grade-label">年级：</text>
-    </view>
-    <scroll-view class="grade-tabs" scroll-x="true" scroll-with-animation="true">
+  <!-- 主内容区：左侧年级 + 右侧项目列表 -->
+  <view class="main-content">
+    <!-- 左侧年级列表 -->
+    <view class="grade-sidebar">
       <view 
-        class="grade-tab {{selectedGrade === index ? 'active' : ''}}" 
+        class="grade-item {{selectedGrade === index ? 'active' : ''}}" 
         wx:for="{{grades}}" 
         wx:key="id"
         bindtap="selectGrade"
         data-index="{{index}}"
       >
-        {{item.name}}
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- 项目列表 -->
-  <view class="projects-list">
-    <view 
-      class="project-card" 
-      wx:for="{{currentProjects}}" 
-      wx:key="id"
-      bindtap="viewProject"
-      data-id="{{item.id}}"
-    >
-      <view class="project-header">
-        <text class="project-title">{{item.title}}</text>
-        <view class="project-price">¥{{item.price}}</view>
-      </view>
-      
-      <view class="project-tags">
-        <view class="tag subject-tag">{{item.subject}}</view>
-        <view class="tag grade-tag">{{item.gradeName}}</view>
-      </view>
-
-      <view class="project-footer">
-        <view class="project-stats">
-          <view class="stat-item">
-            <text class="stat-icon">👍</text>
-            <text class="stat-text">{{item.likes || 0}}</text>
-          </view>
-          <view class="stat-item">
-            <text class="stat-icon">⭐</text>
-            <text class="stat-text">{{item.favorites || 0}}</text>
-          </view>
-          <view class="stat-item">
-            <text class="stat-icon">💬</text>
-            <text class="stat-text">{{item.comments || 0}}</text>
-          </view>
-        </view>
-        <view class="project-arrow">›</view>
+        <text class="grade-text">{{item.name}}</text>
       </view>
     </view>
-  </view>
 
-  <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{currentProjects.length === 0}}">
-    <text class="empty-icon">📭</text>
-    <text class="empty-text">暂无项目</text>
-    <text class="empty-tip">换个关键词试试</text>
+    <!-- 右侧项目列表 -->
+    <scroll-view class="projects-scroll" scroll-y="true">
+      <view class="projects-list">
+        <view 
+          class="project-card" 
+          wx:for="{{currentProjects}}" 
+          wx:key="id"
+          bindtap="viewProject"
+          data-id="{{item.id}}"
+        >
+          <text class="project-title">{{item.title}}</text>
+          
+          <view class="project-tags">
+            <view class="tag subject-tag">{{item.subject}}</view>
+          </view>
+
+          <view class="project-footer">
+            <view class="project-stats">
+              <view class="stat-item">
+                <text class="stat-icon">👍</text>
+                <text class="stat-text">{{item.likes || 0}}</text>
+              </view>
+              <view class="stat-item">
+                <text class="stat-icon">⭐</text>
+                <text class="stat-text">{{item.favorites || 0}}</text>
+              </view>
+            </view>
+            <view class="project-price">¥{{item.price}}</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{currentProjects.length === 0}}">
+        <text class="empty-icon">📭</text>
+        <text class="empty-text">暂无项目</text>
+        <text class="empty-tip">换个关键词试试</text>
+      </view>
+    </scroll-view>
   </view>
 </view>

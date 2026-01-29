@@ -8,10 +8,10 @@ Page({
     
   },
 
-  // VIP权益提示
-  showVIPTip() {
+  // 讲座主题提示
+  showThemeTip() {
     wx.showModal({
-      title: 'VIP权益专属',
+      title: '讲座主题',
       content: '功能开发中，敬请期待！',
       showCancel: false,
       confirmText: '知道了'

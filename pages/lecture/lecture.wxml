@@ -5,41 +5,16 @@
     <text class="header-subtitle">专业导师精彩分享</text>
   </view>
 
-  <!-- VIP权益专属 -->
-  <view class="lecture-card vip-card" bindtap="showVIPTip">
-    <view class="card-badge">VIP专属</view>
-    <text class="card-icon">👑</text>
-    <text class="card-title">VIP权益专属</text>
-    <text class="card-desc">专属讲座·深度指导·优先服务</text>
-    <view class="card-footer">
-      <text class="footer-text">立即开通VIP享受专属权益</text>
-      <text class="footer-arrow">→</text>
-    </view>
+  <!-- 讲座主题 -->
+  <view class="lecture-card theme-card" bindtap="showThemeTip">
+    <text class="card-icon">🎤</text>
+    <text class="card-title">讲座主题</text>
   </view>
 
   <!-- 下期预告 -->
   <view class="lecture-card preview-card" bindtap="showPreviewTip">
     <text class="card-icon">📢</text>
     <text class="card-title">下期预告</text>
-    <text class="card-desc">精彩内容即将上线</text>
-    <view class="preview-list">
-      <view class="preview-item">
-        <text class="preview-dot">•</text>
-        <text class="preview-text">PBL项目设计工作坊</text>
-      </view>
-      <view class="preview-item">
-        <text class="preview-dot">•</text>
-        <text class="preview-text">跨学科教学实践分享</text>
-      </view>
-      <view class="preview-item">
-        <text class="preview-dot">•</text>
-        <text class="preview-text">项目评价与反思策略</text>
-      </view>
-    </view>
-    <view class="card-footer">
-      <text class="footer-text">点击关注最新动态</text>
-      <text class="footer-arrow">→</text>
-    </view>
   </view>
 
   <!-- 提示卡片 -->
