@@ -2,17 +2,22 @@
   "pages": [
     "pages/index/index",
     "pages/register/register",
-    "pages/message/message",
+    "pages/ai-assistant/ai-assistant",
     "pages/profile/profile",
-    "pages/theory/theory",
-    "pages/theory-detail/theory-detail",
+    "pages/swiper-vip/swiper-vip",
+    "pages/lecture/lecture",
     "pages/cases/cases",
     "pages/case-detail/case-detail",
-    "pages/tools/tools",
-    "pages/tool-detail/tool-detail",
-    "pages/training/training",
-    "pages/lecture/lecture",
-    "pages/upload/upload"
+    "pages/hot-projects/hot-projects",
+    "pages/my-projects/my-projects",
+    "pages/project-design/project-design",
+    "pages/project-implementation/project-implementation",
+    "pages/project-detail/project-detail",
+    "pages/school-team/school-team",
+    "pages/my-school/my-school",
+    "pages/admin-dashboard/admin-dashboard",
+    "pages/points-record/points-record",
+    "pages/contact/contact"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -34,10 +39,10 @@
         "selectedIconPath": "images/home-active.png"
       },
       {
-        "pagePath": "pages/message/message",
-        "text": "消息",
-        "iconPath": "images/message.png",
-        "selectedIconPath": "images/message-active.png"
+        "pagePath": "pages/ai-assistant/ai-assistant",
+        "text": "AI助手",
+        "iconPath": "images/ai.png",
+        "selectedIconPath": "images/ai-active.png"
       },
       {
         "pagePath": "pages/profile/profile",

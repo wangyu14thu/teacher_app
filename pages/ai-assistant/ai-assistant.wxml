@@ -1,0 +1,10 @@
+<!--pages/ai-assistant/ai-assistant.wxml-->
+<view class="ai-container">
+  <view class="coming-soon">
+    <text class="soon-icon">🤖</text>
+    <text class="soon-title">AI助手</text>
+    <text class="soon-text">敬请期待</text>
+    <text class="soon-subtitle">智能助力项目式教学</text>
+  </view>
+</view>
+

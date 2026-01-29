@@ -1,0 +1,280 @@
+/* pages/my-projects/my-projects.wxss */
+.myprojects-container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* Tab栏 */
+.tab-bar {
+  background-color: white;
+  display: flex;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.tab-item {
+  flex: 1;
+  padding: 32rpx 0;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.tab-text {
+  font-size: 30rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.tab-item.active .tab-text {
+  color: #4A90E2;
+  font-weight: bold;
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 6rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3rpx;
+}
+
+/* Tab内容 */
+.tab-content {
+  padding: 30rpx;
+}
+
+/* 欢迎卡片 */
+.welcome-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 50rpx 40rpx;
+  border-radius: 20rpx;
+  text-align: center;
+  box-shadow: 0 8rpx 20rpx rgba(102, 126, 234, 0.3);
+  margin-bottom: 30rpx;
+  transition: all 0.3s;
+}
+
+.welcome-card:active {
+  transform: scale(0.98);
+}
+
+.welcome-icon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.welcome-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: white;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.welcome-desc {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.9);
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.welcome-btn {
+  display: inline-block;
+  padding: 16rpx 40rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 30rpx;
+  font-size: 28rpx;
+  color: white;
+  font-weight: bold;
+}
+
+/* 项目区域 */
+.projects-section {
+  margin-bottom: 40rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.section-count {
+  font-size: 26rpx;
+  color: #999;
+  margin-left: 8rpx;
+}
+
+/* 项目列表 */
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.project-item {
+  background-color: white;
+  padding: 30rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  transition: all 0.3s;
+}
+
+.project-item:active {
+  transform: scale(0.98);
+}
+
+.project-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.project-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 12rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-meta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.meta-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.meta-price {
+  font-size: 24rpx;
+  color: #f093fb;
+  font-weight: bold;
+}
+
+.status-badge {
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  font-weight: bold;
+}
+
+.status-badge.draft {
+  background-color: #f5f5f5;
+  color: #999;
+}
+
+.status-badge.reviewing {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.published {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.progress-badge {
+  padding: 4rpx 12rpx;
+  background-color: #e3f2fd;
+  color: #2196f3;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  font-weight: bold;
+}
+
+.project-time {
+  font-size: 22rpx;
+  color: #ccc;
+}
+
+.project-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.action-icon {
+  font-size: 48rpx;
+  color: #ccc;
+}
+
+.btn-download {
+  padding: 12rpx 28rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  border: none;
+}
+
+.project-thumb {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.thumb-image {
+  width: 100%;
+  height: 100%;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx 60rpx;
+  background-color: white;
+  border-radius: 20rpx;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 30rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 30rpx;
+}
+
+.btn-create {
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 48rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 36rpx;
+  font-size: 28rpx;
+  border: none;
+}
+

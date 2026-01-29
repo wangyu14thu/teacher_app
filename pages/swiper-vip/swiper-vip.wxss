@@ -1,0 +1,66 @@
+/* pages/swiper-vip/swiper-vip.wxss */
+.vip-container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.vip-banner {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  padding: 60rpx 30rpx;
+  text-align: center;
+}
+
+.banner-icon {
+  font-size: 100rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.banner-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: white;
+  display: block;
+}
+
+.coming-soon-card {
+  margin: 60rpx 30rpx;
+  background-color: white;
+  padding: 80rpx 40rpx;
+  border-radius: 20rpx;
+  text-align: center;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.icon {
+  font-size: 120rpx;
+  display: block;
+  margin-bottom: 30rpx;
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.desc {
+  font-size: 28rpx;
+  color: #999;
+  display: block;
+  margin-bottom: 40rpx;
+}
+
+.btn-back {
+  width: 400rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 40rpx;
+  font-size: 30rpx;
+  border: none;
+}
+

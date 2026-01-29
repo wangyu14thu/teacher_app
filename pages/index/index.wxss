@@ -2,90 +2,52 @@
 .index-container {
   min-height: 100vh;
   background-color: #f5f5f5;
+  padding-bottom: 30rpx;
 }
 
-.header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 60rpx 30rpx 40rpx;
-  border-radius: 0 0 50rpx 50rpx;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.greeting {
-  flex: 1;
-}
-
-.greeting-text {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: white;
-  display: block;
-  margin-bottom: 8rpx;
-}
-
-.greeting-subtitle {
-  font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.8);
-  display: block;
-}
-
-.points-badge {
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 16rpx 28rpx;
-  border-radius: 30rpx;
-  display: flex;
-  align-items: center;
-  backdrop-filter: blur(10rpx);
-}
-
-.points-icon {
-  font-size: 32rpx;
-  margin-right: 8rpx;
-}
-
-.points-text {
-  font-size: 28rpx;
-  color: white;
-  font-weight: bold;
-}
-
-.modules-section {
-  padding: 40rpx 30rpx;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
+/* 轮播 */
+.top-swiper {
+  height: 280rpx;
   margin-bottom: 30rpx;
 }
 
-.title-text {
+.swiper-content {
+  height: 100%;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.swiper-icon {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+}
+
+.swiper-title {
   font-size: 36rpx;
   font-weight: bold;
-  color: #333;
-  margin-right: 20rpx;
+  color: white;
+  margin-bottom: 12rpx;
 }
 
-.title-line {
-  flex: 1;
-  height: 4rpx;
-  background: linear-gradient(90deg, #667eea 0%, transparent 100%);
-  border-radius: 2rpx;
+.swiper-desc {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.modules-grid {
+/* 三大模块 */
+.main-modules {
+  padding: 0 30rpx 30rpx;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 20rpx;
 }
 
 .module-card {
-  width: calc(50% - 10rpx);
+  background-color: white;
   padding: 40rpx 30rpx;
   border-radius: 20rpx;
   box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
@@ -95,68 +57,142 @@
 }
 
 .module-card:active {
-  transform: scale(0.95);
+  transform: scale(0.98);
 }
 
-.module-icon {
-  font-size: 60rpx;
-  margin-bottom: 16rpx;
+.lecture-card {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
 }
 
-.module-name {
-  font-size: 32rpx;
+.cases-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.myproject-card {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.card-icon {
+  font-size: 48rpx;
+  margin-right: 16rpx;
+}
+
+.card-title {
+  font-size: 36rpx;
   font-weight: bold;
   color: white;
+}
+
+.card-desc {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 8rpx;
 }
 
-.module-desc {
+.card-badge {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  background-color: rgba(255, 255, 255, 0.3);
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.4;
+  color: white;
+  font-weight: bold;
 }
 
-.module-arrow {
+.card-arrow {
   position: absolute;
   bottom: 20rpx;
-  right: 20rpx;
-  font-size: 40rpx;
-  color: rgba(255, 255, 255, 0.5);
+  right: 30rpx;
+  font-size: 48rpx;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.tips-section {
+/* 快捷入口 */
+.quick-actions {
   padding: 0 30rpx 30rpx;
 }
 
-.tip-card {
-  background-color: white;
-  padding: 30rpx;
-  border-radius: 20rpx;
-  display: flex;
-  align-items: center;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+.section-title {
+  margin-bottom: 20rpx;
 }
 
-.tip-icon {
-  font-size: 48rpx;
-  margin-right: 20rpx;
-}
-
-.tip-content {
-  flex: 1;
-}
-
-.tip-title {
-  font-size: 28rpx;
+.title-text {
+  font-size: 32rpx;
   font-weight: bold;
   color: #333;
-  display: block;
+}
+
+.actions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.action-item {
+  width: calc(25% - 15rpx);
+  background-color: white;
+  padding: 30rpx 20rpx;
+  border-radius: 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+}
+
+.action-item:active {
+  transform: scale(0.95);
+}
+
+.action-icon {
+  font-size: 48rpx;
+  margin-bottom: 12rpx;
+}
+
+.action-text {
+  font-size: 24rpx;
+  color: #666;
+  text-align: center;
+}
+
+/* 提示卡片 */
+.tips-card {
+  margin: 0 30rpx;
+  padding: 24rpx 30rpx;
+  background-color: #fff3cd;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: flex-start;
+}
+
+.tips-icon {
+  font-size: 40rpx;
+  margin-right: 16rpx;
+}
+
+.tips-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tips-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #856404;
   margin-bottom: 8rpx;
 }
 
-.tip-text {
+.tips-text {
   font-size: 24rpx;
-  color: #999;
-  line-height: 1.4;
+  color: #856404;
+  line-height: 1.6;
 }
-

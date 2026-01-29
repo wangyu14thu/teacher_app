@@ -1,0 +1,15 @@
+<!--pages/swiper-vip/swiper-vip.wxml-->
+<view class="vip-container">
+  <view class="vip-banner">
+    <text class="banner-icon">👑</text>
+    <text class="banner-title">SVIP专属线下工作坊</text>
+  </view>
+
+  <view class="coming-soon-card">
+    <text class="icon">🚧</text>
+    <text class="title">功能开发中</text>
+    <text class="desc">精彩内容即将上线，敬请期待</text>
+    <button class="btn-back" bindtap="goBack">返回首页</button>
+  </view>
+</view>
+

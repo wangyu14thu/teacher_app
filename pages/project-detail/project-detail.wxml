@@ -1,0 +1,132 @@
+<!--pages/project-detail/project-detail.wxml-->
+<view class="detail-container">
+  <!-- 项目头部 -->
+  <view class="project-header">
+    <text class="project-title">{{project.title}}</text>
+    <view class="project-meta">
+      <view class="tag subject-tag">{{project.subject}}</view>
+      <view class="tag grade-tag">{{project.gradeName}}</view>
+    </view>
+  </view>
+
+  <!-- 项目统计 -->
+  <view class="stats-card">
+    <view class="stat-item">
+      <text class="stat-icon">👍</text>
+      <text class="stat-number">{{project.likes}}</text>
+      <text class="stat-label">点赞</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-icon">⭐</text>
+      <text class="stat-number">{{project.favorites}}</text>
+      <text class="stat-label">收藏</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-icon">💬</text>
+      <text class="stat-number">{{project.comments}}</text>
+      <text class="stat-label">评论</text>
+    </view>
+  </view>
+
+  <!-- 项目详情 -->
+  <view class="content-card">
+    <view class="content-section">
+      <text class="section-title">项目概述</text>
+      <text class="section-content">本项目通过真实情境引导学生探究和实践，培养学生的综合素养和解决实际问题的能力。</text>
+    </view>
+
+    <view class="content-section">
+      <text class="section-title">适用年级</text>
+      <text class="section-content">{{project.gradeName}}</text>
+    </view>
+
+    <view class="content-section">
+      <text class="section-title">涉及学科</text>
+      <text class="section-content">{{project.subject}}</text>
+    </view>
+
+    <view class="content-section">
+      <text class="section-title">项目特色</text>
+      <text class="section-content">• 真实问题情境\n• 跨学科整合\n• 培养核心素养\n• 成果多样化展示</text>
+    </view>
+  </view>
+
+  <!-- 评论区 -->
+  <view class="comments-section">
+    <view class="comments-header">
+      <text class="comments-title">评论 ({{commentList.length}})</text>
+      <view class="comment-sort" bindtap="toggleCommentSort">
+        <text class="sort-text">{{commentSort === 'hot' ? '热门' : '最新'}}</text>
+        <text class="sort-arrow">▼</text>
+      </view>
+    </view>
+
+    <view class="comments-list">
+      <view class="comment-item" wx:for="{{commentList}}" wx:key="id">
+        <view class="comment-avatar">👤</view>
+        <view class="comment-content">
+          <view class="comment-header">
+            <text class="comment-user">{{item.userName}}</text>
+            <text class="comment-time">{{item.time}}</text>
+          </view>
+          <text class="comment-text">{{item.content}}</text>
+          <view class="comment-actions">
+            <view class="action-btn" bindtap="likeComment" data-id="{{item.id}}">
+              <text class="action-icon">{{item.liked ? '❤️' : '🤍'}}</text>
+              <text class="action-text">{{item.commentLikes}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-comments" wx:if="{{commentList.length === 0}}">
+      <text class="empty-icon">💬</text>
+      <text class="empty-text">暂无评论，快来抢沙发吧~</text>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="bar-left">
+      <view class="action-btn" bindtap="toggleLike">
+        <text class="action-icon">{{project.isLiked ? '👍' : '👍🏻'}}</text>
+        <text class="action-text">{{project.isLiked ? '已点赞' : '点赞'}}</text>
+      </view>
+      <view class="action-btn" bindtap="toggleFavorite">
+        <text class="action-icon">{{project.isFavorited ? '⭐' : '☆'}}</text>
+        <text class="action-text">{{project.isFavorited ? '已收藏' : '收藏'}}</text>
+      </view>
+      <view class="action-btn" bindtap="showCommentInput">
+        <text class="action-icon">💬</text>
+        <text class="action-text">评论</text>
+      </view>
+    </view>
+    <button class="btn-purchase" bindtap="purchaseProject">
+      <text class="btn-text">购买项目</text>
+      <text class="btn-price">¥{{project.price}}</text>
+    </button>
+  </view>
+
+  <!-- 评论输入框（弹出） -->
+  <view class="comment-modal {{showCommentModal ? 'show' : ''}}" bindtap="hideCommentInput">
+    <view class="modal-content" catchtap="preventClose">
+      <textarea 
+        class="comment-textarea" 
+        placeholder="说说你的看法..."
+        value="{{commentInput}}"
+        bindinput="onCommentInput"
+        auto-focus="{{showCommentModal}}"
+        maxlength="200"
+      />
+      <view class="modal-footer">
+        <text class="char-count">{{commentInput.length}}/200</text>
+        <button class="btn-submit" bindtap="submitComment">发送</button>
+      </view>
+    </view>
+  </view>
+</view>
+

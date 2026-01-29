@@ -1,51 +1,81 @@
 <!--pages/index/index.wxml-->
 <view class="index-container">
-  <!-- Header -->
-  <view class="header">
-    <view class="header-content">
-      <view class="greeting">
-        <text class="greeting-text">你好，{{teacherInfo.nickname || '教师'}}👋</text>
-        <text class="greeting-subtitle">欢迎来到PBL营</text>
+  <!-- 顶部轮播 -->
+  <swiper class="top-swiper" indicator-dots="true" autoplay="true" interval="3000" duration="500" circular="true" bindtap="goToVIPWorkshop">
+    <swiper-item>
+      <view class="swiper-content">
+        <text class="swiper-icon">👑</text>
+        <text class="swiper-title">SVIP专属线下工作坊</text>
+        <text class="swiper-desc">点击了解更多</text>
       </view>
-      <view class="points-badge">
-        <text class="points-icon">💎</text>
-        <text class="points-text">{{teacherInfo.points || 0}}积分</text>
+    </swiper-item>
+  </swiper>
+
+  <!-- 三大模块 -->
+  <view class="main-modules">
+    <!-- 专题讲座 -->
+    <view class="module-card lecture-card" bindtap="navigateToLecture">
+      <view class="card-header">
+        <text class="card-icon">🎤</text>
+        <text class="card-title">专题讲座</text>
       </view>
+      <text class="card-desc">专业导师精彩分享</text>
+      <view class="card-arrow">→</view>
+    </view>
+
+    <!-- 项目案例 -->
+    <view class="module-card cases-card" bindtap="navigateToCases">
+      <view class="card-header">
+        <text class="card-icon">📚</text>
+        <text class="card-title">项目案例</text>
+      </view>
+      <text class="card-desc">各年级优质案例库</text>
+      <view class="card-badge">{{totalCases}}+</view>
+      <view class="card-arrow">→</view>
+    </view>
+
+    <!-- 我的项目 -->
+    <view class="module-card myproject-card" bindtap="navigateToMyProjects">
+      <view class="card-header">
+        <text class="card-icon">✏️</text>
+        <text class="card-title">我的项目</text>
+      </view>
+      <text class="card-desc">设计与实施记录</text>
+      <view class="card-arrow">→</view>
     </view>
   </view>
 
-  <!-- Modules Grid -->
-  <view class="modules-section">
+  <!-- 快捷入口 -->
+  <view class="quick-actions">
     <view class="section-title">
-      <text class="title-text">功能模块</text>
-      <text class="title-line"></text>
+      <text class="title-text">快捷入口</text>
     </view>
-    <view class="modules-grid">
-      <view 
-        class="module-card" 
-        wx:for="{{modules}}" 
-        wx:key="id"
-        bindtap="navigateToModule"
-        data-url="{{item.url}}"
-        style="background: linear-gradient(135deg, {{item.color}} 0%, {{item.color}}cc 100%);"
-      >
-        <view class="module-icon">{{item.icon}}</view>
-        <view class="module-name">{{item.name}}</view>
-        <view class="module-desc">{{item.desc}}</view>
-        <view class="module-arrow">→</view>
+    <view class="actions-grid">
+      <view class="action-item" bindtap="quickDesign">
+        <text class="action-icon">🎨</text>
+        <text class="action-text">快速设计</text>
+      </view>
+      <view class="action-item" bindtap="quickSearch">
+        <text class="action-icon">🔍</text>
+        <text class="action-text">搜索案例</text>
+      </view>
+      <view class="action-item" bindtap="quickHot">
+        <text class="action-icon">🔥</text>
+        <text class="action-text">热门推荐</text>
+      </view>
+      <view class="action-item" bindtap="quickPoints">
+        <text class="action-icon">💎</text>
+        <text class="action-text">我的积分</text>
       </view>
     </view>
   </view>
 
-  <!-- Tips -->
-  <view class="tips-section">
-    <view class="tip-card">
-      <text class="tip-icon">💡</text>
-      <view class="tip-content">
-        <text class="tip-title">积分说明</text>
-        <text class="tip-text">上传优质项目可获得积分，积分可兑换资料</text>
-      </view>
+  <!-- 提示卡片 -->
+  <view class="tips-card">
+    <text class="tips-icon">💡</text>
+    <view class="tips-content">
+      <text class="tips-title">温馨提示</text>
+      <text class="tips-text">发布优质项目可获得积分奖励，1积分=1元，可用于兑换资源</text>
     </view>
   </view>
 </view>
-

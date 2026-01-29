@@ -1,24 +1,92 @@
 <!--pages/cases/cases.wxml-->
 <view class="cases-container">
-  <view class="page-header">
-    <text class="header-title">项目案例</text>
-    <text class="header-subtitle">各年级优秀实践案例</text>
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <text class="search-icon">🔍</text>
+      <input 
+        class="search-input" 
+        type="text" 
+        placeholder="搜索项目名称或关键词"
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="doSearch"
+      />
+      <text class="clear-icon" wx:if="{{searchKeyword}}" bindtap="clearSearch">✕</text>
+    </view>
+    <button class="search-btn" bindtap="doSearch">搜索</button>
   </view>
 
-  <view class="grades-grid">
-    <view 
-      class="grade-card" 
-      wx:for="{{grades}}" 
-      wx:key="id"
-      bindtap="viewGrade"
-      data-id="{{item.id}}"
-      style="background: linear-gradient(135deg, {{item.color}} 0%, {{item.color}}cc 100%);"
-    >
-      <text class="grade-icon">{{item.icon}}</text>
-      <text class="grade-name">{{item.name}}</text>
-      <text class="grade-count">{{item.cases.length}}个案例</text>
-      <view class="grade-arrow">→</view>
+  <!-- 热门推荐 -->
+  <view class="hot-section">
+    <view class="section-header" bindtap="goToHotProjects">
+      <text class="section-icon">🔥</text>
+      <text class="section-title">热门推荐</text>
+      <text class="section-more">查看更多 ›</text>
     </view>
   </view>
-</view>
 
+  <!-- 年级选择 -->
+  <view class="grade-section">
+    <view class="grade-header">
+      <text class="grade-label">年级：</text>
+    </view>
+    <scroll-view class="grade-tabs" scroll-x="true" scroll-with-animation="true">
+      <view 
+        class="grade-tab {{selectedGrade === index ? 'active' : ''}}" 
+        wx:for="{{grades}}" 
+        wx:key="id"
+        bindtap="selectGrade"
+        data-index="{{index}}"
+      >
+        {{item.name}}
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 项目列表 -->
+  <view class="projects-list">
+    <view 
+      class="project-card" 
+      wx:for="{{currentProjects}}" 
+      wx:key="id"
+      bindtap="viewProject"
+      data-id="{{item.id}}"
+    >
+      <view class="project-header">
+        <text class="project-title">{{item.title}}</text>
+        <view class="project-price">¥{{item.price}}</view>
+      </view>
+      
+      <view class="project-tags">
+        <view class="tag subject-tag">{{item.subject}}</view>
+        <view class="tag grade-tag">{{item.gradeName}}</view>
+      </view>
+
+      <view class="project-footer">
+        <view class="project-stats">
+          <view class="stat-item">
+            <text class="stat-icon">👍</text>
+            <text class="stat-text">{{item.likes || 0}}</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-icon">⭐</text>
+            <text class="stat-text">{{item.favorites || 0}}</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-icon">💬</text>
+            <text class="stat-text">{{item.comments || 0}}</text>
+          </view>
+        </view>
+        <view class="project-arrow">›</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{currentProjects.length === 0}}">
+    <text class="empty-icon">📭</text>
+    <text class="empty-text">暂无项目</text>
+    <text class="empty-tip">换个关键词试试</text>
+  </view>
+</view>
