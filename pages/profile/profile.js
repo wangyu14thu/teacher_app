@@ -53,6 +53,13 @@ Page({
     })
   },
 
+  // 我的项目
+  goToMyProjects() {
+    wx.navigateTo({
+      url: '/pages/project-list/project-list'
+    })
+  },
+
   // 我的积分
   goToPointsRecord() {
     wx.showModal({

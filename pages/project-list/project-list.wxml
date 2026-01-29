@@ -1,0 +1,94 @@
+<!--pages/project-list/project-list.wxml-->
+<view class="project-list-container">
+  <!-- 顶部Tab -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{currentTab === 'designed' ? 'active' : ''}}" 
+      bindtap="switchTab"
+      data-tab="designed"
+    >
+      <text class="tab-text">我设计的</text>
+      <view class="tab-line" wx:if="{{currentTab === 'designed'}}"></view>
+    </view>
+    <view 
+      class="tab-item {{currentTab === 'purchased' ? 'active' : ''}}" 
+      bindtap="switchTab"
+      data-tab="purchased"
+    >
+      <text class="tab-text">我购买的</text>
+      <view class="tab-line" wx:if="{{currentTab === 'purchased'}}"></view>
+    </view>
+  </view>
+
+  <!-- 我设计的项目 -->
+  <scroll-view scroll-y class="tab-content" wx:if="{{currentTab === 'designed'}}">
+    <view class="projects-list">
+      <view 
+        class="project-card" 
+        wx:for="{{myDesignedProjects}}" 
+        wx:key="id"
+        bindtap="viewMyProject"
+        data-id="{{item.id}}"
+      >
+        <view class="project-header">
+          <text class="project-title">{{item.title}}</text>
+          <view class="status-badge {{item.status}}">{{item.statusText}}</view>
+        </view>
+        <view class="project-meta">
+          <text class="meta-item">{{item.grade}}</text>
+          <text class="meta-divider">·</text>
+          <text class="meta-item">{{item.subject}}</text>
+          <text class="meta-divider">·</text>
+          <text class="meta-item">{{item.updateTime}}</text>
+        </view>
+        <view class="project-footer">
+          <text class="project-arrow">查看详情 ›</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{myDesignedProjects.length === 0}}">
+      <text class="empty-icon">📝</text>
+      <text class="empty-text">还没有设计项目</text>
+      <text class="empty-desc">去"我的项目"开始设计吧</text>
+    </view>
+  </scroll-view>
+
+  <!-- 我购买的项目 -->
+  <scroll-view scroll-y class="tab-content" wx:if="{{currentTab === 'purchased'}}">
+    <view class="projects-list">
+      <view 
+        class="project-card purchased-card" 
+        wx:for="{{myPurchasedProjects}}" 
+        wx:key="id"
+        bindtap="viewPurchasedProject"
+        data-id="{{item.id}}"
+      >
+        <view class="project-header">
+          <text class="project-title">{{item.title}}</text>
+          <view class="price-badge">¥{{item.price}}</view>
+        </view>
+        <view class="project-meta">
+          <text class="meta-item">{{item.grade}}</text>
+          <text class="meta-divider">·</text>
+          <text class="meta-item">{{item.subject}}</text>
+        </view>
+        <view class="project-footer">
+          <text class="purchase-time">购买于 {{item.purchaseTime}}</text>
+          <button class="btn-download" bindtap="downloadProject" data-id="{{item.id}}" catchtap="stopPropagation">
+            下载
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{myPurchasedProjects.length === 0}}">
+      <text class="empty-icon">🛒</text>
+      <text class="empty-text">还没有购买项目</text>
+      <text class="empty-desc">去项目案例库看看吧</text>
+    </view>
+  </scroll-view>
+</view>
+

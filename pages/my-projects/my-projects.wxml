@@ -1,153 +1,38 @@
 <!--pages/my-projects/my-projects.wxml-->
 <view class="myprojects-container">
-  <!-- 顶部Tab -->
-  <view class="tab-bar">
-    <view 
-      class="tab-item {{currentTab === 'design' ? 'active' : ''}}" 
-      bindtap="switchTab"
-      data-tab="design"
-    >
-      <text class="tab-text">设计</text>
+  <view class="page-header">
+    <text class="header-title">我的项目</text>
+    <text class="header-desc">选择您要进行的操作</text>
+  </view>
+
+  <view class="entry-grid">
+    <!-- 设计项目 -->
+    <view class="entry-card design-card" bindtap="goToDesign">
+      <view class="card-icon-bg design-bg">
+        <text class="card-icon">✨</text>
+      </view>
+      <text class="card-title">设计项目</text>
+      <text class="card-desc">AI辅助生成专属项目</text>
+      <view class="card-arrow">→</view>
     </view>
-    <view 
-      class="tab-item {{currentTab === 'implement' ? 'active' : ''}}" 
-      bindtap="switchTab"
-      data-tab="implement"
-    >
-      <text class="tab-text">实施</text>
+
+    <!-- 实施项目 -->
+    <view class="entry-card implement-card" bindtap="goToImplement">
+      <view class="card-icon-bg implement-bg">
+        <text class="card-icon">📸</text>
+      </view>
+      <text class="card-title">实施项目</text>
+      <text class="card-desc">记录项目实施过程</text>
+      <view class="card-arrow">→</view>
     </view>
   </view>
 
-  <!-- 设计模块 -->
-  <view class="tab-content" wx:if="{{currentTab === 'design'}}">
-    <view class="welcome-card" bindtap="goToDesign">
-      <text class="welcome-icon">✨</text>
-      <text class="welcome-title">生成你的专属项目吧！</text>
-      <text class="welcome-desc">支持AI辅助生成，快速创建优质项目</text>
-      <view class="welcome-btn">立即设计 →</view>
-    </view>
-
-    <!-- 项目列表 -->
-    <view class="projects-section">
-      <view class="section-header">
-        <text class="section-title">我设计的项目</text>
-        <text class="section-count">({{myDesignedProjects.length}})</text>
-      </view>
-
-      <view class="projects-list">
-        <view 
-          class="project-item" 
-          wx:for="{{myDesignedProjects}}" 
-          wx:key="id"
-          bindtap="viewMyProject"
-          data-id="{{item.id}}"
-        >
-          <view class="project-info">
-            <text class="project-title">{{item.title}}</text>
-            <view class="project-meta">
-              <text class="meta-text">{{item.grade}} · {{item.subject}}</text>
-              <view class="status-badge {{item.status}}">{{item.statusText}}</view>
-            </view>
-            <text class="project-time">{{item.updateTime}}</text>
-          </view>
-          <view class="project-actions">
-            <text class="action-icon">›</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 空状态 -->
-      <view class="empty-state" wx:if="{{myDesignedProjects.length === 0}}">
-        <text class="empty-icon">📝</text>
-        <text class="empty-text">还没有设计项目</text>
-        <button class="btn-create" bindtap="goToDesign">开始设计</button>
-      </view>
-    </view>
-
-    <!-- 我购买的项目 -->
-    <view class="projects-section">
-      <view class="section-header">
-        <text class="section-title">我购买的项目</text>
-        <text class="section-count">({{myPurchasedProjects.length}})</text>
-      </view>
-
-      <view class="projects-list">
-        <view 
-          class="project-item" 
-          wx:for="{{myPurchasedProjects}}" 
-          wx:key="id"
-          bindtap="viewPurchasedProject"
-          data-id="{{item.id}}"
-        >
-          <view class="project-info">
-            <text class="project-title">{{item.title}}</text>
-            <view class="project-meta">
-              <text class="meta-text">{{item.grade}} · {{item.subject}}</text>
-              <text class="meta-price">¥{{item.price}}</text>
-            </view>
-            <text class="project-time">购买于 {{item.purchaseTime}}</text>
-          </view>
-          <view class="project-actions">
-            <button class="btn-download" bindtap="downloadProject" data-id="{{item.id}}" catchtap="preventBubble">
-              下载
-            </button>
-          </view>
-        </view>
-      </view>
-
-      <!-- 空状态 -->
-      <view class="empty-state" wx:if="{{myPurchasedProjects.length === 0}}">
-        <text class="empty-icon">🛒</text>
-        <text class="empty-text">还没有购买项目</text>
-        <button class="btn-create" bindtap="goToCases">去项目库看看</button>
-      </view>
-    </view>
-  </view>
-
-  <!-- 实施模块 -->
-  <view class="tab-content" wx:if="{{currentTab === 'implement'}}">
-    <view class="welcome-card" bindtap="goToImplement">
-      <text class="welcome-icon">📸</text>
-      <text class="welcome-title">记录项目实施过程吧！</text>
-      <text class="welcome-desc">上传图片，记录每个精彩瞬间</text>
-      <view class="welcome-btn">开始记录 →</view>
-    </view>
-
-    <!-- 实施记录列表 -->
-    <view class="projects-section">
-      <view class="section-header">
-        <text class="section-title">实施记录</text>
-        <text class="section-count">({{myImplementations.length}})</text>
-      </view>
-
-      <view class="projects-list">
-        <view 
-          class="project-item" 
-          wx:for="{{myImplementations}}" 
-          wx:key="id"
-          bindtap="viewImplementation"
-          data-id="{{item.id}}"
-        >
-          <view class="project-info">
-            <text class="project-title">{{item.title}}</text>
-            <view class="project-meta">
-              <text class="meta-text">{{item.grade}} · {{item.subject}}</text>
-              <view class="progress-badge">{{item.progress}}</view>
-            </view>
-            <text class="project-time">更新于 {{item.updateTime}}</text>
-          </view>
-          <view class="project-thumb">
-            <image class="thumb-image" src="{{item.coverImage}}" mode="aspectFill" />
-          </view>
-        </view>
-      </view>
-
-      <!-- 空状态 -->
-      <view class="empty-state" wx:if="{{myImplementations.length === 0}}">
-        <text class="empty-icon">📷</text>
-        <text class="empty-text">还没有实施记录</text>
-        <button class="btn-create" bindtap="goToImplement">开始记录</button>
-      </view>
+  <!-- 提示信息 -->
+  <view class="tip-card">
+    <text class="tip-icon">💡</text>
+    <view class="tip-content">
+      <text class="tip-title">温馨提示</text>
+      <text class="tip-text">设计完成的项目可以在"我的-我的项目"中查看和管理</text>
     </view>
   </view>
 </view>

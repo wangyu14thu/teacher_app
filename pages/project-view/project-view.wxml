@@ -1,0 +1,152 @@
+<!--pages/project-view/project-view.wxml-->
+<scroll-view scroll-y class="project-view-container">
+  <!-- 项目标题卡片 -->
+  <view class="title-card">
+    <text class="project-title">{{projectData.projectName}}</text>
+    <view class="project-tags">
+      <text class="tag">{{projectData.grade}}</text>
+      <text class="tag">{{projectData.subjects}}</text>
+      <text class="tag">{{projectData.hours}}课时</text>
+    </view>
+  </view>
+
+  <!-- 项目基本信息 -->
+  <view class="section-card">
+    <view class="section-header">
+      <text class="section-icon">📋</text>
+      <text class="section-title">项目基本信息</text>
+    </view>
+    <view class="content-item">
+      <text class="item-label">项目概述</text>
+      <text class="item-content">{{projectData.overview}}</text>
+    </view>
+  </view>
+
+  <!-- 项目立项依据 -->
+  <view class="section-card">
+    <view class="section-header">
+      <text class="section-icon">🎯</text>
+      <text class="section-title">项目立项依据</text>
+    </view>
+    <view class="content-item">
+      <text class="item-label">依据现实世界</text>
+      <text class="item-content">{{projectData.basisWorld}}</text>
+    </view>
+    <view class="content-item">
+      <text class="item-label">依据课标教材</text>
+      <text class="item-content">{{projectData.basisCurriculum}}</text>
+    </view>
+    <view class="content-item">
+      <text class="item-label">依据学生实际</text>
+      <text class="item-content">{{projectData.basisStudents}}</text>
+    </view>
+  </view>
+
+  <!-- 跨学科概念 -->
+  <view class="section-card" wx:if="{{projectData.interdisciplinaryConcept}}">
+    <view class="section-header">
+      <text class="section-icon">🔗</text>
+      <text class="section-title">跨学科概念</text>
+    </view>
+    <view class="highlight-content">
+      <text>{{projectData.interdisciplinaryConcept}}</text>
+    </view>
+  </view>
+
+  <!-- 项目框架 -->
+  <view class="section-card">
+    <view class="section-header">
+      <text class="section-icon">🏗️</text>
+      <text class="section-title">项目框架</text>
+    </view>
+    <view class="content-item" wx:if="{{projectData.drivingQuestion}}">
+      <text class="item-label">驱动性问题</text>
+      <text class="item-content">{{projectData.drivingQuestion}}</text>
+    </view>
+    <view class="content-item" wx:if="{{projectData.subQuestions}}">
+      <text class="item-label">子问题链</text>
+      <text class="item-content">{{projectData.subQuestions}}</text>
+    </view>
+    <view class="content-item" wx:if="{{projectData.finalOutcome}}">
+      <text class="item-label">最终成果</text>
+      <text class="item-content">{{projectData.finalOutcome}}</text>
+    </view>
+    <view class="content-item" wx:if="{{projectData.presentationForm}}">
+      <text class="item-label">成果展示形式</text>
+      <text class="item-content">{{projectData.presentationForm}}</text>
+    </view>
+  </view>
+
+  <!-- 项目目标 -->
+  <view class="section-card" wx:if="{{projectData.projectGoals}}">
+    <view class="section-header">
+      <text class="section-icon">🎓</text>
+      <text class="section-title">项目目标</text>
+    </view>
+    <view class="highlight-content">
+      <text>{{projectData.projectGoals}}</text>
+    </view>
+  </view>
+
+  <!-- 占位，防止底部按钮遮挡内容 -->
+  <view style="height: 200rpx;"></view>
+
+  <!-- 底部操作按钮 -->
+  <view class="bottom-actions">
+    <button class="btn-action btn-download" bindtap="downloadProject">
+      <text class="btn-action-icon">💾</text>
+      <text>下载项目</text>
+    </button>
+    <button class="btn-action btn-evaluate" bindtap="applyEvaluation">
+      <text class="btn-action-icon">🎓</text>
+      <text>申请专家评估</text>
+    </button>
+    <button class="btn-action btn-publish" bindtap="publishProject">
+      <text class="btn-action-icon">🚀</text>
+      <text>发布项目</text>
+    </button>
+  </view>
+
+  <!-- 审核标准说明弹窗 -->
+  <view class="modal-mask" wx:if="{{showStandardModal}}" bindtap="closeStandardModal">
+    <view class="modal-container" catchtap="preventClose">
+      <view class="modal-header">
+        <text class="modal-title">审核标准说明</text>
+        <text class="modal-close" bindtap="closeStandardModal">×</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="standard-item">
+          <text class="standard-title">1. 项目完整性</text>
+          <text class="standard-desc">项目信息完整，包含所有必填字段</text>
+        </view>
+        <view class="standard-item">
+          <text class="standard-title">2. 教学设计合理性</text>
+          <text class="standard-desc">教学目标明确，活动设计符合学生认知水平</text>
+        </view>
+        <view class="standard-item">
+          <text class="standard-title">3. 跨学科融合度</text>
+          <text class="standard-desc">跨学科概念清晰，学科融合自然合理</text>
+        </view>
+        <view class="standard-item">
+          <text class="standard-title">4. 创新性与实践性</text>
+          <text class="standard-desc">项目设计具有创新性，可操作性强</text>
+        </view>
+        <view class="standard-highlight">
+          ⚠️ 重要说明：发布成功后，该项目产生的积分（如有）将计入您的个人账户，与所在学校无关。
+        </view>
+      </scroll-view>
+      <view class="modal-footer">
+        <checkbox-group bindchange="onAgreeChange">
+          <label class="agreement-label">
+            <checkbox value="agree" checked="{{agreed}}" />
+            <text>我已阅读并同意</text>
+          </label>
+        </checkbox-group>
+        <button class="btn-modal-confirm" disabled="{{!agreed}}" bindtap="confirmAction">
+          确认{{actionType === 'evaluate' ? '申请评估' : '发布'}}
+        </button>
+      </view>
+    </view>
+  </view>
+</scroll-view>
+

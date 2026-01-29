@@ -10,6 +10,8 @@
     "pages/case-detail/case-detail",
     "pages/hot-projects/hot-projects",
     "pages/my-projects/my-projects",
+    "pages/project-list/project-list",
+    "pages/project-view/project-view",
     "pages/project-design/project-design",
     "pages/project-implementation/project-implementation",
     "pages/project-detail/project-detail",

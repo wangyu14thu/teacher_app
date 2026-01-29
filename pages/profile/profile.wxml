@@ -34,6 +34,13 @@
   <!-- 功能菜单 -->
   <view class="menu-section">
     <view class="menu-group">
+      <view class="menu-item" bindtap="goToMyProjects">
+        <view class="menu-left">
+          <text class="menu-icon">📁</text>
+          <text class="menu-title">我的项目</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
       <view class="menu-item" bindtap="goToPointsRecord">
         <view class="menu-left">
           <text class="menu-icon">💎</text>

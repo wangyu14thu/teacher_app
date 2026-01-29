@@ -1,0 +1,204 @@
+/* pages/project-list/project-list.wxss */
+.project-list-container {
+  min-height: 100vh;
+  background: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tab栏 */
+.tab-bar {
+  background: white;
+  display: flex;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.tab-item {
+  flex: 1;
+  padding: 32rpx 0;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.tab-text {
+  font-size: 32rpx;
+  color: #666;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.tab-item.active .tab-text {
+  color: #667eea;
+  font-weight: bold;
+}
+
+.tab-line {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 6rpx;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3rpx;
+}
+
+/* 内容区 */
+.tab-content {
+  flex: 1;
+  padding: 30rpx;
+}
+
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+/* 项目卡片 */
+.project-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  transition: all 0.3s;
+  border-left: 6rpx solid #667eea;
+}
+
+.project-card:active {
+  transform: translateY(-4rpx);
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.purchased-card {
+  border-left-color: #52c41a;
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.project-title {
+  flex: 1;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  line-height: 1.4;
+  margin-right: 16rpx;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.status-badge.published {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.status-badge.reviewing {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.status-badge.draft {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.price-badge {
+  flex-shrink: 0;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 26rpx;
+  font-weight: bold;
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.project-meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.meta-item {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.meta-divider {
+  margin: 0 12rpx;
+  color: #d9d9d9;
+}
+
+.project-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.project-arrow {
+  font-size: 26rpx;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.purchase-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.btn-download {
+  padding: 10rpx 28rpx;
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  color: white;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  border: none;
+}
+
+.btn-download::after {
+  border: none;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 60rpx;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 32rpx;
+  opacity: 0.6;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #999;
+  margin-bottom: 12rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #ccc;
+}
+
