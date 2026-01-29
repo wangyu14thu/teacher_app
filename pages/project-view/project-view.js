@@ -36,16 +36,42 @@ Page({
   loadProjectData(projectId) {
     wx.showLoading({ title: '加载中...' });
     
-    // TODO: 从云数据库加载项目数据
+    // 从本地存储加载项目数据
+    const myProjects = wx.getStorageSync('myDesignedProjects') || [];
+    const project = myProjects.find(p => p.id == projectId);
+    
+    if (project) {
+      this.setData({
+        projectData: {
+          projectName: project.title,
+          subjects: project.subject,
+          grade: project.grade,
+          hours: project.hours || '10',
+          overview: project.overview || '本项目基于学生对校园环境的观察和思考...',
+          basisWorld: project.basisWorld || '学生每天在校园中学习生活...',
+          basisCurriculum: project.basisCurriculum || '本项目融合了科学课程...',
+          basisStudents: project.basisStudents || '学生已具备基本的观察能力...',
+          interdisciplinaryConcept: project.interdisciplinaryConcept || '',
+          drivingQuestion: project.drivingQuestion || '',
+          subQuestions: project.subQuestions || '',
+          finalOutcome: project.finalOutcome || '',
+          presentationForm: project.presentationForm || '',
+          projectGoals: project.projectGoals || ''
+        }
+      });
+    }
+    
     setTimeout(() => {
       wx.hideLoading();
-      // 使用示例数据
     }, 500);
   },
 
   // 下载项目
   downloadProject() {
     wx.showLoading({ title: '准备下载...' });
+
+    // 更新项目状态为已下载
+    this.updateProjectStatus('downloaded', '草稿');
 
     // TODO: 生成项目文档并下载
     setTimeout(() => {
@@ -57,6 +83,20 @@ Page({
         confirmText: '我知道了'
       });
     }, 1500);
+  },
+
+  // 更新项目状态
+  updateProjectStatus(status, statusText) {
+    const projectId = this.data.projectId;
+    let myProjects = wx.getStorageSync('myDesignedProjects') || [];
+    
+    const index = myProjects.findIndex(p => p.id == projectId);
+    if (index !== -1) {
+      myProjects[index].status = status;
+      myProjects[index].statusText = statusText;
+      myProjects[index].updateTime = '刚刚';
+      wx.setStorageSync('myDesignedProjects', myProjects);
+    }
   },
 
   // 申请专家评估
@@ -108,7 +148,13 @@ Page({
 
     wx.showLoading({ title: '提交中...' });
 
-    // TODO: 提交到云数据库
+    // 更新项目状态
+    if (actionType === 'evaluate') {
+      this.updateProjectStatus('evaluating', '评估中');
+    } else {
+      this.updateProjectStatus('reviewing', '审核中');
+    }
+
     setTimeout(() => {
       wx.hideLoading();
       

@@ -2,35 +2,7 @@
 Page({
   data: {
     currentTab: 'designed',
-    myDesignedProjects: [
-      {
-        id: 1,
-        title: '《智慧校园改造计划》',
-        grade: '5年级',
-        subject: '综合',
-        status: 'published',
-        statusText: '已发布',
-        updateTime: '2天前'
-      },
-      {
-        id: 2,
-        title: '《环保小卫士在行动》',
-        grade: '4年级',
-        subject: '科学',
-        status: 'reviewing',
-        statusText: '审核中',
-        updateTime: '5天前'
-      },
-      {
-        id: 3,
-        title: '《传统文化探秘》',
-        grade: '6年级',
-        subject: '语文',
-        status: 'draft',
-        statusText: '草稿',
-        updateTime: '1周前'
-      }
-    ],
+    myDesignedProjects: [],
     myPurchasedProjects: [
       {
         id: 101,
@@ -62,14 +34,25 @@ Page({
     this.loadMyProjects();
   },
 
+  onShow() {
+    // 页面显示时重新加载数据，确保保存后能看到最新的项目
+    this.loadMyProjects();
+  },
+
   // 加载我的项目
   loadMyProjects() {
     wx.showLoading({ title: '加载中...' });
     
-    // TODO: 从云函数获取数据
+    // 从本地存储加载项目数据
+    const myDesignedProjects = wx.getStorageSync('myDesignedProjects') || [];
+    
+    this.setData({
+      myDesignedProjects
+    });
+    
     setTimeout(() => {
       wx.hideLoading();
-    }, 500);
+    }, 300);
   },
 
   // 切换Tab
@@ -128,9 +111,11 @@ Page({
         if (res.confirm) {
           wx.showLoading({ title: '删除中...' });
           
-          // TODO: 调用云函数删除项目
+          // 从本地存储删除
+          const myDesignedProjects = this.data.myDesignedProjects.filter(p => p.id !== id);
+          wx.setStorageSync('myDesignedProjects', myDesignedProjects);
+          
           setTimeout(() => {
-            const myDesignedProjects = this.data.myDesignedProjects.filter(p => p.id !== id);
             this.setData({
               myDesignedProjects
             });
@@ -139,7 +124,7 @@ Page({
               title: '删除成功',
               icon: 'success'
             });
-          }, 500);
+          }, 300);
         }
       }
     });

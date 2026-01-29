@@ -131,9 +131,19 @@
   color: #fa8c16;
 }
 
+.status-badge.evaluating {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
 .status-badge.draft {
   background: #f5f5f5;
   color: #999;
+}
+
+.status-badge.downloaded {
+  background: #f0f5ff;
+  color: #597ef7;
 }
 
 .price-badge {

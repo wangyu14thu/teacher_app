@@ -211,7 +211,27 @@ Page({
 
     wx.showLoading({ title: '保存中...' });
     
-    // TODO: 保存到云数据库
+    // 保存到本地存储
+    const projectData = {
+      id: Date.now(), // 使用时间戳作为ID
+      title: this.data.formData.projectName,
+      grade: this.data.formData.grade,
+      subject: this.data.formData.subjects,
+      status: 'draft',
+      statusText: '草稿',
+      updateTime: '刚刚',
+      ...this.data.formData,
+      inquiryPhases: this.data.inquiryPhases,
+      createTime: new Date().getTime()
+    };
+
+    // 获取现有项目列表
+    let myProjects = wx.getStorageSync('myDesignedProjects') || [];
+    myProjects.unshift(projectData); // 添加到列表开头
+    
+    // 保存到本地存储
+    wx.setStorageSync('myDesignedProjects', myProjects);
+    
     setTimeout(() => {
       wx.hideLoading();
       wx.showModal({
@@ -222,7 +242,7 @@ Page({
           wx.navigateBack();
         }
       });
-    }, 1000);
+    }, 500);
   },
 
   // 申请专家评估
@@ -284,7 +304,25 @@ Page({
 
     wx.showLoading({ title: '提交中...' });
 
-    // TODO: 提交到云数据库
+    // 保存项目数据
+    const projectData = {
+      id: Date.now(),
+      title: this.data.formData.projectName,
+      grade: this.data.formData.grade,
+      subject: this.data.formData.subjects,
+      status: actionType === 'evaluate' ? 'evaluating' : 'reviewing',
+      statusText: actionType === 'evaluate' ? '评估中' : '审核中',
+      updateTime: '刚刚',
+      ...this.data.formData,
+      inquiryPhases: this.data.inquiryPhases,
+      createTime: new Date().getTime()
+    };
+
+    // 获取现有项目列表
+    let myProjects = wx.getStorageSync('myDesignedProjects') || [];
+    myProjects.unshift(projectData);
+    wx.setStorageSync('myDesignedProjects', myProjects);
+
     setTimeout(() => {
       wx.hideLoading();
       
