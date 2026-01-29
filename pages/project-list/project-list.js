@@ -114,6 +114,37 @@ Page({
     }, 1000);
   },
 
+  // 删除项目
+  deleteProject(e) {
+    const id = e.currentTarget.dataset.id;
+    const project = this.data.myDesignedProjects.find(p => p.id === id);
+    
+    wx.showModal({
+      title: '确认删除',
+      content: `确定要删除项目"${project.title}"吗？删除后无法恢复。`,
+      confirmText: '删除',
+      confirmColor: '#ff4d4f',
+      success: (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '删除中...' });
+          
+          // TODO: 调用云函数删除项目
+          setTimeout(() => {
+            const myDesignedProjects = this.data.myDesignedProjects.filter(p => p.id !== id);
+            this.setData({
+              myDesignedProjects
+            });
+            wx.hideLoading();
+            wx.showToast({
+              title: '删除成功',
+              icon: 'success'
+            });
+          }, 500);
+        }
+      }
+    });
+  },
+
   // 阻止事件冒泡
   stopPropagation() {
     // 空函数，用于阻止事件冒泡

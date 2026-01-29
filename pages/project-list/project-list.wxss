@@ -94,6 +94,25 @@
   margin-right: 16rpx;
 }
 
+.project-header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.btn-delete-icon {
+  font-size: 32rpx;
+  padding: 4rpx;
+  opacity: 0.6;
+  transition: all 0.3s;
+}
+
+.btn-delete-icon:active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
 .status-badge {
   flex-shrink: 0;
   padding: 6rpx 16rpx;

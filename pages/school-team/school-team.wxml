@@ -1,0 +1,88 @@
+<!--pages/school-team/school-team.wxml-->
+<view class="school-team-container">
+  <view class="page-header">
+    <text class="header-icon">🏫</text>
+    <text class="header-title">创建学校团队</text>
+    <text class="header-desc">完善学校信息，创建专属团队</text>
+  </view>
+
+  <!-- 表单 -->
+  <view class="form-section">
+    <view class="form-item">
+      <text class="form-label">学校名称 <text class="required">*</text></text>
+      <input class="form-input" placeholder="请输入学校全称" value="{{formData.schoolName}}" bindinput="onInputChange" data-field="schoolName" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">学校地址 <text class="required">*</text></text>
+      <input class="form-input" placeholder="请输入学校地址" value="{{formData.schoolAddress}}" bindinput="onInputChange" data-field="schoolAddress" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">联系人姓名 <text class="required">*</text></text>
+      <input class="form-input" placeholder="请输入您的姓名" value="{{formData.contactName}}" bindinput="onInputChange" data-field="contactName" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">联系电话 <text class="required">*</text></text>
+      <input class="form-input" type="number" placeholder="请输入联系电话" value="{{formData.contactPhone}}" bindinput="onInputChange" data-field="contactPhone" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">职务 <text class="required">*</text></text>
+      <input class="form-input" placeholder="如：教务主任、年级组长等" value="{{formData.position}}" bindinput="onInputChange" data-field="position" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">学校规模</text>
+      <picker mode="selector" range="{{schoolSizeOptions}}" value="{{schoolSizeIndex}}" bindchange="onSchoolSizeChange">
+        <view class="picker-view">
+          <text class="picker-text {{schoolSizeIndex !== null ? 'selected' : ''}}">
+            {{schoolSizeIndex !== null ? schoolSizeOptions[schoolSizeIndex] : '请选择学校规模'}}
+          </text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">营业执照/办学许可证 <text class="required">*</text></text>
+      <view class="upload-area">
+        <view class="upload-grid">
+          <view class="image-item" wx:for="{{licenseImages}}" wx:key="index">
+            <image class="uploaded-image" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-index="{{index}}" />
+            <view class="image-delete" bindtap="deleteImage" data-index="{{index}}">×</view>
+          </view>
+          <view class="upload-btn" wx:if="{{licenseImages.length < 3}}" bindtap="chooseImage">
+            <text class="upload-icon">+</text>
+            <text class="upload-text">上传证件</text>
+          </view>
+        </view>
+        <text class="upload-tip">最多上传3张，支持jpg/png格式</text>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">申请说明</text>
+      <textarea class="form-textarea" placeholder="请简要说明申请创建团队的原因和计划（选填）" value="{{formData.description}}" bindinput="onInputChange" data-field="description" maxlength="500" />
+      <text class="char-count">{{formData.description.length}}/500</text>
+    </view>
+  </view>
+
+  <!-- 提示信息 -->
+  <view class="tip-card">
+    <text class="tip-icon">💡</text>
+    <view class="tip-content">
+      <text class="tip-title">温馨提示</text>
+      <text class="tip-text">1. 审核通过后，系统将自动生成学校专属邀请码</text>
+      <text class="tip-text">2. 您将成为学校管理员，可邀请同事加入团队</text>
+      <text class="tip-text">3. 审核结果将在24小时内通过系统消息通知</text>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="bottom-actions">
+    <button class="btn-submit" bindtap="submitApplication">提交申请</button>
+  </view>
+</view>
+

@@ -1,0 +1,204 @@
+/* pages/points-record/points-record.wxss */
+.points-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #667eea 0%, #f5f7fa 400rpx);
+  padding: 40rpx 30rpx;
+}
+
+/* 积分卡片 */
+.points-card {
+  background: white;
+  border-radius: 32rpx;
+  padding: 60rpx 40rpx;
+  text-align: center;
+  margin-bottom: 30rpx;
+  box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.points-icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10rpx);
+  }
+}
+
+.points-number {
+  font-size: 88rpx;
+  font-weight: bold;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+  margin-bottom: 12rpx;
+}
+
+.points-label {
+  display: block;
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 说明卡片 */
+.info-card {
+  background: linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%);
+  border-radius: 20rpx;
+  padding: 30rpx;
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 40rpx;
+}
+
+.info-icon {
+  font-size: 48rpx;
+  flex-shrink: 0;
+}
+
+.info-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.info-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #d48806;
+}
+
+.info-text {
+  font-size: 26rpx;
+  color: #ad6800;
+  line-height: 1.6;
+}
+
+/* 记录区块 */
+.records-section {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.section-count {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 记录列表 */
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  background: #f9f9f9;
+  border-radius: 16rpx;
+  transition: all 0.3s;
+}
+
+.record-item:active {
+  background: #f0f0f0;
+}
+
+.record-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  flex: 1;
+}
+
+.record-icon {
+  font-size: 48rpx;
+  flex-shrink: 0;
+}
+
+.record-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  flex: 1;
+}
+
+.record-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.record-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.record-right {
+  flex-shrink: 0;
+}
+
+.record-points {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+
+.record-points.add {
+  color: #52c41a;
+}
+
+.record-points.minus {
+  color: #ff4d4f;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 40rpx;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.6;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.empty-desc {
+  font-size: 24rpx;
+  color: #ccc;
+}
+

@@ -1,0 +1,221 @@
+<!--pages/admin-dashboard/admin-dashboard.wxml-->
+<view class="admin-container">
+  <!-- 顶部信息 -->
+  <view class="admin-header">
+    <text class="admin-title">{{schoolName}} 管理后台</text>
+    <text class="admin-role">管理员：{{adminName}}</text>
+  </view>
+
+  <!-- 核心数据 -->
+  <view class="stats-cards">
+    <view class="stat-card">
+      <text class="stat-value">{{stats.memberCount}}</text>
+      <text class="stat-label">成员总数</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-value">{{stats.activeCount}}</text>
+      <text class="stat-label">本月活跃</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-value">{{stats.projectCount}}</text>
+      <text class="stat-label">本校项目总数</text>
+    </view>
+    <view class="stat-card highlight">
+      <text class="stat-value">{{stats.remainingQuota}}</text>
+      <text class="stat-label">剩余下载额度</text>
+    </view>
+  </view>
+
+  <!-- 功能Tab -->
+  <view class="function-tabs">
+    <scroll-view scroll-x class="tabs-scroll">
+      <view 
+        class="tab-item {{currentTab === 'members' ? 'active' : ''}}"
+        bindtap="switchTab"
+        data-tab="members"
+      >
+        <text class="tab-icon">👥</text>
+        <text class="tab-text">成员管理</text>
+      </view>
+      <view 
+        class="tab-item {{currentTab === 'projects' ? 'active' : ''}}"
+        bindtap="switchTab"
+        data-tab="projects"
+      >
+        <text class="tab-icon">📚</text>
+        <text class="tab-text">校本项目库</text>
+      </view>
+      <view 
+        class="tab-item {{currentTab === 'resources' ? 'active' : ''}}"
+        bindtap="switchTab"
+        data-tab="resources"
+      >
+        <text class="tab-icon">💰</text>
+        <text class="tab-text">资源与采购</text>
+      </view>
+      <view 
+        class="tab-item {{currentTab === 'analytics' ? 'active' : ''}}"
+        bindtap="switchTab"
+        data-tab="analytics"
+      >
+        <text class="tab-icon">📊</text>
+        <text class="tab-text">数据统计</text>
+      </view>
+      <view 
+        class="tab-item {{currentTab === 'settings' ? 'active' : ''}}"
+        bindtap="switchTab"
+        data-tab="settings"
+      >
+        <text class="tab-icon">⚙️</text>
+        <text class="tab-text">设置与联系</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- Tab内容区 -->
+  <scroll-view scroll-y class="tab-content">
+    <!-- 成员管理 -->
+    <view wx:if="{{currentTab === 'members'}}">
+      <view class="members-list">
+        <view class="member-item" wx:for="{{members}}" wx:key="id">
+          <view class="member-info">
+            <text class="member-name">{{item.name}}</text>
+            <text class="member-subject">{{item.subject}}</text>
+            <text class="member-join">加入于 {{item.joinTime}}</text>
+          </view>
+          <view class="member-status {{item.active ? 'active' : ''}}">
+            {{item.active ? '本周活跃' : '未活跃'}}
+          </view>
+          <button class="btn-remove" bindtap="removeMember" data-id="{{item.id}}">移除</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 校本项目库 -->
+    <view wx:if="{{currentTab === 'projects'}}">
+      <view class="school-projects-list">
+        <view class="project-item" wx:for="{{schoolProjects}}" wx:key="id">
+          <view class="project-left">
+            <text class="project-title">{{item.title}}</text>
+            <view class="project-meta">
+              <text>{{item.author}}</text>
+              <text>·</text>
+              <text>{{item.uploadTime}}</text>
+            </view>
+          </view>
+          <view class="project-actions">
+            <button class="btn-top" wx:if="{{!item.isTop}}" bindtap="topProject" data-id="{{item.id}}">
+              置顶
+            </button>
+            <button class="btn-untop" wx:else bindtap="untopProject" data-id="{{item.id}}">
+              取消置顶
+            </button>
+            <button class="btn-share" bindtap="shareProject" data-id="{{item.id}}">
+              分享
+            </button>
+            <button class="btn-private" bindtap="setPrivate" data-id="{{item.id}}">
+              设为私密
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 资源与采购 -->
+    <view wx:if="{{currentTab === 'resources'}}">
+      <!-- 当前状态 -->
+      <view class="resource-status">
+        <view class="status-card">
+          <text class="status-label">剩余下载额度</text>
+          <text class="status-value">{{stats.remainingQuota}}次</text>
+          <button class="btn-detail" bindtap="viewUsageDetail">查看使用明细</button>
+        </view>
+      </view>
+
+      <!-- 购买资源包 -->
+      <view class="purchase-section">
+        <text class="section-title">购买资源包</text>
+        <view class="package-list">
+          <view class="package-card">
+            <text class="package-name">基础包</text>
+            <text class="package-quota">300次下载额度</text>
+            <text class="package-price">¥299</text>
+            <button class="btn-buy" bindtap="buyPackage" data-type="basic">立即购买</button>
+          </view>
+          <view class="package-card">
+            <text class="package-name">扩容包</text>
+            <text class="package-quota">100次下载额度</text>
+            <text class="package-price">¥150</text>
+            <button class="btn-buy" bindtap="buyPackage" data-type="expand">立即购买</button>
+          </view>
+        </view>
+      </view>
+
+      <!-- 购买记录 -->
+      <view class="purchase-history">
+        <text class="section-title">购买记录</text>
+        <view class="history-list">
+          <view class="history-item" wx:for="{{purchaseHistory}}" wx:key="id">
+            <view class="history-info">
+              <text class="history-package">{{item.packageName}}</text>
+              <text class="history-time">{{item.purchaseTime}}</text>
+            </view>
+            <text class="history-amount">¥{{item.amount}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 数据统计 -->
+    <view wx:if="{{currentTab === 'analytics'}}">
+      <view class="analytics-section">
+        <text class="section-title">使用趋势</text>
+        <view class="chart-placeholder">
+          <text class="chart-icon">📈</text>
+          <text class="chart-text">图表功能开发中</text>
+        </view>
+      </view>
+
+      <view class="analytics-section">
+        <text class="section-title">资源消耗排行</text>
+        <view class="rank-list">
+          <view class="rank-item" wx:for="{{resourceRanking}}" wx:key="id">
+            <view class="rank-number {{index < 3 ? 'top' : ''}}">{{index + 1}}</view>
+            <view class="rank-info">
+              <text class="rank-name">{{item.name}}</text>
+              <text class="rank-count">下载{{item.downloadCount}}次</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 设置与联系 -->
+    <view wx:if="{{currentTab === 'settings'}}">
+      <view class="settings-section">
+        <view class="setting-item" bindtap="resetInviteCode">
+          <view class="setting-left">
+            <text class="setting-icon">🔑</text>
+            <view class="setting-info">
+              <text class="setting-title">重置邀请码</text>
+              <text class="setting-desc">原码失效，生成新码</text>
+            </view>
+          </view>
+          <text class="setting-arrow">›</text>
+        </view>
+
+        <view class="setting-item highlight" bindtap="contactService">
+          <view class="setting-left">
+            <text class="setting-icon">🤝</text>
+            <view class="setting-info">
+              <text class="setting-title">联系我们，定制校本化方案</text>
+              <text class="setting-desc">课程共建、教师培训等定制服务</text>
+            </view>
+          </view>
+          <text class="setting-arrow">›</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
+

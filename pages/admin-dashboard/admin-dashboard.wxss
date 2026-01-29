@@ -1,0 +1,535 @@
+/* pages/admin-dashboard/admin-dashboard.wxss */
+.admin-container {
+  min-height: 100vh;
+  background: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 顶部信息 */
+.admin-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 50rpx 40rpx 40rpx;
+  color: white;
+}
+
+.admin-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: bold;
+  margin-bottom: 12rpx;
+}
+
+.admin-role {
+  display: block;
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+/* 数据卡片 */
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  padding: 30rpx;
+  margin-top: -40rpx;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.stat-card.highlight {
+  background: linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%);
+}
+
+.stat-value {
+  display: block;
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 8rpx;
+}
+
+.stat-card.highlight .stat-value {
+  color: #fa8c16;
+}
+
+.stat-label {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* Tab栏 */
+.function-tabs {
+  background: white;
+  padding: 20rpx 0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+  padding: 0 20rpx;
+}
+
+.tab-item {
+  display: inline-block;
+  padding: 16rpx 28rpx;
+  margin: 0 8rpx;
+  border-radius: 40rpx;
+  background: #f5f7fa;
+  transition: all 0.3s;
+}
+
+.tab-item.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.tab-icon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+}
+
+.tab-text {
+  font-size: 26rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.tab-item.active .tab-text {
+  color: white;
+}
+
+/* 内容区 */
+.tab-content {
+  flex: 1;
+  padding: 30rpx;
+}
+
+/* 成员管理 */
+.members-list {
+  background: white;
+  border-radius: 20rpx;
+  padding: 20rpx;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.member-item:last-child {
+  border-bottom: none;
+}
+
+.member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.member-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.member-subject {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.member-join {
+  font-size: 22rpx;
+  color: #ccc;
+}
+
+.member-status {
+  padding: 8rpx 16rpx;
+  background: #f5f5f5;
+  color: #999;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  margin-right: 16rpx;
+}
+
+.member-status.active {
+  background: #e6fffb;
+  color: #52c41a;
+}
+
+.btn-remove {
+  padding: 12rpx 24rpx;
+  background: #ff4d4f;
+  color: white;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  border: none;
+}
+
+.btn-remove::after {
+  border: none;
+}
+
+/* 校本项目库 */
+.school-projects-list {
+  background: white;
+  border-radius: 20rpx;
+  padding: 20rpx;
+}
+
+.project-item {
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.project-item:last-child {
+  border-bottom: none;
+}
+
+.project-left {
+  margin-bottom: 16rpx;
+}
+
+.project-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.project-meta {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.project-actions {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.project-actions button {
+  padding: 10rpx 20rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  border: none;
+}
+
+.project-actions button::after {
+  border: none;
+}
+
+.btn-top, .btn-untop {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.btn-share {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.btn-private {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+/* 资源与采购 */
+.resource-status {
+  background: white;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 30rpx;
+}
+
+.status-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.status-label {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.status-value {
+  font-size: 56rpx;
+  font-weight: bold;
+  color: #fa8c16;
+}
+
+.btn-detail {
+  padding: 16rpx 40rpx;
+  background: #e6f7ff;
+  color: #1890ff;
+  border-radius: 40rpx;
+  font-size: 26rpx;
+  border: none;
+}
+
+.btn-detail::after {
+  border: none;
+}
+
+.purchase-section {
+  background: white;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 24rpx;
+}
+
+.package-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+}
+
+.package-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ebf0 100%);
+  border-radius: 16rpx;
+  padding: 32rpx 24rpx;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.package-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.package-quota {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.package-price {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #fa8c16;
+  margin: 8rpx 0;
+}
+
+.btn-buy {
+  padding: 16rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  font-weight: bold;
+  border: none;
+}
+
+.btn-buy::after {
+  border: none;
+}
+
+.purchase-history {
+  background: white;
+  border-radius: 20rpx;
+  padding: 32rpx;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  background: #f9f9f9;
+  border-radius: 12rpx;
+}
+
+.history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.history-package {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.history-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.history-amount {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #fa8c16;
+}
+
+/* 数据统计 */
+.analytics-section {
+  background: white;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 30rpx;
+}
+
+.chart-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 40rpx;
+  background: #f9f9f9;
+  border-radius: 12rpx;
+}
+
+.chart-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+  opacity: 0.6;
+}
+
+.chart-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  background: #f9f9f9;
+  border-radius: 12rpx;
+}
+
+.rank-number {
+  width: 60rpx;
+  height: 60rpx;
+  background: #e0e0e0;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: bold;
+  margin-right: 20rpx;
+}
+
+.rank-number.top {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+}
+
+.rank-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.rank-name {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.rank-count {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 设置 */
+.settings-section {
+  background: white;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: all 0.3s;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item:active {
+  background: #f9f9f9;
+}
+
+.setting-item.highlight {
+  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+}
+
+.setting-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.setting-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.setting-title {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.setting-desc {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.setting-arrow {
+  font-size: 48rpx;
+  color: #ccc;
+  line-height: 1;
+}
+

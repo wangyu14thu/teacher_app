@@ -1,0 +1,277 @@
+/* pages/school-team/school-team.wxss */
+.school-team-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 300rpx);
+  padding: 30rpx 30rpx 200rpx;
+}
+
+/* 页面头部 */
+.page-header {
+  text-align: center;
+  margin-bottom: 50rpx;
+  padding: 40rpx 0;
+}
+
+.header-icon {
+  font-size: 100rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.header-title {
+  display: block;
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.header-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 表单 */
+.form-section {
+  background: white;
+  border-radius: 20rpx;
+  padding: 40rpx 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.form-item {
+  margin-bottom: 36rpx;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 16rpx;
+}
+
+.required {
+  color: #ff4d4f;
+}
+
+.form-input {
+  width: 100%;
+  background: #f5f7fa;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: #667eea;
+  background: white;
+}
+
+.form-textarea {
+  width: 100%;
+  background: #f5f7fa;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  color: #333;
+  min-height: 200rpx;
+  box-sizing: border-box;
+}
+
+.form-textarea:focus {
+  border-color: #667eea;
+  background: white;
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+/* 选择器 */
+.picker-view {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f5f7fa;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  padding: 24rpx;
+}
+
+.picker-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #999;
+}
+
+.picker-text.selected {
+  color: #333;
+}
+
+.picker-arrow {
+  font-size: 40rpx;
+  color: #ccc;
+  line-height: 1;
+}
+
+/* 上传区域 */
+.upload-area {
+  margin-top: 16rpx;
+}
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20rpx;
+}
+
+.image-item {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.uploaded-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.image-delete {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 44rpx;
+  height: 44rpx;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  line-height: 1;
+  z-index: 10;
+}
+
+.upload-btn {
+  width: 100%;
+  padding-bottom: 100%;
+  position: relative;
+  background: #f5f7fa;
+  border: 2rpx dashed #d9d9d9;
+  border-radius: 12rpx;
+}
+
+.upload-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -80%);
+  font-size: 56rpx;
+  color: #999;
+}
+
+.upload-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 40%);
+  font-size: 22rpx;
+  color: #999;
+  white-space: nowrap;
+}
+
+.upload-tip {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 12rpx;
+}
+
+/* 提示卡片 */
+.tip-card {
+  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+  border-radius: 20rpx;
+  padding: 30rpx;
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.tip-icon {
+  font-size: 48rpx;
+  flex-shrink: 0;
+}
+
+.tip-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.tip-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #0958d9;
+  margin-bottom: 8rpx;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: #096dd9;
+  line-height: 1.6;
+}
+
+/* 底部按钮 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 20rpx 30rpx;
+  box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.btn-submit {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12rpx;
+  padding: 28rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  border: none;
+}
+
+.btn-submit::after {
+  border: none;
+}
+
+.btn-submit:active {
+  opacity: 0.8;
+}
+

@@ -32,7 +32,10 @@
       >
         <view class="project-header">
           <text class="project-title">{{item.title}}</text>
-          <view class="status-badge {{item.status}}">{{item.statusText}}</view>
+          <view class="project-header-right">
+            <view class="status-badge {{item.status}}">{{item.statusText}}</view>
+            <text class="btn-delete-icon" bindtap="deleteProject" data-id="{{item.id}}" catchtap="stopPropagation">🗑️</text>
+          </view>
         </view>
         <view class="project-meta">
           <text class="meta-item">{{item.grade}}</text>

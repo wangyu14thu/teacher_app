@@ -62,42 +62,45 @@ Page({
 
   // 我的积分
   goToPointsRecord() {
-    wx.showModal({
-      title: '我的积分',
-      content: '功能开发中，敬请期待！',
-      showCancel: false,
-      confirmText: '知道了'
+    wx.navigateTo({
+      url: '/pages/points-record/points-record'
     })
   },
 
   // 创建学校团队
   createSchoolTeam() {
-    wx.showModal({
-      title: '创建学校团队',
-      content: '功能开发中，敬请期待！',
-      showCancel: false,
-      confirmText: '知道了'
+    wx.navigateTo({
+      url: '/pages/school-team/school-team'
     })
   },
 
   // 我的学校
   goToMySchool() {
-    wx.showModal({
-      title: '我的学校',
-      content: '功能开发中，敬请期待！',
-      showCancel: false,
-      confirmText: '知道了'
+    // TODO: 检查用户是否已加入学校团队
+    // 如果未加入，提示用户先加入或创建学校团队
+    wx.navigateTo({
+      url: '/pages/my-school/my-school'
     })
   },
 
   // 管理后台
   goToAdminDashboard() {
-    wx.showModal({
-      title: '管理后台',
-      content: '功能开发中，敬请期待！',
-      showCancel: false,
-      confirmText: '知道了'
-    })
+    // TODO: 检查用户是否有管理员权限
+    // 只有学校管理员才能访问此页面
+    const isAdmin = true; // 临时设置，实际应从用户数据中获取
+    
+    if (isAdmin) {
+      wx.navigateTo({
+        url: '/pages/admin-dashboard/admin-dashboard'
+      })
+    } else {
+      wx.showModal({
+        title: '权限不足',
+        content: '只有学校管理员才能访问管理后台',
+        showCancel: false,
+        confirmText: '我知道了'
+      })
+    }
   },
 
   // 联系我们
