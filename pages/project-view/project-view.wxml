@@ -101,10 +101,6 @@
       <text class="btn-action-icon">📥</text>
       <text>导出项目</text>
     </button>
-    <button class="btn-action btn-download" bindtap="downloadProject">
-      <text class="btn-action-icon">💾</text>
-      <text>下载</text>
-    </button>
     <button class="btn-action btn-evaluate" bindtap="applyEvaluation">
       <text class="btn-action-icon">🎓</text>
       <text>专家评估</text>

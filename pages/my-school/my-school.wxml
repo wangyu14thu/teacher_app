@@ -23,68 +23,11 @@
     </view>
   </view>
 
-  <!-- 项目排序 -->
-  <view class="sort-bar">
-    <text class="sort-title">本校项目列表</text>
-    <view class="sort-options">
-      <text 
-        class="sort-option {{sortType === 'latest' ? 'active' : ''}}"
-        bindtap="changeSortType"
-        data-type="latest"
-      >
-        最新上传
-      </text>
-      <text 
-        class="sort-option {{sortType === 'likes' ? 'active' : ''}}"
-        bindtap="changeSortType"
-        data-type="likes"
-      >
-        最多点赞
-      </text>
-      <text 
-        class="sort-option {{sortType === 'smart' ? 'active' : ''}}"
-        bindtap="changeSortType"
-        data-type="smart"
-      >
-        智能推荐
-      </text>
-    </view>
-  </view>
-
-  <!-- 项目列表 -->
-  <view class="projects-section">
-    <view class="project-card" wx:for="{{projects}}" wx:key="id" bindtap="viewProject" data-id="{{item.id}}">
-      <view class="project-header">
-        <text class="project-title">{{item.title}}</text>
-        <view class="project-badges">
-          <view class="badge-hot" wx:if="{{item.isHot}}">🔥</view>
-          <view class="badge-new" wx:if="{{item.isNew}}">NEW</view>
-        </view>
-      </view>
-      <view class="project-meta">
-        <text class="meta-item">{{item.grade}}</text>
-        <text class="meta-divider">·</text>
-        <text class="meta-item">{{item.subject}}</text>
-        <text class="meta-divider">·</text>
-        <text class="meta-item">{{item.author}}</text>
-      </view>
-      <view class="project-footer">
-        <view class="project-stats">
-          <text class="stat-icon">👍</text>
-          <text class="stat-text">{{item.likes}}</text>
-          <text class="stat-icon">💬</text>
-          <text class="stat-text">{{item.comments}}</text>
-        </view>
-        <text class="project-time">{{item.uploadTime}}</text>
-      </view>
-    </view>
-
-    <!-- 空状态 -->
-    <view class="empty-state" wx:if="{{projects.length === 0}}">
-      <text class="empty-icon">📦</text>
-      <text class="empty-text">本校暂无项目</text>
-      <button class="btn-goto-cases" bindtap="goToCases">去项目库看看</button>
-    </view>
+  <!-- 空状态 -->
+  <view class="empty-state-main">
+    <text class="empty-icon">📦</text>
+    <text class="empty-text">本校暂无项目</text>
+    <button class="btn-goto-cases" bindtap="goToCases">去项目库看看</button>
   </view>
 </scroll-view>
 

@@ -67,24 +67,6 @@ Page({
     }, 500);
   },
 
-  // 下载项目
-  downloadProject() {
-    wx.showLoading({ title: '准备下载...' });
-
-    // 更新项目状态为已下载
-    this.updateProjectStatus('downloaded', '草稿');
-
-    // TODO: 生成项目文档并下载
-    setTimeout(() => {
-      wx.hideLoading();
-      wx.showModal({
-        title: '下载成功',
-        content: '项目文档已保存到本地相册',
-        showCancel: false,
-        confirmText: '我知道了'
-      });
-    }, 1500);
-  },
 
   // 更新项目状态
   updateProjectStatus(status, statusText) {
@@ -128,8 +110,7 @@ Page({
 
   // 分享项目
   shareProject() {
-    const projectData = this.data.projectData;
-    
+    // 启用分享功能
     wx.showShareMenu({
       withShareTicket: true,
       menus: ['shareAppMessage', 'shareTimeline']
@@ -137,9 +118,29 @@ Page({
     
     wx.showModal({
       title: '分享提示',
-      content: '请点击右上角"..."按钮，选择"转发"或"分享到朋友圈"',
+      content: '请点击右上角"..."按钮，选择"转发给好友"或"分享到朋友圈"',
       showCancel: false
     });
+  },
+
+  // 分享给好友
+  onShareAppMessage() {
+    const { projectData } = this.data;
+    return {
+      title: `推荐项目：${projectData.projectName}`,
+      path: `/pages/project-view/project-view?id=${this.data.projectId}`,
+      imageUrl: '' // 可以设置分享图片
+    };
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    const { projectData } = this.data;
+    return {
+      title: `推荐项目：${projectData.projectName}`,
+      query: `id=${this.data.projectId}`,
+      imageUrl: '' // 可以设置分享图片
+    };
   },
 
   // 显示导出选项
@@ -158,34 +159,133 @@ Page({
 
   // 导出为Word
   exportAsWord() {
+    const { projectData } = this.data;
     wx.showLoading({ title: '正在生成Word文档...' });
     
-    // TODO: 调用API生成Word文档
+    // TODO: 实际应调用云函数生成Word文档
+    // 模拟生成文档内容
+    const content = this.generateProjectContent();
+    
     setTimeout(() => {
-      wx.hideLoading();
-      this.closeExportModal();
-      wx.showModal({
-        title: '导出成功',
-        content: 'Word文档已保存到您的手机相册，您可以在相册中查看和分享。',
-        showCancel: false
-      });
+      // 使用文件系统保存文档
+      const fs = wx.getFileSystemManager();
+      const fileName = `${projectData.projectName}_${Date.now()}.doc`;
+      const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`;
+      
+      try {
+        fs.writeFileSync(filePath, content, 'utf8');
+        
+        wx.hideLoading();
+        this.closeExportModal();
+        
+        // 打开文档
+        wx.openDocument({
+          filePath: filePath,
+          fileType: 'doc',
+          showMenu: true,
+          success: () => {
+            wx.showToast({
+              title: '文档已生成',
+              icon: 'success'
+            });
+          },
+          fail: () => {
+            wx.showModal({
+              title: '导出成功',
+              content: `Word文档已保存到本地文件夹：\n${filePath}\n\n您可以通过文件管理器查看和分享。`,
+              showCancel: false
+            });
+          }
+        });
+      } catch (err) {
+        wx.hideLoading();
+        wx.showModal({
+          title: '导出失败',
+          content: '文档生成失败，请稍后重试',
+          showCancel: false
+        });
+      }
     }, 2000);
   },
 
   // 导出为PDF
   exportAsPDF() {
+    const { projectData } = this.data;
     wx.showLoading({ title: '正在生成PDF文档...' });
     
-    // TODO: 调用API生成PDF文档
+    // TODO: 实际应调用云函数生成PDF文档
+    const content = this.generateProjectContent();
+    
     setTimeout(() => {
-      wx.hideLoading();
-      this.closeExportModal();
-      wx.showModal({
-        title: '导出成功',
-        content: 'PDF文档已保存到您的手机相册，您可以在相册中查看和分享。',
-        showCancel: false
-      });
+      const fs = wx.getFileSystemManager();
+      const fileName = `${projectData.projectName}_${Date.now()}.pdf`;
+      const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`;
+      
+      try {
+        fs.writeFileSync(filePath, content, 'utf8');
+        
+        wx.hideLoading();
+        this.closeExportModal();
+        
+        // 打开文档
+        wx.openDocument({
+          filePath: filePath,
+          fileType: 'pdf',
+          showMenu: true,
+          success: () => {
+            wx.showToast({
+              title: '文档已生成',
+              icon: 'success'
+            });
+          },
+          fail: () => {
+            wx.showModal({
+              title: '导出成功',
+              content: `PDF文档已保存到本地文件夹：\n${filePath}\n\n您可以通过文件管理器查看和分享。`,
+              showCancel: false
+            });
+          }
+        });
+      } catch (err) {
+        wx.hideLoading();
+        wx.showModal({
+          title: '导出失败',
+          content: '文档生成失败，请稍后重试',
+          showCancel: false
+        });
+      }
     }, 2000);
+  },
+
+  // 生成项目内容
+  generateProjectContent() {
+    const { projectData } = this.data;
+    return `
+项目名称：${projectData.projectName}
+年级：${projectData.grade}
+学科：${projectData.subjects}
+课时：${projectData.hours}
+
+【项目概述】
+${projectData.overview}
+
+【项目立项依据】
+依据现实世界：${projectData.basisWorld}
+依据课标教材：${projectData.basisCurriculum}
+依据学生实际：${projectData.basisStudents}
+
+【跨学科概念】
+${projectData.interdisciplinaryConcept}
+
+【项目框架】
+驱动性问题：${projectData.drivingQuestion}
+子问题链：${projectData.subQuestions}
+最终成果：${projectData.finalOutcome}
+成果展示形式：${projectData.presentationForm}
+
+【项目目标】
+${projectData.projectGoals}
+    `.trim();
   },
 
   // 阻止冒泡

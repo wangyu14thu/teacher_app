@@ -42,7 +42,7 @@
       },
       {
         "pagePath": "pages/ai-assistant/ai-assistant",
-        "text": "AI助手",
+        "text": "消息与助手",
         "iconPath": "images/ai.png",
         "selectedIconPath": "images/ai-active.png"
       },

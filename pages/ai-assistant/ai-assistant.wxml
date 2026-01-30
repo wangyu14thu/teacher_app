@@ -1,10 +1,107 @@
 <!--pages/ai-assistant/ai-assistant.wxml-->
-<view class="ai-container">
-  <view class="coming-soon">
-    <text class="soon-icon">🤖</text>
-    <text class="soon-title">AI助手</text>
-    <text class="soon-text">敬请期待</text>
-    <text class="soon-subtitle">智能助力项目式教学</text>
+<view class="assistant-container">
+  <!-- 顶部标签栏 -->
+  <view class="tab-bar">
+    <view class="tab-item {{currentTab === 'messages' ? 'active' : ''}}" bindtap="switchTab" data-tab="messages">
+      <text class="tab-text">系统消息</text>
+      <view class="unread-badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
+    </view>
+    <view class="tab-item {{currentTab === 'ai' ? 'active' : ''}}" bindtap="switchTab" data-tab="ai">
+      <text class="tab-text">AI助手</text>
+    </view>
+  </view>
+
+  <!-- 系统消息列表 -->
+  <scroll-view class="content-area" scroll-y wx:if="{{currentTab === 'messages'}}">
+    <view class="messages-list">
+      <view class="message-card {{item.read ? 'read' : 'unread'}}" 
+            wx:for="{{messages}}" 
+            wx:key="id" 
+            bindtap="viewMessage" 
+            data-id="{{item.id}}">
+        <!-- 未读标识 -->
+        <view class="unread-dot" wx:if="{{!item.read}}"></view>
+        
+        <view class="message-content">
+          <view class="message-header">
+            <text class="message-title">{{item.title}}</text>
+            <text class="message-time">{{item.time}}</text>
+          </view>
+          
+          <view class="message-preview">
+            <text class="preview-text">{{item.preview}}</text>
+          </view>
+          
+          <!-- 特殊内容：邀请码 -->
+          <view class="invite-code-box" wx:if="{{item.type === 'invite_code'}}">
+            <text class="code-label">邀请码：</text>
+            <text class="code-value">{{item.inviteCode}}</text>
+            <button class="btn-copy" bindtap="copyCode" data-code="{{item.inviteCode}}">复制</button>
+          </view>
+          
+          <!-- 操作按钮 -->
+          <view class="message-actions" wx:if="{{item.actionText}}">
+            <button class="btn-action" bindtap="handleMessageAction" data-id="{{item.id}}">
+              {{item.actionText}}
+            </button>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{messages.length === 0}}">
+        <text class="empty-icon">📭</text>
+        <text class="empty-text">暂无消息</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- AI助手 -->
+  <view class="ai-chat-container" wx:if="{{currentTab === 'ai'}}">
+    <!-- 聊天记录 -->
+    <scroll-view class="chat-history" scroll-y scroll-into-view="{{scrollToId}}">
+      <view class="chat-messages">
+        <view class="chat-message {{msg.sender === 'user' ? 'user-message' : 'ai-message'}}" 
+              wx:for="{{chatHistory}}" 
+              wx:key="id"
+              id="msg-{{msg.id}}">
+          <view class="message-avatar">
+            <text class="avatar-emoji">{{msg.sender === 'user' ? '👨‍🏫' : '🤖'}}</text>
+          </view>
+          <view class="message-bubble">
+            <text class="message-text">{{msg.content}}</text>
+            <text class="message-timestamp">{{msg.time}}</text>
+          </view>
+        </view>
+        
+        <!-- 空状态 -->
+        <view class="empty-chat" wx:if="{{chatHistory.length === 0}}">
+          <text class="empty-icon">🤖</text>
+          <text class="empty-title">AI助手</text>
+          <text class="empty-desc">您好！我是您的AI助手，可以帮助您：</text>
+          <view class="feature-list">
+            <text class="feature-item">• 项目设计咨询</text>
+            <text class="feature-item">• 跨学科概念生成</text>
+            <text class="feature-item">• 驱动性问题优化</text>
+            <text class="feature-item">• 教学策略建议</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 输入框 -->
+    <view class="chat-input-bar">
+      <input 
+        class="chat-input" 
+        placeholder="输入您的问题..." 
+        value="{{inputText}}"
+        bindinput="onInputChange"
+        confirm-type="send"
+        bindconfirm="sendMessage"
+      />
+      <button class="btn-send {{inputText ? 'active' : ''}}" bindtap="sendMessage">
+        发送
+      </button>
+    </view>
   </view>
 </view>
-
