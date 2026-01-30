@@ -1,88 +1,311 @@
 <!--pages/school-team/school-team.wxml-->
 <view class="school-team-container">
+  <!-- 页面头部 -->
   <view class="page-header">
     <text class="header-icon">🏫</text>
     <text class="header-title">创建学校团队</text>
-    <text class="header-desc">完善学校信息，创建专属团队</text>
+    <text class="header-desc">完善学校信息，开启团队协作</text>
   </view>
 
-  <!-- 表单 -->
-  <view class="form-section">
-    <view class="form-item">
-      <text class="form-label">学校名称 <text class="required">*</text></text>
-      <input class="form-input" placeholder="请输入学校全称" value="{{formData.schoolName}}" bindinput="onInputChange" data-field="schoolName" />
+  <!-- 步骤指示器 -->
+  <view class="step-indicator">
+    <view class="step-item {{currentStep >= 1 ? 'active' : ''}} {{currentStep > 1 ? 'completed' : ''}}">
+      <view class="step-circle">
+        <text class="step-number" wx:if="{{currentStep <= 1}}">1</text>
+        <text class="step-icon" wx:else>✓</text>
+      </view>
+      <text class="step-label">基础信息</text>
     </view>
-
-    <view class="form-item">
-      <text class="form-label">学校地址 <text class="required">*</text></text>
-      <input class="form-input" placeholder="请输入学校地址" value="{{formData.schoolAddress}}" bindinput="onInputChange" data-field="schoolAddress" />
+    <view class="step-line {{currentStep > 1 ? 'active' : ''}}"></view>
+    <view class="step-item {{currentStep >= 2 ? 'active' : ''}} {{currentStep > 2 ? 'completed' : ''}}">
+      <view class="step-circle">
+        <text class="step-number" wx:if="{{currentStep <= 2}}">2</text>
+        <text class="step-icon" wx:else>✓</text>
+      </view>
+      <text class="step-label">证明材料</text>
     </view>
-
-    <view class="form-item">
-      <text class="form-label">联系人姓名 <text class="required">*</text></text>
-      <input class="form-input" placeholder="请输入您的姓名" value="{{formData.contactName}}" bindinput="onInputChange" data-field="contactName" />
+    <view class="step-line {{currentStep > 2 ? 'active' : ''}}"></view>
+    <view class="step-item {{currentStep >= 3 ? 'active' : ''}}">
+      <view class="step-circle">
+        <text class="step-number">3</text>
+      </view>
+      <text class="step-label">确认提交</text>
     </view>
+  </view>
 
-    <view class="form-item">
-      <text class="form-label">联系电话 <text class="required">*</text></text>
-      <input class="form-input" type="number" placeholder="请输入联系电话" value="{{formData.contactPhone}}" bindinput="onInputChange" data-field="contactPhone" />
-    </view>
-
-    <view class="form-item">
-      <text class="form-label">职务 <text class="required">*</text></text>
-      <input class="form-input" placeholder="如：教务主任、年级组长等" value="{{formData.position}}" bindinput="onInputChange" data-field="position" />
-    </view>
-
-    <view class="form-item">
-      <text class="form-label">学校规模</text>
-      <picker mode="selector" range="{{schoolSizeOptions}}" value="{{schoolSizeIndex}}" bindchange="onSchoolSizeChange">
-        <view class="picker-view">
-          <text class="picker-text {{schoolSizeIndex !== null ? 'selected' : ''}}">
-            {{schoolSizeIndex !== null ? schoolSizeOptions[schoolSizeIndex] : '请选择学校规模'}}
-          </text>
-          <text class="picker-arrow">›</text>
+  <!-- 步骤1：基础信息 -->
+  <view class="step-content" wx:if="{{currentStep === 1}}">
+    <!-- 学校基本信息卡片 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-icon">🏛️</text>
+        <text class="card-title">学校基本信息</text>
+      </view>
+      <view class="card-content">
+        <view class="form-item">
+          <text class="form-label">学校名称 <text class="required">*</text></text>
+          <input 
+            class="form-input" 
+            placeholder="请输入学校全称" 
+            value="{{formData.schoolName}}" 
+            bindinput="onInputChange" 
+            data-field="schoolName"
+            placeholder-class="placeholder"
+          />
         </view>
-      </picker>
-    </view>
 
-    <view class="form-item">
-      <text class="form-label">营业执照/办学许可证 <text class="required">*</text></text>
-      <view class="upload-area">
-        <view class="upload-grid">
-          <view class="image-item" wx:for="{{licenseImages}}" wx:key="index">
-            <image class="uploaded-image" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-index="{{index}}" />
-            <view class="image-delete" bindtap="deleteImage" data-index="{{index}}">×</view>
-          </view>
-          <view class="upload-btn" wx:if="{{licenseImages.length < 3}}" bindtap="chooseImage">
-            <text class="upload-icon">+</text>
-            <text class="upload-text">上传证件</text>
-          </view>
+        <view class="form-item">
+          <text class="form-label">学校地址 <text class="required">*</text></text>
+          <input 
+            class="form-input" 
+            placeholder="请输入学校详细地址" 
+            value="{{formData.schoolAddress}}" 
+            bindinput="onInputChange" 
+            data-field="schoolAddress"
+            placeholder-class="placeholder"
+          />
         </view>
-        <text class="upload-tip">最多上传3张，支持jpg/png格式</text>
+
+        <view class="form-item">
+          <text class="form-label">学校规模</text>
+          <picker mode="selector" range="{{schoolSizeOptions}}" value="{{schoolSizeIndex}}" bindchange="onSchoolSizeChange">
+            <view class="picker-view">
+              <text class="picker-text {{schoolSizeIndex !== null ? 'selected' : ''}}">
+                {{schoolSizeIndex !== null ? schoolSizeOptions[schoolSizeIndex] : '请选择学校规模'}}
+              </text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
       </view>
     </view>
 
-    <view class="form-item">
-      <text class="form-label">申请说明</text>
-      <textarea class="form-textarea" placeholder="请简要说明申请创建团队的原因和计划（选填）" value="{{formData.description}}" bindinput="onInputChange" data-field="description" maxlength="500" />
-      <text class="char-count">{{formData.description.length}}/500</text>
+    <!-- 联系人信息卡片 -->
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-icon">👤</text>
+        <text class="card-title">联系人信息</text>
+      </view>
+      <view class="card-content">
+        <view class="form-item">
+          <text class="form-label">您的姓名 <text class="required">*</text></text>
+          <input 
+            class="form-input" 
+            placeholder="请输入您的真实姓名" 
+            value="{{formData.contactName}}" 
+            bindinput="onInputChange" 
+            data-field="contactName"
+            placeholder-class="placeholder"
+          />
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">联系电话 <text class="required">*</text></text>
+          <input 
+            class="form-input" 
+            type="number" 
+            placeholder="请输入11位手机号" 
+            value="{{formData.contactPhone}}" 
+            bindinput="onInputChange" 
+            data-field="contactPhone"
+            placeholder-class="placeholder"
+            maxlength="11"
+          />
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">您的职务 <text class="required">*</text></text>
+          <input 
+            class="form-input" 
+            placeholder="如：教务主任、年级组长" 
+            value="{{formData.position}}" 
+            bindinput="onInputChange" 
+            data-field="position"
+            placeholder-class="placeholder"
+          />
+          <text class="field-hint">请填写您在学校的职务或角色</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 可折叠提示 -->
+    <view class="collapsible-tip">
+      <view class="tip-header" bindtap="toggleTip">
+        <text class="tip-icon">💡</text>
+        <text class="tip-title">温馨提示</text>
+        <text class="tip-arrow {{showTip ? 'expanded' : ''}}">›</text>
+      </view>
+      <view class="tip-body {{showTip ? 'show' : ''}}">
+        <text class="tip-text">• 请确保填写的信息真实准确，便于审核</text>
+        <text class="tip-text">• 审核通过后，您将成为学校管理员</text>
+        <text class="tip-text">• 所有信息仅用于团队认证，不会对外公开</text>
+      </view>
     </view>
   </view>
 
-  <!-- 提示信息 -->
-  <view class="tip-card">
-    <text class="tip-icon">💡</text>
-    <view class="tip-content">
-      <text class="tip-title">温馨提示</text>
-      <text class="tip-text">1. 审核通过后，系统将自动生成学校专属邀请码</text>
-      <text class="tip-text">2. 您将成为学校管理员，可邀请同事加入团队</text>
-      <text class="tip-text">3. 审核结果将在24小时内通过系统消息通知</text>
+  <!-- 步骤2：证明材料 -->
+  <view class="step-content" wx:if="{{currentStep === 2}}">
+    <view class="info-card">
+      <view class="card-header">
+        <text class="card-icon">📄</text>
+        <text class="card-title">上传证明文件</text>
+      </view>
+      <view class="card-content">
+        <view class="form-item">
+          <text class="form-label">营业执照/办学许可证 <text class="required">*</text></text>
+          <text class="field-hint" style="margin-bottom: 20rpx;">请上传清晰的证件照片，确保信息可读</text>
+          
+          <view class="upload-area">
+            <view class="upload-grid">
+              <!-- 已上传的图片 -->
+              <view class="image-item" wx:for="{{licenseImages}}" wx:key="index">
+                <image class="uploaded-image" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-index="{{index}}" />
+                <view class="image-delete" bindtap="deleteImage" data-index="{{index}}">
+                  <text class="delete-icon">×</text>
+                </view>
+                <view class="image-name">证件照片{{index + 1}}</view>
+              </view>
+              
+              <!-- 上传按钮 -->
+              <view class="upload-btn {{licenseImages.length >= 3 ? 'disabled' : ''}}" wx:if="{{licenseImages.length < 3}}" bindtap="chooseImage">
+                <text class="upload-icon">📷</text>
+                <text class="upload-text">点击上传</text>
+                <text class="upload-hint">{{licenseImages.length}}/3</text>
+              </view>
+            </view>
+            <view class="upload-tips">
+              <text class="tip-item">• 支持 JPG、PNG 格式</text>
+              <text class="tip-item">• 单张图片不超过 10MB</text>
+              <text class="tip-item">• 最多上传 3 张照片</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">申请说明</text>
+          <text class="field-hint" style="margin-bottom: 20rpx;">请简要说明申请原因和团队使用计划（选填）</text>
+          <textarea 
+            class="form-textarea" 
+            placeholder="例如：我校计划开展项目式学习，希望通过平台促进教师间的交流与协作..." 
+            value="{{formData.description}}" 
+            bindinput="onInputChange" 
+            data-field="description" 
+            maxlength="500"
+            placeholder-class="placeholder"
+            auto-height
+          />
+          <text class="char-count">{{formData.description.length}}/500</text>
+        </view>
+      </view>
     </view>
   </view>
 
-  <!-- 提交按钮 -->
+  <!-- 步骤3：确认提交 -->
+  <view class="step-content" wx:if="{{currentStep === 3}}">
+    <view class="summary-card">
+      <view class="summary-header">
+        <text class="summary-icon">📋</text>
+        <text class="summary-title">请确认以下信息</text>
+      </view>
+
+      <!-- 学校信息摘要 -->
+      <view class="summary-section">
+        <text class="summary-section-title">学校基本信息</text>
+        <view class="summary-item">
+          <text class="summary-label">学校名称</text>
+          <text class="summary-value">{{formData.schoolName}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">学校地址</text>
+          <text class="summary-value">{{formData.schoolAddress}}</text>
+        </view>
+        <view class="summary-item" wx:if="{{schoolSizeIndex !== null}}">
+          <text class="summary-label">学校规模</text>
+          <text class="summary-value">{{schoolSizeOptions[schoolSizeIndex]}}</text>
+        </view>
+      </view>
+
+      <!-- 联系人信息摘要 -->
+      <view class="summary-section">
+        <text class="summary-section-title">联系人信息</text>
+        <view class="summary-item">
+          <text class="summary-label">联系人</text>
+          <text class="summary-value">{{formData.contactName}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">联系电话</text>
+          <text class="summary-value">{{formData.contactPhone}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">职务</text>
+          <text class="summary-value">{{formData.position}}</text>
+        </view>
+      </view>
+
+      <!-- 证明材料摘要 -->
+      <view class="summary-section">
+        <text class="summary-section-title">证明材料</text>
+        <view class="summary-item">
+          <text class="summary-label">已上传证件</text>
+          <text class="summary-value">{{licenseImages.length}} 张照片</text>
+        </view>
+        <view class="summary-images">
+          <image 
+            class="summary-image" 
+            wx:for="{{licenseImages}}" 
+            wx:key="index" 
+            src="{{item}}" 
+            mode="aspectFill"
+            bindtap="previewImage" 
+            data-index="{{index}}"
+          />
+        </view>
+      </view>
+
+      <!-- 申请说明 -->
+      <view class="summary-section" wx:if="{{formData.description}}">
+        <text class="summary-section-title">申请说明</text>
+        <text class="summary-description">{{formData.description}}</text>
+      </view>
+
+      <!-- 修改入口 -->
+      <view class="edit-links">
+        <text class="edit-link" bindtap="goToStep" data-step="1">修改基础信息</text>
+        <text class="link-divider">|</text>
+        <text class="edit-link" bindtap="goToStep" data-step="2">修改证明材料</text>
+      </view>
+    </view>
+
+    <!-- 最终提示 -->
+    <view class="final-tip">
+      <text class="final-tip-icon">⚠️</text>
+      <text class="final-tip-text">提交后，我们将在 <text class="highlight">24小时内</text> 完成审核，并通过系统消息通知您审核结果。审核通过后，系统将自动生成学校专属邀请码。</text>
+    </view>
+  </view>
+
+  <!-- 底部操作按钮 -->
   <view class="bottom-actions">
-    <button class="btn-submit" bindtap="submitApplication">提交申请</button>
+    <button class="btn-back" wx:if="{{currentStep > 1}}" bindtap="prevStep">
+      <text class="btn-icon">‹</text>
+      <text>上一步</text>
+    </button>
+    <button 
+      class="btn-next {{canProceed ? '' : 'disabled'}}" 
+      wx:if="{{currentStep < 3}}" 
+      bindtap="nextStep"
+      disabled="{{!canProceed}}"
+    >
+      <text>下一步</text>
+      <text class="btn-icon">›</text>
+    </button>
+    <button 
+      class="btn-submit {{canSubmit ? '' : 'disabled'}}" 
+      wx:if="{{currentStep === 3}}" 
+      bindtap="submitApplication"
+      disabled="{{!canSubmit}}"
+    >
+      <text class="btn-icon">✓</text>
+      <text>确认信息并提交审核</text>
+    </button>
   </view>
 </view>
-

@@ -57,18 +57,72 @@ Page({
     }, 500);
   },
 
-  // 一键导入
+  // 一键导入 - 从"我的项目"中选择
   importProject() {
-    wx.showModal({
-      title: '一键导入',
-      content: '即将跳转到项目库选择要导入的项目',
+    wx.showLoading({ title: '加载项目...' });
+    
+    // 获取我的项目列表
+    const myProjects = wx.getStorageSync('myDesignedProjects') || [];
+    const purchasedProjects = wx.getStorageSync('myPurchasedProjects') || [];
+    const allMyProjects = [...myProjects, ...purchasedProjects];
+    
+    wx.hideLoading();
+    
+    if (allMyProjects.length === 0) {
+      wx.showModal({
+        title: '提示',
+        content: '您还没有已保存或购买的项目，无法导入。您可以先去项目案例中购买项目，或保存一个项目后再导入。',
+        showCancel: false
+      });
+      return;
+    }
+    
+    // 准备选项列表
+    const projectTitles = allMyProjects.map(p => p.title || p.projectName);
+    
+    wx.showActionSheet({
+      itemList: projectTitles,
       success: (res) => {
-        if (res.confirm) {
-          wx.navigateTo({
-            url: '/pages/cases/cases?mode=import'
-          });
-        }
+        const selectedProject = allMyProjects[res.tapIndex];
+        this.fillProjectData(selectedProject);
+        wx.showToast({
+          title: '导入成功',
+          icon: 'success'
+        });
       }
+    });
+  },
+  
+  // 填充项目数据
+  fillProjectData(project) {
+    const formData = {
+      projectName: project.title || project.projectName || '',
+      subjects: project.subject || project.subjects || '',
+      grade: project.grade || '',
+      hours: project.hours || '',
+      overview: project.overview || '',
+      basisWorld: project.basisWorld || '',
+      basisCurriculum: project.basisCurriculum || '',
+      basisStudents: project.basisStudents || '',
+      interdisciplinaryConcept: project.interdisciplinaryConcept || '',
+      drivingQuestion: project.drivingQuestion || '',
+      subQuestions: project.subQuestions || '',
+      finalOutcome: project.finalOutcome || '',
+      presentationForm: project.presentationForm || '',
+      launchGoal: project.launchGoal || '',
+      launchHours: project.launchHours || '',
+      launchActivity: project.launchActivity || '',
+      launchOutcome: project.launchOutcome || '',
+      launchEvaluation: project.launchEvaluation || '',
+      projectGoals: project.projectGoals || ''
+    };
+    
+    // 探究阶段数据
+    const inquiryPhases = project.inquiryPhases || [];
+    
+    this.setData({
+      formData,
+      inquiryPhases
     });
   },
 

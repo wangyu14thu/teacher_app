@@ -93,17 +93,25 @@
 
   <!-- 底部操作按钮 -->
   <view class="bottom-actions">
+    <button class="btn-action btn-secondary" bindtap="shareProject">
+      <text class="btn-action-icon">📤</text>
+      <text>分享项目</text>
+    </button>
+    <button class="btn-action btn-secondary" bindtap="showExportOptions">
+      <text class="btn-action-icon">📥</text>
+      <text>导出项目</text>
+    </button>
     <button class="btn-action btn-download" bindtap="downloadProject">
       <text class="btn-action-icon">💾</text>
-      <text>下载项目</text>
+      <text>下载</text>
     </button>
     <button class="btn-action btn-evaluate" bindtap="applyEvaluation">
       <text class="btn-action-icon">🎓</text>
-      <text>申请专家评估</text>
+      <text>专家评估</text>
     </button>
     <button class="btn-action btn-publish" bindtap="publishProject">
       <text class="btn-action-icon">🚀</text>
-      <text>发布项目</text>
+      <text>发布</text>
     </button>
   </view>
 
@@ -145,6 +153,32 @@
         <button class="btn-modal-confirm" disabled="{{!agreed}}" bindtap="confirmAction">
           确认{{actionType === 'evaluate' ? '申请评估' : '发布'}}
         </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 导出格式选择弹窗 -->
+  <view class="modal-mask" wx:if="{{showExportModal}}" bindtap="closeExportModal">
+    <view class="modal-container export-modal" catchtap="preventClose">
+      <view class="modal-header">
+        <text class="modal-title">选择导出格式</text>
+        <text class="modal-close" bindtap="closeExportModal">×</text>
+      </view>
+      <view class="export-options">
+        <view class="export-option" bindtap="exportAsWord">
+          <view class="export-icon">📄</view>
+          <view class="export-info">
+            <text class="export-name">导出为 Word</text>
+            <text class="export-desc">适合编辑和打印</text>
+          </view>
+        </view>
+        <view class="export-option" bindtap="exportAsPDF">
+          <view class="export-icon">📕</view>
+          <view class="export-info">
+            <text class="export-name">导出为 PDF</text>
+            <text class="export-desc">适合分享和保存</text>
+          </view>
+        </view>
       </view>
     </view>
   </view>

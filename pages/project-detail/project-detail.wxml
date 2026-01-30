@@ -46,11 +46,6 @@
       <text class="section-title">涉及学科</text>
       <text class="section-content">{{project.subject}}</text>
     </view>
-
-    <view class="content-section">
-      <text class="section-title">项目特色</text>
-      <text class="section-content">• 真实问题情境\n• 跨学科整合\n• 培养核心素养\n• 成果多样化展示</text>
-    </view>
   </view>
 
   <!-- 评论区 -->

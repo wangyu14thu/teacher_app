@@ -19,6 +19,7 @@ Page({
       projectGoals: '1. 探究任务：通过实地调查和数据分析，发现校园环境问题并提出改造方案\n2. 知识运用：空间规划、数据统计、设计思维、环保理念\n3. 成果产出：改造方案、设计图纸、预算清单、实施计划\n4. 素养培育：创新思维、团队协作、问题解决能力、审美情趣'
     },
     showStandardModal: false,
+    showExportModal: false,
     agreed: false,
     actionType: '' // 'evaluate' 或 'publish'
   },
@@ -123,6 +124,68 @@ Page({
       showStandardModal: false,
       agreed: false
     });
+  },
+
+  // 分享项目
+  shareProject() {
+    const projectData = this.data.projectData;
+    
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    });
+    
+    wx.showModal({
+      title: '分享提示',
+      content: '请点击右上角"..."按钮，选择"转发"或"分享到朋友圈"',
+      showCancel: false
+    });
+  },
+
+  // 显示导出选项
+  showExportOptions() {
+    this.setData({
+      showExportModal: true
+    });
+  },
+
+  // 关闭导出弹窗
+  closeExportModal() {
+    this.setData({
+      showExportModal: false
+    });
+  },
+
+  // 导出为Word
+  exportAsWord() {
+    wx.showLoading({ title: '正在生成Word文档...' });
+    
+    // TODO: 调用API生成Word文档
+    setTimeout(() => {
+      wx.hideLoading();
+      this.closeExportModal();
+      wx.showModal({
+        title: '导出成功',
+        content: 'Word文档已保存到您的手机相册，您可以在相册中查看和分享。',
+        showCancel: false
+      });
+    }, 2000);
+  },
+
+  // 导出为PDF
+  exportAsPDF() {
+    wx.showLoading({ title: '正在生成PDF文档...' });
+    
+    // TODO: 调用API生成PDF文档
+    setTimeout(() => {
+      wx.hideLoading();
+      this.closeExportModal();
+      wx.showModal({
+        title: '导出成功',
+        content: 'PDF文档已保存到您的手机相册，您可以在相册中查看和分享。',
+        showCancel: false
+      });
+    }, 2000);
   },
 
   // 阻止冒泡

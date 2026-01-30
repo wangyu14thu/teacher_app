@@ -206,13 +206,36 @@ Page({
             title: '正在跳转支付...'
           })
 
+          // 模拟支付成功
           setTimeout(() => {
             wx.hideLoading()
-            wx.showToast({
-              title: '支付功能开发中',
-              icon: 'none'
+            
+            // 保存到"我购买的"项目中
+            const purchasedProject = {
+              id: Date.now(),
+              title: project.title,
+              grade: project.gradeName,
+              subject: project.subject,
+              price: project.price,
+              purchaseTime: new Date().toISOString().split('T')[0],
+              ...project
+            }
+            
+            let myPurchasedProjects = wx.getStorageSync('myPurchasedProjects') || []
+            myPurchasedProjects.unshift(purchasedProject)
+            wx.setStorageSync('myPurchasedProjects', myPurchasedProjects)
+            
+            // 显示购买成功提示
+            wx.showModal({
+              title: '购买成功',
+              content: '项目已购买成功！您可以在"我的"-"我的项目"-"我购买的"中查看该项目。',
+              showCancel: false,
+              confirmText: '我知道了',
+              success: () => {
+                // 可选：返回上一页或跳转到"我的项目"
+              }
             })
-          }, 1000)
+          }, 1500)
         }
       }
     })
