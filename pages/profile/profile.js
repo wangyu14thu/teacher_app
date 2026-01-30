@@ -3,7 +3,16 @@ const app = getApp()
 
 Page({
   data: {
-    teacherInfo: null,
+    teacherInfo: {
+      nickname: '张老师',
+      subject: '数学',
+      grade: '五年级',
+      region: '北京市海淀区',
+      points: 120,
+      avatar: ''
+    },
+    isEditing: false,
+    editData: {},
     stats: {
       uploads: 0,
       purchased: 0
@@ -22,6 +31,9 @@ Page({
       this.setData({
         teacherInfo
       })
+    } else {
+      // 如果没有存储的信息，保存默认信息
+      wx.setStorageSync('teacherInfo', this.data.teacherInfo)
     }
   },
 
@@ -45,12 +57,104 @@ Page({
     }
   },
 
-  // 编辑资料
-  editProfile() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
+  // 开始编辑
+  startEdit() {
+    this.setData({
+      isEditing: true,
+      editData: {
+        nickname: this.data.teacherInfo.nickname,
+        subject: this.data.teacherInfo.subject,
+        grade: this.data.teacherInfo.grade,
+        region: this.data.teacherInfo.region || ''
+      }
     })
+  },
+
+  // 取消编辑
+  cancelEdit() {
+    this.setData({
+      isEditing: false,
+      editData: {}
+    })
+  },
+
+  // 编辑输入
+  onEditInput(e) {
+    const { field } = e.currentTarget.dataset
+    const { value } = e.detail
+    this.setData({
+      [`editData.${field}`]: value
+    })
+  },
+
+  // 更换头像
+  changeAvatar() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const tempFilePath = res.tempFiles[0].tempFilePath
+        
+        // 更新头像预览
+        this.setData({
+          'teacherInfo.avatar': tempFilePath
+        })
+        
+        wx.showToast({
+          title: '头像已选择',
+          icon: 'success'
+        })
+      }
+    })
+  },
+
+  // 保存资料
+  saveProfile() {
+    const { editData, teacherInfo } = this.data
+    
+    // 验证必填项
+    if (!editData.nickname || !editData.nickname.trim()) {
+      wx.showToast({
+        title: '请输入昵称',
+        icon: 'none'
+      })
+      return
+    }
+
+    wx.showLoading({
+      title: '保存中...'
+    })
+
+    // TODO: 上传头像到云存储
+    // TODO: 调用云函数更新用户信息
+
+    setTimeout(() => {
+      // 更新本地数据
+      const updatedInfo = {
+        ...teacherInfo,
+        nickname: editData.nickname,
+        subject: editData.subject,
+        grade: editData.grade,
+        region: editData.region
+      }
+
+      this.setData({
+        teacherInfo: updatedInfo,
+        isEditing: false,
+        editData: {}
+      })
+
+      // 保存到本地存储
+      wx.setStorageSync('teacherInfo', updatedInfo)
+
+      wx.hideLoading()
+      wx.showToast({
+        title: '保存成功',
+        icon: 'success'
+      })
+    }, 1000)
   },
 
   // 我的项目

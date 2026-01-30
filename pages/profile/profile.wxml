@@ -4,15 +4,73 @@
   <view class="profile-header">
     <view class="header-bg"></view>
     <view class="user-card">
-      <view class="user-avatar">
-        <text class="avatar-icon">👨‍🏫</text>
+      <view class="user-avatar" bindtap="{{isEditing ? 'changeAvatar' : ''}}">
+        <image 
+          wx:if="{{teacherInfo.avatar}}" 
+          class="avatar-image" 
+          src="{{teacherInfo.avatar}}" 
+          mode="aspectFill"
+        />
+        <text wx:else class="avatar-icon">👨‍🏫</text>
+        <view wx:if="{{isEditing}}" class="avatar-mask">
+          <text class="camera-icon">📷</text>
+        </view>
       </view>
-      <view class="user-info">
+      <view class="user-info" wx:if="{{!isEditing}}">
         <text class="user-name">{{teacherInfo.nickname || '未登录'}}</text>
         <text class="user-detail">{{teacherInfo.subject}} · {{teacherInfo.grade}}</text>
         <text class="user-region" wx:if="{{teacherInfo.region}}">{{teacherInfo.region}}</text>
       </view>
-      <button class="btn-edit" bindtap="editProfile">编辑</button>
+      <view class="user-info-edit" wx:else>
+        <view class="edit-item">
+          <text class="edit-label">昵称</text>
+          <input 
+            class="edit-input" 
+            value="{{editData.nickname}}" 
+            bindinput="onEditInput" 
+            data-field="nickname"
+            placeholder="请输入昵称"
+          />
+        </view>
+        <view class="edit-item">
+          <text class="edit-label">学科</text>
+          <input 
+            class="edit-input" 
+            value="{{editData.subject}}" 
+            bindinput="onEditInput" 
+            data-field="subject"
+            placeholder="如：语文"
+          />
+        </view>
+        <view class="edit-item">
+          <text class="edit-label">年级</text>
+          <input 
+            class="edit-input" 
+            value="{{editData.grade}}" 
+            bindinput="onEditInput" 
+            data-field="grade"
+            placeholder="如：五年级"
+          />
+        </view>
+        <view class="edit-item">
+          <text class="edit-label">地区</text>
+          <input 
+            class="edit-input" 
+            value="{{editData.region}}" 
+            bindinput="onEditInput" 
+            data-field="region"
+            placeholder="如：北京市海淀区"
+          />
+        </view>
+      </view>
+      <view class="edit-actions">
+        <button class="btn-edit" wx:if="{{!isEditing}}" bindtap="startEdit">
+          <text class="edit-icon">✏️</text>
+          <text>编辑</text>
+        </button>
+        <button class="btn-cancel" wx:else bindtap="cancelEdit">取消</button>
+        <button class="btn-save" wx:if="{{isEditing}}" bindtap="saveProfile">保存</button>
+      </view>
     </view>
   </view>
 
