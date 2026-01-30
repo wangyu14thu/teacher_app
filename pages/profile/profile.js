@@ -209,11 +209,8 @@ Page({
 
   // 联系我们
   contactUs() {
-    wx.showModal({
-      title: '联系我们',
-      content: '电话：010-62846510\n手机：13681397661',
-      showCancel: false,
-      confirmText: '我知道了'
+    wx.navigateTo({
+      url: '/pages/contact/contact'
     })
   },
 

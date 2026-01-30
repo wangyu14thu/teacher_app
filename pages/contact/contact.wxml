@@ -1,0 +1,92 @@
+<!--pages/contact/contact.wxml-->
+<view class="contact-container">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <text class="header-icon">📞</text>
+    <text class="header-title">联系我们</text>
+    <text class="header-desc">随时为您提供帮助与支持</text>
+  </view>
+
+  <!-- 联系方式卡片 -->
+  <view class="contact-card">
+    <view class="card-section">
+      <view class="section-header">
+        <text class="section-icon">☎️</text>
+        <text class="section-title">客服电话</text>
+      </view>
+      <view class="info-item" bindtap="callPhone" data-phone="010-62846510">
+        <text class="info-label">座机</text>
+        <text class="info-value">010-62846510</text>
+        <text class="info-arrow">›</text>
+      </view>
+      <view class="info-item" bindtap="callPhone" data-phone="13681397661">
+        <text class="info-label">手机</text>
+        <text class="info-value">136 8139 7661</text>
+        <text class="info-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="divider"></view>
+
+    <view class="card-section">
+      <view class="section-header">
+        <text class="section-icon">⏰</text>
+        <text class="section-title">工作时间</text>
+      </view>
+      <view class="time-info">
+        <text class="time-text">周一至周五：9:00 - 18:00</text>
+        <text class="time-text">周末及节假日：10:00 - 17:00</text>
+      </view>
+    </view>
+
+    <view class="divider"></view>
+
+    <view class="card-section">
+      <view class="section-header">
+        <text class="section-icon">💬</text>
+        <text class="section-title">在线客服</text>
+      </view>
+      <button class="btn-service" bindtap="openCustomerService">
+        <text class="btn-icon">💁</text>
+        <text class="btn-text">联系在线客服</text>
+        <text class="btn-arrow">›</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 常见问题 -->
+  <view class="faq-section">
+    <text class="faq-title">常见问题</text>
+    <view class="faq-list">
+      <view class="faq-item" bindtap="openFaq" data-type="account">
+        <text class="faq-icon">❓</text>
+        <text class="faq-text">如何注册和登录？</text>
+        <text class="faq-arrow">›</text>
+      </view>
+      <view class="faq-item" bindtap="openFaq" data-type="project">
+        <text class="faq-icon">❓</text>
+        <text class="faq-text">如何设计和发布项目？</text>
+        <text class="faq-arrow">›</text>
+      </view>
+      <view class="faq-item" bindtap="openFaq" data-type="points">
+        <text class="faq-icon">❓</text>
+        <text class="faq-text">积分如何获得和使用？</text>
+        <text class="faq-arrow">›</text>
+      </view>
+      <view class="faq-item" bindtap="openFaq" data-type="school">
+        <text class="faq-icon">❓</text>
+        <text class="faq-text">如何创建学校团队？</text>
+        <text class="faq-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 反馈建议 -->
+  <view class="feedback-section">
+    <button class="btn-feedback" bindtap="submitFeedback">
+      <text class="btn-icon">✍️</text>
+      <text>提交反馈与建议</text>
+    </button>
+  </view>
+</view>
+
