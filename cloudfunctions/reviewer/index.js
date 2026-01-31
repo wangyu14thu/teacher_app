@@ -35,10 +35,10 @@ exports.main = async (event, context) => {
       case 'logout':
         return await handleLogout(event, openid);
       
-      case 'getProfile':
-        return await getProfile(event, openid);
-      
       case 'getPendingTasks':
+        return await getPendingTasks(event, openid);
+      
+      case 'getTaskDetail':
         return await getPendingTasks(event, openid);
       
       case 'getTaskDetail':
@@ -369,5 +369,92 @@ async function getProfile(event, openid) {
       message: '获取用户信息失败'
     };
   }
+}
+
+/**
+ * 获取待审核任务列表
+ */
+async function getPendingTasks(event, openid) {
+  const { token, taskType } = event;
+
+  if (!token) {
+    return { success: false, message: '未登录' };
+  }
+
+  try {
+    // 验证token并获取审核员ID
+    const reviewerInfo = await verifyTokenAndGetReviewer(token);
+    if (!reviewerInfo) {
+      return { success: false, message: 'Token无效' };
+    }
+
+    const results = {};
+    
+    // 获取待审核项目
+    if (taskType === 'project' || taskType === 'all') {
+      const projects = await db.collection('projects_pending')
+        .where({
+          status: 'pending',
+          assignedTo: reviewerInfo._id
+        })
+        .orderBy('submitTime', 'desc')
+        .get();
+      
+      results.projects = projects.data.map(item => ({
+        ...item,
+        urgent: isUrgent(item.submitTime)
+      }));
+    }
+
+    // 获取待审核学校
+    if (taskType === 'school' || taskType === 'all') {
+      const schools = await db.collection('schools_pending')
+        .where({
+          status: 'pending',
+          assignedTo: reviewerInfo._id
+        })
+        .orderBy('submitTime', 'desc')
+        .get();
+      
+      results.schools = schools.data;
+    }
+
+    return { success: true, data: results };
+
+  } catch (error) {
+    console.error('获取待审核任务错误:', error);
+    return { success: false, message: '获取任务列表失败' };
+  }
+}
+
+/**
+ * 验证Token并获取审核员信息
+ */
+async function verifyTokenAndGetReviewer(token) {
+  try {
+    const parts = token.split('_');
+    if (parts.length < 2) return null;
+    
+    const userId = parts[1];
+    const result = await db.collection('reviewers').doc(userId).get();
+    
+    if (!result.data || result.data.currentToken !== token) return null;
+    
+    return result.data;
+  } catch (error) {
+    console.error('验证Token错误:', error);
+    return null;
+  }
+}
+
+/**
+ * 判断任务是否紧急（超过24小时）
+ */
+function isUrgent(submitTime) {
+  if (!submitTime) return false;
+  const now = new Date();
+  const submit = new Date(submitTime);
+  const hoursDiff = (now - submit) / (1000 * 60 * 60);
+  return hoursDiff > 24;
 }
 

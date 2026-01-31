@@ -178,29 +178,69 @@ Page({
   },
 
   // 执行提交
-  doSubmit() {
-    const { schoolName } = this.data.formData;
+  async doSubmit() {
+    const { formData, schoolSizeIndex, schoolSizeOptions } = this.data;
     
     wx.showLoading({
       title: '提交中...',
       mask: true
     });
 
-    // TODO: 调用云函数提交申请，生成邀请码
-
-    setTimeout(() => {
-      wx.hideLoading();
+    try {
+      // 获取教师信息
+      const teacherInfo = wx.getStorageSync('teacherInfo') || {};
       
-      wx.showModal({
-        title: '申请已提交！',
-        content: `我们已收到您创建"${schoolName}"团队的申请，将在24小时内完成审核。\n\n审核结果将通过"系统消息"通知您，请留意。\n\n审核通过后，系统将自动生成学校专属邀请码并发送给您。`,
-        showCancel: false,
-        confirmText: '我知道了',
-        success: () => {
-          // 返回上一页
-          wx.navigateBack();
+      // 准备提交数据
+      const schoolData = {
+        schoolName: formData.schoolName,
+        schoolAddress: formData.schoolAddress,
+        schoolSize: schoolSizeIndex !== null ? schoolSizeOptions[schoolSizeIndex] : '',
+        contactName: formData.contactName,
+        contactPhone: formData.contactPhone,
+        position: formData.position,
+        description: formData.description,
+        teacherInfo: teacherInfo
+      };
+
+      // 调用云函数提交申请
+      const result = await wx.cloud.callFunction({
+        name: 'school-application',
+        data: {
+          action: 'submitApplication',
+          schoolData: schoolData
         }
       });
-    }, 2000);
+
+      wx.hideLoading();
+
+      if (result.result.success) {
+        wx.showModal({
+          title: '申请已提交！',
+          content: `我们已收到您创建"${formData.schoolName}"团队的申请，将在24小时内完成审核。\n\n审核结果将通过"系统消息"通知您，请留意。\n\n审核通过后，系统将自动生成学校专属邀请码并发送给您。`,
+          showCancel: false,
+          confirmText: '我知道了',
+          success: () => {
+            // 返回上一页
+            wx.navigateBack();
+          }
+        });
+      } else {
+        wx.showModal({
+          title: '提交失败',
+          content: result.result.message || '提交失败，请稍后重试',
+          showCancel: false
+        });
+      }
+
+    } catch (error) {
+      wx.hideLoading();
+      console.error('提交申请错误:', error);
+      
+      wx.showModal({
+        title: '提交失败',
+        content: '网络错误，请检查网络连接后重试',
+        showCancel: false
+      });
+    }
   }
 });

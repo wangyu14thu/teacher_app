@@ -189,30 +189,90 @@ Page({
    * 加载待审核学校
    */
   async loadPendingSchools() {
-    // TODO: 调用云函数获取待审核学校列表
-    const schools = [
-      {
-        id: 'school_001',
-        schoolName: '翠微小学',
-        contactName: '张主任',
-        position: '教务主任',
-        schoolAddress: '北京市海淀区',
-        submitTime: '3小时前'
-      },
-      {
-        id: 'school_002',
-        schoolName: '实验小学',
-        contactName: '李校长',
-        position: '副校长',
-        schoolAddress: '北京市朝阳区',
-        submitTime: '1天前'
+    try {
+      const reviewerInfo = wx.getStorageSync('reviewer_info');
+      if (!reviewerInfo || !reviewerInfo.id) {
+        console.error('未找到审核员信息');
+        this.setData({ schools: [], schoolCount: 0 });
+        return;
       }
-    ];
+
+      // 调用云函数获取待审核学校
+      const result = await wx.cloud.callFunction({
+        name: 'reviewer',
+        data: {
+          action: 'getPendingTasks',
+          token: wx.getStorageSync('reviewer_token'),
+          taskType: 'school'
+        }
+      });
+
+      if (result.result && result.result.success) {
+        const schools = result.result.data.schools || [];
+        
+        // 格式化数据
+        const formattedSchools = schools.map(school => ({
+          id: school._id,
+          schoolName: school.schoolName,
+          contactName: school.contactName,
+          position: school.position,
+          schoolAddress: school.schoolAddress,
+          submitTime: this.formatTime(school.submitTime)
+        }));
+
+        this.setData({
+          schools: formattedSchools,
+          schoolCount: formattedSchools.length
+        });
+
+        console.log(`加载了 ${formattedSchools.length} 个待审核学校`);
+      } else {
+        console.error('加载学校失败:', result.result?.message);
+        this.setData({ schools: [], schoolCount: 0 });
+      }
+
+    } catch (error) {
+      console.error('加载待审核学校错误:', error);
+      this.setData({ schools: [], schoolCount: 0 });
+    }
+  },
+
+  /**
+   * 格式化时间
+   */
+  formatTime(date) {
+    if (!date) return '';
     
-    this.setData({
-      schools,
-      schoolCount: schools.length
-    });
+    const d = new Date(date);
+    const now = new Date();
+    const diff = now - d;
+    
+    // 小于1小时
+    if (diff < 3600000) {
+      const minutes = Math.floor(diff / 60000);
+      return minutes <= 1 ? '刚刚' : `${minutes}分钟前`;
+    }
+    
+    // 小于24小时
+    if (diff < 86400000) {
+      const hours = Math.floor(diff / 3600000);
+      return `${hours}小时前`;
+    }
+    
+    // 小于7天
+    if (diff < 604800000) {
+      const days = Math.floor(diff / 86400000);
+      return `${days}天前`;
+    }
+    
+    // 超过7天，显示具体日期
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hour = String(d.getHours()).padStart(2, '0');
+    const minute = String(d.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hour}:${minute}`;
   },
 
   /**
