@@ -178,21 +178,35 @@ Page({
     }
 
     console.log('验证通过，显示确认弹窗');
-    wx.showModal({
-      title: '确认提交',
-      content: '请确认所填信息准确无误，提交后将进入审核流程',
-      confirmText: '确认提交',
-      cancelText: '再检查一下',
-      success: (res) => {
-        console.log('弹窗结果:', res);
-        if (res.confirm) {
-          console.log('用户点击确认，开始执行提交');
-          this.doSubmit();
-        } else {
-          console.log('用户取消提交');
+    console.log('即将调用 wx.showModal');
+    
+    try {
+      wx.showModal({
+        title: '确认提交',
+        content: '请确认所填信息准确无误，提交后将进入审核流程',
+        confirmText: '确认提交',
+        cancelText: '再检查一下',
+        success: (res) => {
+          console.log('弹窗 success 回调被触发');
+          console.log('弹窗结果:', res);
+          if (res.confirm) {
+            console.log('用户点击确认，开始执行提交');
+            this.doSubmit();
+          } else {
+            console.log('用户取消提交');
+          }
+        },
+        fail: (err) => {
+          console.error('wx.showModal 失败:', err);
+        },
+        complete: () => {
+          console.log('wx.showModal complete 回调被触发');
         }
-      }
-    });
+      });
+      console.log('wx.showModal 已调用');
+    } catch (e) {
+      console.error('调用 wx.showModal 时发生异常:', e);
+    }
   },
 
   // 执行提交
