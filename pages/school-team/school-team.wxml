@@ -218,9 +218,5 @@
       <text class="btn-icon">✓</text>
       <text>确认信息并提交审核</text>
     </button>
-    
-    <!-- 临时调试按钮 -->
-    <button 
-      class="btn-debug"
   </view>
 </view>
