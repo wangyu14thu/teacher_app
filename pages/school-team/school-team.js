@@ -72,16 +72,24 @@ Page({
 
   // 下一步
   nextStep() {
+    console.log('=== nextStep 被调用 ===');
+    console.log('当前 canProceed:', this.data.canProceed);
+    
     if (!this.data.canProceed) {
+      console.warn('canProceed 为 false，显示错误提示');
       this.showValidationError();
       return;
     }
 
     const nextStep = this.data.currentStep + 1;
+    console.log('即将进入步骤:', nextStep);
+    
     this.setData({
       currentStep: nextStep,
       canSubmit: true  // 进入步骤2即可提交
     });
+
+    console.log('步骤已切换，canSubmit 已设置为 true');
 
     // 滚动到顶部
     wx.pageScrollTo({
@@ -156,7 +164,12 @@ Page({
 
   // 提交申请
   submitApplication() {
+    console.log('=== submitApplication 被调用 ===');
+    console.log('canSubmit 状态:', this.data.canSubmit);
+    console.log('currentStep:', this.data.currentStep);
+    
     if (!this.data.canSubmit) {
+      console.warn('canSubmit 为 false，无法提交');
       wx.showToast({
         title: '请完善所有必填信息',
         icon: 'none'
@@ -164,14 +177,19 @@ Page({
       return;
     }
 
+    console.log('验证通过，显示确认弹窗');
     wx.showModal({
       title: '确认提交',
       content: '请确认所填信息准确无误，提交后将进入审核流程',
       confirmText: '确认提交',
       cancelText: '再检查一下',
       success: (res) => {
+        console.log('弹窗结果:', res);
         if (res.confirm) {
+          console.log('用户点击确认，开始执行提交');
           this.doSubmit();
+        } else {
+          console.log('用户取消提交');
         }
       }
     });
@@ -254,5 +272,21 @@ Page({
         showCancel: false
       });
     }
+  },
+
+  // 调试测试函数
+  debugTest() {
+    console.log('========== 调试测试 ==========');
+    console.log('页面数据状态:');
+    console.log('- currentStep:', this.data.currentStep);
+    console.log('- canSubmit:', this.data.canSubmit);
+    console.log('- canProceed:', this.data.canProceed);
+    console.log('- formData:', this.data.formData);
+    
+    wx.showModal({
+      title: '调试信息',
+      content: `currentStep: ${this.data.currentStep}\ncanSubmit: ${this.data.canSubmit}\ncanProceed: ${this.data.canProceed}`,
+      showCancel: false
+    });
   }
 });

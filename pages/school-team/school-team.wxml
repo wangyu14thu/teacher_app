@@ -220,5 +220,15 @@
       <text class="btn-icon">✓</text>
       <text>确认信息并提交审核</text>
     </button>
+    
+    <!-- 临时调试按钮 -->
+    <button 
+      class="btn-debug"
+      wx:if="{{currentStep === 2}}"
+      bindtap="debugTest"
+      style="margin-top: 10px; background: #ff9800; color: white;"
+    >
+      调试测试按钮（点我测试）
+    </button>
   </view>
 </view>
