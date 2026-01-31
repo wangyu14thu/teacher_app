@@ -1,0 +1,86 @@
+<!--pages/reviewer-login/reviewer-login.wxml-->
+<view class="reviewer-login-container">
+  <!-- Logo区域 -->
+  <view class="logo-section">
+    <text class="logo-icon">🛡️</text>
+    <text class="logo-text">PBL营·教师端</text>
+  </view>
+
+  <!-- 登录卡片 -->
+  <view class="login-card">
+    <view class="card-header">
+      <text class="login-title">审核工作台登录</text>
+      <text class="login-subtitle">Reviewer Dashboard</text>
+    </view>
+
+    <!-- 表单区域 -->
+    <view class="form-container">
+      <!-- 账号输入 -->
+      <view class="form-group">
+        <view class="input-wrapper {{accountError ? 'error' : ''}}">
+          <text class="input-icon">👤</text>
+          <input 
+            class="form-input" 
+            type="text"
+            placeholder="工号 / 审核员账号" 
+            value="{{account}}" 
+            bindinput="onAccountInput"
+            bindconfirm="handleLogin"
+            focus="{{autoFocus}}"
+            placeholder-class="input-placeholder"
+          />
+        </view>
+        <text class="error-tip" wx:if="{{accountError}}">{{accountError}}</text>
+      </view>
+
+      <!-- 密码输入 -->
+      <view class="form-group">
+        <view class="input-wrapper {{passwordError ? 'error' : ''}}">
+          <text class="input-icon">🔒</text>
+          <input 
+            class="form-input" 
+            type="password"
+            password="{{true}}"
+            placeholder="请输入密码" 
+            value="{{password}}" 
+            bindinput="onPasswordInput"
+            bindconfirm="handleLogin"
+            placeholder-class="input-placeholder"
+          />
+        </view>
+        <text class="error-tip" wx:if="{{passwordError}}">{{passwordError}}</text>
+      </view>
+
+      <!-- 全局错误提示 -->
+      <view class="global-error" wx:if="{{globalError}}">
+        <text class="error-icon">⚠️</text>
+        <text class="error-text">{{globalError}}</text>
+      </view>
+
+      <!-- 登录按钮 -->
+      <button 
+        class="btn-login {{isLoading ? 'loading' : ''}}" 
+        bindtap="handleLogin"
+        disabled="{{isLoading}}"
+      >
+        <text wx:if="{{!isLoading}}">进入审核工作台</text>
+        <view wx:else class="loading-content">
+          <view class="spinner"></view>
+          <text>登录中...</text>
+        </view>
+      </button>
+    </view>
+
+    <!-- 安全提示 -->
+    <view class="security-notice">
+      <text class="notice-icon">🔐</text>
+      <text class="notice-text">内部工作系统，未经授权严禁访问</text>
+    </view>
+  </view>
+
+  <!-- 底部装饰 -->
+  <view class="footer-decoration">
+    <view class="decoration-line"></view>
+  </view>
+</view>
+

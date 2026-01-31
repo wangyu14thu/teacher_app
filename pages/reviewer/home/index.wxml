@@ -1,0 +1,78 @@
+<!--pages/reviewer/home/index.wxml-->
+<view class="reviewer-home-container">
+  <!-- 顶部导航栏 -->
+  <view class="top-bar">
+    <view class="top-left">
+      <text class="app-icon">🛡️</text>
+      <text class="app-name">审核工作台</text>
+    </view>
+    <view class="top-right">
+      <text class="user-name">{{reviewerInfo.name}}</text>
+      <button class="btn-logout" bindtap="handleLogout">
+        <text class="logout-icon">🚪</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 欢迎信息 -->
+  <view class="welcome-section">
+    <text class="welcome-title">欢迎回来，{{reviewerInfo.name}}</text>
+    <text class="welcome-subtitle">{{reviewerInfo.department || '审核员'}}</text>
+    <view class="welcome-badge">
+      <text class="badge-text">内部系统</text>
+    </view>
+  </view>
+
+  <!-- 快速统计 -->
+  <view class="stats-grid">
+    <view class="stat-card">
+      <text class="stat-number">23</text>
+      <text class="stat-label">待审核项目</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-number">156</text>
+      <text class="stat-label">已完成审核</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-number">8</text>
+      <text class="stat-label">待审核学校</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-number">45</text>
+      <text class="stat-label">本月完成</text>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="function-section">
+    <text class="section-title">审核功能</text>
+    <view class="function-grid">
+      <view class="function-card" bindtap="navigateToProjectReview">
+        <text class="function-icon">📝</text>
+        <text class="function-name">项目审核</text>
+        <view class="badge-pending" wx:if="{{pendingProjects > 0}}">{{pendingProjects}}</view>
+      </view>
+      <view class="function-card" bindtap="navigateToSchoolReview">
+        <text class="function-icon">🏫</text>
+        <text class="function-name">学校审核</text>
+        <view class="badge-pending" wx:if="{{pendingSchools > 0}}">{{pendingSchools}}</view>
+      </view>
+      <view class="function-card" bindtap="navigateToUserManage">
+        <text class="function-icon">👥</text>
+        <text class="function-name">用户管理</text>
+      </view>
+      <view class="function-card" bindtap="navigateToReports">
+        <text class="function-icon">📊</text>
+        <text class="function-name">数据报表</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 开发中提示 -->
+  <view class="dev-notice">
+    <text class="dev-icon">🚧</text>
+    <text class="dev-text">审核员功能正在开发中...</text>
+    <text class="dev-desc">当前为演示版本，完整功能即将上线</text>
+  </view>
+</view>
+
