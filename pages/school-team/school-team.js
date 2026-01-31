@@ -181,6 +181,9 @@ Page({
   async doSubmit() {
     const { formData, schoolSizeIndex, schoolSizeOptions } = this.data;
     
+    console.log('=== 开始提交学校申请 ===');
+    console.log('表单数据:', formData);
+    
     wx.showLoading({
       title: '提交中...',
       mask: true
@@ -189,6 +192,7 @@ Page({
     try {
       // 获取教师信息
       const teacherInfo = wx.getStorageSync('teacherInfo') || {};
+      console.log('教师信息:', teacherInfo);
       
       // 准备提交数据
       const schoolData = {
@@ -202,7 +206,10 @@ Page({
         teacherInfo: teacherInfo
       };
 
+      console.log('准备提交的数据:', schoolData);
+
       // 调用云函数提交申请
+      console.log('开始调用云函数 school-application...');
       const result = await wx.cloud.callFunction({
         name: 'school-application',
         data: {
@@ -211,9 +218,12 @@ Page({
         }
       });
 
+      console.log('云函数调用结果:', result);
+
       wx.hideLoading();
 
       if (result.result.success) {
+        console.log('提交成功！');
         wx.showModal({
           title: '申请已提交！',
           content: `我们已收到您创建"${formData.schoolName}"团队的申请，将在24小时内完成审核。\n\n审核结果将通过"系统消息"通知您，请留意。\n\n审核通过后，系统将自动生成学校专属邀请码并发送给您。`,
@@ -225,6 +235,7 @@ Page({
           }
         });
       } else {
+        console.error('提交失败:', result.result.message);
         wx.showModal({
           title: '提交失败',
           content: result.result.message || '提交失败，请稍后重试',
@@ -235,10 +246,11 @@ Page({
     } catch (error) {
       wx.hideLoading();
       console.error('提交申请错误:', error);
+      console.error('错误详情:', JSON.stringify(error));
       
       wx.showModal({
         title: '提交失败',
-        content: '网络错误，请检查网络连接后重试',
+        content: `错误信息: ${error.errMsg || error.message || '未知错误'}\n\n请检查：\n1. 云函数是否已部署\n2. 网络连接是否正常\n3. 云开发环境是否正常`,
         showCancel: false
       });
     }
