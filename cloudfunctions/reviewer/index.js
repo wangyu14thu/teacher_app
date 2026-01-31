@@ -39,10 +39,10 @@ exports.main = async (event, context) => {
         return await getPendingTasks(event, openid);
       
       case 'getTaskDetail':
-        return await getPendingTasks(event, openid);
-      
-      case 'getTaskDetail':
         return await getTaskDetail(event, openid);
+      
+      case 'reviewSchool':
+        return await reviewSchool(event, openid);
       
       case 'submitReview':
         return await submitReview(event, openid);
@@ -456,5 +456,144 @@ function isUrgent(submitTime) {
   const submit = new Date(submitTime);
   const hoursDiff = (now - submit) / (1000 * 60 * 60);
   return hoursDiff > 24;
+}
+
+/**
+ * 审核学校申请
+ */
+async function reviewSchool(event, openid) {
+  const { token, schoolId, decision, rejectReason, schoolName } = event;
+
+  // 1. 验证审核员身份
+  const reviewerInfo = await verifyTokenAndGetReviewer(token);
+  if (!reviewerInfo) {
+    return { success: false, message: '审核员身份验证失败' };
+  }
+
+  // 2. 验证参数
+  if (!schoolId || !decision) {
+    return { success: false, message: '参数不完整' };
+  }
+
+  if (decision === 'reject' && !rejectReason) {
+    return { success: false, message: '驳回时必须提供原因' };
+  }
+
+  try {
+    const now = new Date();
+    let inviteCode = '';
+
+    // 3. 如果审核通过，生成邀请码
+    if (decision === 'pass') {
+      inviteCode = generateInviteCode();
+      console.log(`为学校 ${schoolName} 生成邀请码: ${inviteCode}`);
+    }
+
+    // 4. 获取学校申请信息
+    const schoolResult = await db.collection('schools_pending').doc(schoolId).get();
+    if (!schoolResult.data) {
+      return { success: false, message: '未找到学校申请记录' };
+    }
+
+    const schoolData = schoolResult.data;
+
+    // 5. 更新学校申请状态
+    const updateData = {
+      status: decision === 'pass' ? 'approved' : 'rejected',
+      reviewerId: reviewerInfo._id,
+      reviewerName: reviewerInfo.name,
+      reviewTime: now,
+      inviteCode: inviteCode,
+      rejectReason: rejectReason || ''
+    };
+
+    await db.collection('schools_pending')
+      .doc(schoolId)
+      .update({
+        data: updateData
+      });
+
+    console.log(`学校申请 ${schoolId} 审核完成: ${decision}`);
+
+    // 6. 如果通过，创建正式的学校记录
+    if (decision === 'pass') {
+      await db.collection('schools').add({
+        data: {
+          schoolName: schoolData.schoolName,
+          schoolAddress: schoolData.schoolAddress,
+          schoolSize: schoolData.schoolSize,
+          contactName: schoolData.contactName,
+          contactPhone: schoolData.contactPhone,
+          position: schoolData.position,
+          description: schoolData.description,
+          inviteCode: inviteCode,
+          adminOpenid: schoolData.applicantOpenid,
+          adminId: schoolData.applicantId,
+          adminName: schoolData.applicantName,
+          createdTime: now,
+          status: 'active',
+          memberCount: 1,
+          projectCount: 0,
+          downloadQuota: 100 // 初始下载额度
+        }
+      });
+
+      console.log(`正式学校记录已创建，邀请码: ${inviteCode}`);
+    }
+
+    // 7. 发送系统消息给申请人
+    const messageContent = decision === 'pass'
+      ? `恭喜！您申请的"${schoolData.schoolName}"团队已创建成功。学校邀请码为：${inviteCode}。请将该码分享给本校同事，邀请他们加入。`
+      : `很遗憾，您申请的"${schoolData.schoolName}"团队未通过审核。原因：${rejectReason}。如有疑问，请联系客服。`;
+
+    await db.collection('system_messages').add({
+      data: {
+        userId: schoolData.applicantOpenid,
+        type: decision === 'pass' ? 'school_approved' : 'school_rejected',
+        title: decision === 'pass' ? '学校团队创建成功' : '学校团队审核未通过',
+        content: messageContent,
+        inviteCode: inviteCode,
+        schoolName: schoolData.schoolName,
+        status: 'unread',
+        createdTime: now
+      }
+    });
+
+    console.log('系统消息已发送给申请人');
+
+    // 8. 返回成功结果
+    return {
+      success: true,
+      message: decision === 'pass' ? '审核通过' : '审核驳回',
+      inviteCode: inviteCode,
+      data: {
+        schoolId,
+        schoolName: schoolData.schoolName,
+        decision,
+        inviteCode
+      }
+    };
+
+  } catch (error) {
+    console.error('审核学校申请错误:', error);
+    return {
+      success: false,
+      message: '审核操作失败: ' + error.message
+    };
+  }
+}
+
+/**
+ * 生成唯一邀请码（6-8位数字字母混合）
+ */
+function generateInviteCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 去掉容易混淆的字符
+  const length = 8;
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * chars.length);
+    code += chars[randomIndex];
+  }
+  return code;
 }
 
