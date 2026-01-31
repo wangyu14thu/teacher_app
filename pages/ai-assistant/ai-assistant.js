@@ -78,16 +78,114 @@ Page({
   },
 
   // 加载系统消息
-  loadSystemMessages() {
-    // TODO: 从云端加载系统消息
-    // 这里使用模拟数据
-    const messages = wx.getStorageSync('systemMessages') || this.data.messages;
-    const unreadCount = messages.filter(m => !m.read).length;
+  async loadSystemMessages() {
+    try {
+      wx.showLoading({ title: '加载中...' });
+      
+      // 获取当前用户的 openid
+      const userInfo = wx.getStorageSync('teacherInfo') || {};
+      
+      // 从云数据库获取系统消息
+      const db = wx.cloud.database();
+      const result = await db.collection('system_messages')
+        .where({
+          userId: db.command.exists(true) // 先获取所有消息，后续按用户过滤
+        })
+        .orderBy('createdTime', 'desc')
+        .limit(50)
+        .get();
+      
+      console.log('获取到的系统消息:', result.data);
+      
+      // 格式化消息数据
+      const messages = result.data.map((msg, index) => {
+        return {
+          id: msg._id || index,
+          title: msg.title || '系统通知',
+          preview: this.getMessagePreview(msg.content),
+          time: this.formatMessageTime(msg.createdTime),
+          read: msg.status === 'read',
+          type: msg.type || 'system',
+          inviteCode: msg.inviteCode || '',
+          actionText: this.getActionText(msg.type),
+          fullContent: msg.content || '',
+          _id: msg._id // 保存原始ID用于标记已读
+        };
+      });
+      
+      const unreadCount = messages.filter(m => !m.read).length;
+      
+      this.setData({
+        messages,
+        unreadCount
+      });
+      
+      wx.hideLoading();
+      
+    } catch (error) {
+      console.error('加载系统消息失败:', error);
+      wx.hideLoading();
+      
+      // 如果加载失败，使用空数组
+      this.setData({
+        messages: [],
+        unreadCount: 0
+      });
+    }
+  },
+
+  // 获取消息预览文本（前30个字符）
+  getMessagePreview(content) {
+    if (!content) return '';
+    return content.length > 30 ? content.substring(0, 30) + '...' : content;
+  },
+
+  // 格式化消息时间
+  formatMessageTime(date) {
+    if (!date) return '';
     
-    this.setData({
-      messages,
-      unreadCount
-    });
+    const d = new Date(date);
+    const now = new Date();
+    const diff = now - d;
+    
+    // 小于1小时
+    if (diff < 3600000) {
+      const minutes = Math.floor(diff / 60000);
+      return minutes <= 1 ? '刚刚' : `${minutes}分钟前`;
+    }
+    
+    // 小于24小时
+    if (diff < 86400000) {
+      const hours = Math.floor(diff / 3600000);
+      return `${hours}小时前`;
+    }
+    
+    // 小于7天
+    if (diff < 604800000) {
+      const days = Math.floor(diff / 86400000);
+      return `${days}天前`;
+    }
+    
+    // 超过7天，显示具体日期
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hour = String(d.getHours()).padStart(2, '0');
+    const minute = String(d.getMinutes()).padStart(2, '0');
+    
+    return `${month}月${day}日 ${hour}:${minute}`;
+  },
+
+  // 根据消息类型获取操作按钮文字
+  getActionText(type) {
+    const actionTexts = {
+      'school_approved': '复制邀请码',
+      'school_rejected': '',
+      'project_approved': '',
+      'project_rejected': '查看反馈',
+      'evaluation': '查看反馈详情',
+      'system': ''
+    };
+    return actionTexts[type] || '';
   },
 
   // 更新未读数
@@ -99,20 +197,34 @@ Page({
   },
 
   // 查看消息
-  viewMessage(e) {
+  async viewMessage(e) {
     const { id } = e.currentTarget.dataset;
     const { messages } = this.data;
     
     const message = messages.find(m => m.id === id);
     if (!message) return;
     
-    // 标记为已读
-    message.read = true;
-    this.setData({
-      messages
-    });
-    wx.setStorageSync('systemMessages', messages);
-    this.updateUnreadCount();
+    // 如果未读，标记为已读
+    if (!message.read && message._id) {
+      try {
+        const db = wx.cloud.database();
+        await db.collection('system_messages')
+          .doc(message._id)
+          .update({
+            data: {
+              status: 'read'
+            }
+          });
+        
+        // 更新本地状态
+        message.read = true;
+        this.setData({ messages });
+        this.updateUnreadCount();
+        
+      } catch (error) {
+        console.error('标记消息已读失败:', error);
+      }
+    }
     
     // 显示完整内容
     wx.showModal({

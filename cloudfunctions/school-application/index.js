@@ -22,6 +22,9 @@ exports.main = async (event, context) => {
       case 'submitApplication':
         return await submitApplication(event, openid);
       
+      case 'submitProject':
+        return await submitProject(event, openid);
+      
       case 'getMyApplication':
         return await getMyApplication(event, openid);
       
@@ -230,4 +233,175 @@ async function assignReviewer() {
     return '';
   }
 }
+
+/**
+ * 提交项目审核/评估申请
+ */
+async function submitProject(event, openid) {
+  const { projectData } = event;
+
+  if (!projectData) {
+    return {
+      success: false,
+      message: '项目数据不能为空'
+    };
+  }
+
+  try {
+    const submitType = projectData.submitType; // 'evaluate' 或 'publish'
+    const teacherInfo = projectData.teacherInfo || {};
+
+    // 1. 自动分配审核员
+    const assignedReviewerId = await assignReviewerByGrade(projectData.grade);
+
+    // 2. 创建待审核项目记录
+    const submitTime = new Date();
+    const result = await db.collection('projects_pending').add({
+      data: {
+        // 项目基本信息
+        projectName: projectData.projectName,
+        subjects: projectData.subjects,
+        grade: projectData.grade,
+        classHours: projectData.classHours,
+        projectOverview: projectData.projectOverview,
+        
+        // 立项依据
+        realWorldBasis: projectData.realWorldBasis,
+        curriculumBasis: projectData.curriculumBasis,
+        studentBasis: projectData.studentBasis,
+        
+        // 跨学科概念与项目框架
+        interdisciplinaryConcept: projectData.interdisciplinaryConcept,
+        drivingQuestion: projectData.drivingQuestion,
+        subQuestions: projectData.subQuestions,
+        finalProduct: projectData.finalProduct,
+        presentationForm: projectData.presentationForm,
+        
+        // 项目启动
+        launchGoals: projectData.launchGoals,
+        launchHours: projectData.launchHours,
+        launchActivity: projectData.launchActivity,
+        launchOutcome: projectData.launchOutcome,
+        launchAssessment: projectData.launchAssessment,
+        
+        // 项目探究阶段
+        inquiryPhases: projectData.inquiryPhases || [],
+        
+        // 项目目标
+        projectGoals: projectData.projectGoals,
+        
+        // 提交人信息
+        applicantOpenid: openid,
+        applicantId: teacherInfo.userId || openid,
+        applicantName: teacherInfo.nickname || '教师',
+        
+        // 提交类型：evaluate=申请评估, publish=发布项目
+        submitType: submitType,
+        
+        // 审核状态
+        status: 'pending',
+        assignedTo: assignedReviewerId,
+        submitTime: submitTime,
+        
+        // 初始化审核相关字段
+        reviewerId: '',
+        reviewerName: '',
+        reviewTime: null,
+        reviewOpinions: [],
+        approvalPoints: 0
+      }
+    });
+
+    console.log(`项目申请已创建: ${result._id}, 类型: ${submitType}, 分配给审核员: ${assignedReviewerId}`);
+
+    return {
+      success: true,
+      data: {
+        projectId: result._id,
+        message: submitType === 'evaluate' ? '评估申请提交成功' : '发布申请提交成功'
+      }
+    };
+
+  } catch (error) {
+    console.error('提交项目申请错误:', error);
+    return {
+      success: false,
+      message: '提交失败，请稍后重试'
+    };
+  }
+}
+
+/**
+ * 根据年级分配审核员（按学段匹配）
+ */
+async function assignReviewerByGrade(grade) {
+  try {
+    // 年级映射到学段
+    const gradeToSegment = {
+      '1年级': '1-2年级',
+      '2年级': '1-2年级',
+      '3年级': '3-4年级',
+      '4年级': '3-4年级',
+      '5年级': '5-6年级',
+      '6年级': '5-6年级'
+    };
+
+    const segment = gradeToSegment[grade] || '';
+
+    // 1. 优先匹配学段专长的审核员
+    let reviewers = await db.collection('reviewers')
+      .where({
+        status: 'active',
+        gradeLevel: db.command.or(
+          db.command.in([segment]),
+          db.command.in(['全学段'])
+        )
+      })
+      .get();
+
+    // 2. 如果没有匹配的，获取所有活跃审核员
+    if (reviewers.data.length === 0) {
+      reviewers = await db.collection('reviewers')
+        .where({
+          status: 'active'
+        })
+        .get();
+    }
+
+    if (reviewers.data.length === 0) {
+      console.warn('没有可用的审核员');
+      return '';
+    }
+
+    // 3. 负载均衡：选择待审核任务最少的审核员
+    const reviewerWorkloads = await Promise.all(
+      reviewers.data.map(async (reviewer) => {
+        const projectCount = await db.collection('projects_pending')
+          .where({
+            assignedTo: reviewer._id,
+            status: 'pending'
+          })
+          .count();
+
+        return {
+          reviewerId: reviewer._id,
+          totalTasks: projectCount.total
+        };
+      })
+    );
+
+    const selectedReviewer = reviewerWorkloads.reduce((min, current) => {
+      return current.totalTasks < min.totalTasks ? current : min;
+    });
+
+    console.log(`项目分配给审核员: ${selectedReviewer.reviewerId}, 当前任务数: ${selectedReviewer.totalTasks}`);
+
+    return selectedReviewer.reviewerId;
+
+  } catch (error) {
+    console.error('分配项目审核员错误:', error);
+    return '';
+  }
+}
+
 

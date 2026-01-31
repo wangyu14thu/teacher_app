@@ -348,7 +348,7 @@ Page({
   },
 
   // 确认操作
-  confirmAction() {
+  async confirmAction() {
     if (!this.data.agreed) {
       return;
     }
@@ -356,45 +356,125 @@ Page({
     const actionType = this.data.actionType;
     this.closeStandardModal();
 
-    wx.showLoading({ title: '提交中...' });
+    wx.showLoading({ title: '提交中...', mask: true });
 
-    // 保存项目数据
-    const projectData = {
-      id: Date.now(),
-      title: this.data.formData.projectName,
-      grade: this.data.formData.grade,
-      subject: this.data.formData.subjects,
-      status: actionType === 'evaluate' ? 'evaluating' : 'reviewing',
-      statusText: actionType === 'evaluate' ? '评估中' : '审核中',
-      updateTime: '刚刚',
-      ...this.data.formData,
-      inquiryPhases: this.data.inquiryPhases,
-      createTime: new Date().getTime()
-    };
-
-    // 获取现有项目列表
-    let myProjects = wx.getStorageSync('myDesignedProjects') || [];
-    myProjects.unshift(projectData);
-    wx.setStorageSync('myDesignedProjects', myProjects);
-
-    setTimeout(() => {
-      wx.hideLoading();
+    try {
+      // 获取教师信息
+      const teacherInfo = wx.getStorageSync('teacherInfo') || {};
       
-      if (actionType === 'evaluate') {
-        wx.showModal({
-          title: '提交成功',
-          content: '您的项目已提交给专家团队，我们将在 24小时内 通过"系统消息"为您发送详细的评估报告，请耐心等待，您可在"我的项目"中查看评估状态。',
-          showCancel: false,
-          success: () => {
-            wx.navigateBack();
-          }
-        });
+      // 准备项目数据
+      const projectData = {
+        // 基本信息
+        projectName: this.data.formData.projectName,
+        subjects: this.data.formData.subjects,
+        grade: this.data.formData.grade,
+        classHours: this.data.formData.classHours,
+        projectOverview: this.data.formData.projectOverview,
+        
+        // 立项依据
+        realWorldBasis: this.data.formData.realWorldBasis,
+        curriculumBasis: this.data.formData.curriculumBasis,
+        studentBasis: this.data.formData.studentBasis,
+        
+        // 跨学科概念与项目框架
+        interdisciplinaryConcept: this.data.formData.interdisciplinaryConcept,
+        drivingQuestion: this.data.formData.drivingQuestion,
+        subQuestions: this.data.formData.subQuestions,
+        finalProduct: this.data.formData.finalProduct,
+        presentationForm: this.data.formData.presentationForm,
+        
+        // 项目启动
+        launchGoals: this.data.formData.launchGoals,
+        launchHours: this.data.formData.launchHours,
+        launchActivity: this.data.formData.launchActivity,
+        launchOutcome: this.data.formData.launchOutcome,
+        launchAssessment: this.data.formData.launchAssessment,
+        
+        // 项目探究阶段
+        inquiryPhases: this.data.inquiryPhases,
+        
+        // 项目目标
+        projectGoals: this.data.formData.projectGoals,
+        
+        // 教师信息
+        teacherInfo: teacherInfo,
+        
+        // 提交类型
+        submitType: actionType, // 'evaluate' 或 'publish'
+        
+        // 时间戳
+        createTime: new Date()
+      };
+
+      console.log('准备提交项目:', projectData);
+
+      // 调用云函数提交项目
+      const result = await wx.cloud.callFunction({
+        name: 'school-application',
+        data: {
+          action: 'submitProject',
+          projectData: projectData
+        }
+      });
+
+      console.log('项目提交结果:', result);
+
+      wx.hideLoading();
+
+      if (result.result && result.result.success) {
+        // 同时保存到本地（用于"我的项目"显示）
+        const localProject = {
+          id: result.result.data.projectId,
+          title: projectData.projectName,
+          grade: projectData.grade,
+          subject: projectData.subjects,
+          status: actionType === 'evaluate' ? 'evaluating' : 'reviewing',
+          statusText: actionType === 'evaluate' ? '评估中' : '审核中',
+          updateTime: '刚刚',
+          ...projectData,
+          _id: result.result.data.projectId
+        };
+
+        let myProjects = wx.getStorageSync('myDesignedProjects') || [];
+        myProjects.unshift(localProject);
+        wx.setStorageSync('myDesignedProjects', myProjects);
+
+        // 显示成功提示
+        if (actionType === 'evaluate') {
+          wx.showModal({
+            title: '提交成功',
+            content: '您的项目已提交给专家团队，我们将在 24小时内 通过"系统消息"为您发送详细的评估报告，请耐心等待，您可在"我的项目"中查看评估状态。',
+            showCancel: false,
+            confirmText: '我知道了',
+            success: () => {
+              wx.navigateBack();
+            }
+          });
+        } else {
+          wx.showModal({
+            title: '感谢您的发布！',
+            content: '您的项目已提交给审核团队，我们将在 24小时内 通过"系统消息"公布审核结果，请耐心等待，您可在"我的项目"中查看审核状态。',
+            showCancel: false,
+            confirmText: '我知道了',
+            success: () => {
+              wx.navigateBack();
+            }
+          });
+        }
       } else {
-        wx.showModal({
-          title: '感谢您的发布！',
-          content: '您的项目已提交给审核团队，我们将在 24小时内 通过"系统消息"公布审核结果，请耐心等待，您可在"我的项目"中查看审核状态。',
-          showCancel: false,
-          success: () => {
+        throw new Error(result.result?.message || '提交失败');
+      }
+
+    } catch (error) {
+      console.error('提交项目失败:', error);
+      wx.hideLoading();
+      wx.showModal({
+        title: '提交失败',
+        content: error.message || '网络错误，请稍后重试',
+        showCancel: false
+      });
+    }
+  },
             wx.navigateBack();
           }
         });

@@ -299,21 +299,5 @@ Page({
         showCancel: false
       });
     }
-  },
-
-  // 调试测试函数
-  debugTest() {
-    console.log('========== 调试测试 ==========');
-    console.log('页面数据状态:');
-    console.log('- currentStep:', this.data.currentStep);
-    console.log('- canSubmit:', this.data.canSubmit);
-    console.log('- canProceed:', this.data.canProceed);
-    console.log('- formData:', this.data.formData);
-    
-    wx.showModal({
-      title: '调试信息',
-      content: `currentStep: ${this.data.currentStep}\ncanSubmit: ${this.data.canSubmit}\ncanProceed: ${this.data.canProceed}`,
-      showCancel: false
-    });
   }
 });
