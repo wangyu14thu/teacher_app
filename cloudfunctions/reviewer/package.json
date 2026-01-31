@@ -1,0 +1,15 @@
+{
+  "name": "reviewer",
+  "version": "1.0.0",
+  "description": "审核员云函数 - 处理审核员登录、认证和管理功能",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
+

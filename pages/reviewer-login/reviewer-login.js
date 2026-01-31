@@ -128,16 +128,14 @@ Page({
 
   /**
    * 登录请求
-   * 调用审核员专属登录接口
+   * 调用审核员专属云函数
    */
   async loginRequest() {
     const { account, password } = this.data;
 
-    // TODO: 替换为实际的云函数或后端API
-    // 示例：使用云函数
     try {
-      // 模拟登录请求（实际项目中替换为真实API）
-      const result = await this.mockLoginAPI(account, password);
+      // 调用真实云函数
+      const result = await this.realLoginAPI(account, password);
       
       if (result.success) {
         // 登录成功，处理令牌和用户信息
@@ -147,7 +145,7 @@ Page({
         throw new Error(result.message || '账号或密码错误');
       }
     } catch (error) {
-      if (error.message === 'Network error') {
+      if (error.errMsg && error.errMsg.includes('cloud')) {
         throw new Error('网络连接失败，请重试');
       } else {
         throw error;
@@ -156,56 +154,25 @@ Page({
   },
 
   /**
-   * 模拟登录API（开发阶段使用）
-   * 正式环境应替换为真实的云函数调用
+   * 真实的云函数登录
    */
-  mockLoginAPI(account, password) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // 模拟账号验证
-        if (account === 'reviewer' && password === '123456') {
-          resolve({
-            success: true,
-            data: {
-              token: 'reviewer_mock_token_' + Date.now(),
-              userInfo: {
-                id: 'reviewer_001',
-                account: account,
-                name: '审核员张三',
-                role: 'reviewer',
-                permissions: ['review_projects', 'review_schools', 'manage_users'],
-                department: '内容审核部'
-              }
-            }
-          });
-        } else {
-          resolve({
-            success: false,
-            message: '账号或密码错误'
-          });
-        }
-      }, 1500); // 模拟网络延迟
-    });
-  },
-
-  /**
-   * 真实的云函数登录（供参考）
-   * 取消注释并配置云函数后使用
-   */
-  /*
   async realLoginAPI(account, password) {
-    const res = await wx.cloud.callFunction({
-      name: 'reviewer',
-      data: {
-        action: 'login',
-        account: account,
-        password: password
-      }
-    });
-    
-    return res.result;
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'reviewer',
+        data: {
+          action: 'login',
+          account: account,
+          password: password
+        }
+      });
+      
+      return res.result;
+    } catch (error) {
+      console.error('云函数调用失败:', error);
+      throw new Error('网络连接失败，请重试');
+    }
   },
-  */
 
   /**
    * 处理登录成功
