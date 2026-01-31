@@ -65,6 +65,9 @@ exports.main = async (event, context) => {
       case 'getStatistics':
         return await getStatistics(event, openid);
       
+      case 'getUserMessages':
+        return await getUserMessages(event, openid);
+      
       default:
         return {
           success: false,
@@ -595,5 +598,37 @@ function generateInviteCode() {
     code += chars[randomIndex];
   }
   return code;
+}
+
+/**
+ * 获取用户的系统消息
+ */
+async function getUserMessages(event, openid) {
+  try {
+    console.log('获取用户消息, openid:', openid);
+    
+    const result = await db.collection('system_messages')
+      .where({
+        userId: openid
+      })
+      .orderBy('createdTime', 'desc')
+      .limit(50)
+      .get();
+    
+    console.log(`找到 ${result.data.length} 条消息`);
+    
+    return {
+      success: true,
+      data: result.data
+    };
+    
+  } catch (error) {
+    console.error('获取用户消息错误:', error);
+    return {
+      success: false,
+      message: '获取消息失败',
+      data: []
+    };
+  }
 }
 

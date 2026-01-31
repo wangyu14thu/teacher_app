@@ -82,23 +82,24 @@ Page({
     try {
       wx.showLoading({ title: '加载中...' });
       
-      // 获取当前用户的 openid
-      const userInfo = wx.getStorageSync('teacherInfo') || {};
-      
-      // 从云数据库获取系统消息
+      // 从云数据库获取系统消息（按当前用户的 openid）
       const db = wx.cloud.database();
-      const result = await db.collection('system_messages')
-        .where({
-          userId: db.command.exists(true) // 先获取所有消息，后续按用户过滤
-        })
-        .orderBy('createdTime', 'desc')
-        .limit(50)
-        .get();
       
-      console.log('获取到的系统消息:', result.data);
-      
-      // 格式化消息数据
-      const messages = result.data.map((msg, index) => {
+      // 调用云函数获取当前用户的 openid
+      const res = await wx.cloud.callFunction({
+        name: 'reviewer',
+        data: {
+          action: 'getUserMessages'
+        }
+      });
+
+      console.log('云函数返回:', res);
+
+      if (!res.result || !res.result.success) {
+        throw new Error('获取消息失败');
+      }
+
+      const messages = (res.result.data || []).map((msg, index) => {
         return {
           id: msg._id || index,
           title: msg.title || '系统通知',
@@ -112,6 +113,8 @@ Page({
           _id: msg._id // 保存原始ID用于标记已读
         };
       });
+      
+      console.log('格式化后的消息:', messages);
       
       const unreadCount = messages.filter(m => !m.read).length;
       
@@ -130,6 +133,11 @@ Page({
       this.setData({
         messages: [],
         unreadCount: 0
+      });
+      
+      wx.showToast({
+        title: '加载消息失败',
+        icon: 'none'
       });
     }
   },

@@ -132,3 +132,90 @@
   border: none;
 }
 
+/* 邀请码区域 */
+.invite-code-section {
+  margin: 0 30rpx 30rpx;
+  background: white;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+
+.invite-code-header {
+  margin-bottom: 24rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.invite-code-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 16rpx;
+}
+
+.invite-code {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #667eea;
+  letter-spacing: 4rpx;
+}
+
+.btn-copy {
+  padding: 16rpx 32rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 24rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+.btn-copy::after {
+  border: none;
+}
+
+.invite-tip {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+}
+
+/* 没有学校时 */
+.no-school-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 40rpx;
+}
+
+.no-school-icon {
+  font-size: 200rpx;
+  margin-bottom: 40rpx;
+  opacity: 0.3;
+}
+
+.no-school-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 16rpx;
+}
+
+.no-school-desc {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 48rpx;
+  text-align: center;
+}
+
+

@@ -28,6 +28,9 @@ exports.main = async (event, context) => {
       case 'getMyApplication':
         return await getMyApplication(event, openid);
       
+      case 'getMySchool':
+        return await getMySchool(event, openid);
+      
       default:
         return {
           success: false,
@@ -401,6 +404,49 @@ async function assignReviewerByGrade(grade) {
   } catch (error) {
     console.error('分配项目审核员错误:', error);
     return '';
+  }
+}
+
+/**
+ * 获取当前用户创建或加入的学校
+ */
+async function getMySchool(event, openid) {
+  try {
+    console.log('获取学校信息, openid:', openid);
+    
+    // 1. 首先查找用户是否是学校管理员（创建者）
+    const adminSchools = await db.collection('schools')
+      .where({
+        adminOpenid: openid,
+        status: 'active'
+      })
+      .limit(1)
+      .get();
+    
+    if (adminSchools.data.length > 0) {
+      console.log('找到管理员学校:', adminSchools.data[0].schoolName);
+      return {
+        success: true,
+        data: adminSchools.data[0]
+      };
+    }
+    
+    // 2. 如果不是管理员，查找是否是学校成员（未来扩展）
+    // TODO: 实现学校成员表查询
+    
+    // 3. 没有找到学校
+    console.log('用户没有学校');
+    return {
+      success: true,
+      data: null
+    };
+    
+  } catch (error) {
+    console.error('获取学校信息错误:', error);
+    return {
+      success: false,
+      message: '获取学校信息失败'
+    };
   }
 }
 
