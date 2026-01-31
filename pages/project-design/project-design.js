@@ -475,12 +475,6 @@ Page({
       });
     }
   },
-            wx.navigateBack();
-          }
-        });
-      }
-    }, 1500);
-  },
 
   // 表单验证
   validateForm() {
