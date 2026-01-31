@@ -251,8 +251,21 @@ Page({
       });
 
       console.log('云函数调用结果:', result);
-
+      console.log('result.result:', result.result);
+      console.log('result.result 类型:', typeof result.result);
+      
       wx.hideLoading();
+
+      // 检查返回结果
+      if (!result.result) {
+        console.error('云函数返回结果为空');
+        wx.showModal({
+          title: '提交失败',
+          content: '云函数返回数据异常，请检查云函数是否正确部署',
+          showCancel: false
+        });
+        return;
+      }
 
       if (result.result.success) {
         console.log('提交成功！');
