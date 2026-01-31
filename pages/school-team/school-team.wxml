@@ -206,7 +206,6 @@
       class="btn-next {{canProceed ? '' : 'disabled'}}" 
       wx:if="{{currentStep === 1}}" 
       bindtap="nextStep"
-      disabled="{{!canProceed}}"
     >
       <text>下一步</text>
       <text class="btn-icon">›</text>
@@ -215,7 +214,6 @@
       class="btn-submit {{canSubmit ? '' : 'disabled'}}" 
       wx:if="{{currentStep === 2}}" 
       bindtap="submitApplication"
-      disabled="{{!canSubmit}}"
     >
       <text class="btn-icon">✓</text>
       <text>确认信息并提交审核</text>
