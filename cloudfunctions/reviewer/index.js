@@ -68,6 +68,9 @@ exports.main = async (event, context) => {
       case 'getUserMessages':
         return await getUserMessages(event, openid);
       
+      case 'getMessageDetail':
+        return await getMessageDetail(event, openid);
+      
       default:
         return {
           success: false,
@@ -628,6 +631,55 @@ async function getUserMessages(event, openid) {
       success: false,
       message: '获取消息失败',
       data: []
+    };
+  }
+}
+
+/**
+ * 获取单条消息详情
+ */
+async function getMessageDetail(event, openid) {
+  const { messageId } = event;
+  
+  if (!messageId) {
+    return {
+      success: false,
+      message: '消息ID不能为空'
+    };
+  }
+  
+  try {
+    console.log('获取消息详情, messageId:', messageId);
+    
+    const result = await db.collection('system_messages')
+      .doc(messageId)
+      .get();
+    
+    if (!result.data) {
+      return {
+        success: false,
+        message: '消息不存在'
+      };
+    }
+    
+    // 验证消息是否属于当前用户
+    if (result.data.userId !== openid) {
+      return {
+        success: false,
+        message: '无权访问此消息'
+      };
+    }
+    
+    return {
+      success: true,
+      data: result.data
+    };
+    
+  } catch (error) {
+    console.error('获取消息详情错误:', error);
+    return {
+      success: false,
+      message: '获取消息详情失败'
     };
   }
 }

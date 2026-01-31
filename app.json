@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/register/register",
     "pages/ai-assistant/ai-assistant",
+    "pages/message-detail/message-detail",
     "pages/profile/profile",
     "pages/swiper-vip/swiper-vip",
     "pages/lecture/lecture",

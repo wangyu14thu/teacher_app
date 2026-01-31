@@ -212,34 +212,9 @@ Page({
     const message = messages.find(m => m.id === id);
     if (!message) return;
     
-    // 如果未读，标记为已读
-    if (!message.read && message._id) {
-      try {
-        const db = wx.cloud.database();
-        await db.collection('system_messages')
-          .doc(message._id)
-          .update({
-            data: {
-              status: 'read'
-            }
-          });
-        
-        // 更新本地状态
-        message.read = true;
-        this.setData({ messages });
-        this.updateUnreadCount();
-        
-      } catch (error) {
-        console.error('标记消息已读失败:', error);
-      }
-    }
-    
-    // 显示完整内容
-    wx.showModal({
-      title: message.title,
-      content: message.fullContent,
-      showCancel: false,
-      confirmText: '我知道了'
+    // 跳转到消息详情页
+    wx.navigateTo({
+      url: `/pages/message-detail/message-detail?id=${message._id || id}`
     });
   },
 

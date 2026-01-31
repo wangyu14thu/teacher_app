@@ -31,6 +31,12 @@ exports.main = async (event, context) => {
       case 'getMySchool':
         return await getMySchool(event, openid);
       
+      case 'joinSchoolByCode':
+        return await joinSchoolByCode(event, openid);
+      
+      case 'getSchoolMembers':
+        return await getSchoolMembers(event, openid);
+      
       default:
         return {
           success: false,
@@ -431,8 +437,31 @@ async function getMySchool(event, openid) {
       };
     }
     
-    // 2. 如果不是管理员，查找是否是学校成员（未来扩展）
-    // TODO: 实现学校成员表查询
+    // 2. 查找是否是学校成员
+    const memberRecords = await db.collection('school_members')
+      .where({
+        memberOpenid: openid,
+        status: 'active'
+      })
+      .limit(1)
+      .get();
+    
+    if (memberRecords.data.length > 0) {
+      const memberRecord = memberRecords.data[0];
+      
+      // 获取学校信息
+      const schoolInfo = await db.collection('schools')
+        .doc(memberRecord.schoolId)
+        .get();
+      
+      if (schoolInfo.data) {
+        console.log('找到成员学校:', schoolInfo.data.schoolName);
+        return {
+          success: true,
+          data: schoolInfo.data
+        };
+      }
+    }
     
     // 3. 没有找到学校
     console.log('用户没有学校');
@@ -448,6 +477,221 @@ async function getMySchool(event, openid) {
       message: '获取学校信息失败'
     };
   }
+}
+
+/**
+ * 通过邀请码加入学校
+ */
+async function joinSchoolByCode(event, openid) {
+  const { inviteCode } = event;
+
+  if (!inviteCode) {
+    return {
+      success: false,
+      message: '邀请码不能为空'
+    };
+  }
+
+  try {
+    console.log('尝试加入学校, 邀请码:', inviteCode);
+
+    // 1. 查找对应的学校
+    const schools = await db.collection('schools')
+      .where({
+        inviteCode: inviteCode,
+        status: 'active'
+      })
+      .limit(1)
+      .get();
+
+    if (schools.data.length === 0) {
+      return {
+        success: false,
+        message: '邀请码无效或已失效'
+      };
+    }
+
+    const school = schools.data[0];
+
+    // 2. 检查用户是否已经是该学校成员
+    const existingMember = await db.collection('school_members')
+      .where({
+        schoolId: school._id,
+        memberOpenid: openid
+      })
+      .get();
+
+    if (existingMember.data.length > 0) {
+      return {
+        success: false,
+        message: '您已经是该学校的成员了'
+      };
+    }
+
+    // 3. 检查用户是否是管理员（创建者）
+    if (school.adminOpenid === openid) {
+      return {
+        success: false,
+        message: '您是该学校的管理员，无需加入'
+      };
+    }
+
+    // 4. 获取用户信息
+    const teacherInfo = await getTeacherInfo(openid);
+
+    // 5. 添加为学校成员
+    const now = new Date();
+    await db.collection('school_members').add({
+      data: {
+        schoolId: school._id,
+        schoolName: school.schoolName,
+        memberOpenid: openid,
+        memberId: teacherInfo.userId || openid,
+        memberName: teacherInfo.nickname || '教师',
+        nickname: teacherInfo.nickname || '',
+        subject: teacherInfo.subject || '',
+        grade: teacherInfo.grade || '',
+        region: teacherInfo.region || '',
+        phone: teacherInfo.phone || '',
+        isAdmin: false,
+        status: 'active',
+        joinTime: now,
+        joinedAt: now
+      }
+    });
+
+    // 6. 更新学校成员数
+    await db.collection('schools')
+      .doc(school._id)
+      .update({
+        data: {
+          memberCount: db.command.inc(1)
+        }
+      });
+
+    console.log(`用户 ${teacherInfo.nickname} 成功加入学校 ${school.schoolName}`);
+
+    return {
+      success: true,
+      message: '成功加入学校！',
+      data: {
+        schoolName: school.schoolName
+      }
+    };
+
+  } catch (error) {
+    console.error('加入学校错误:', error);
+    return {
+      success: false,
+      message: '加入失败，请稍后重试'
+    };
+  }
+}
+
+/**
+ * 获取学校成员列表
+ */
+async function getSchoolMembers(event, openid) {
+  try {
+    // 1. 获取用户所在的学校
+    const mySchoolResult = await getMySchool(event, openid);
+    
+    if (!mySchoolResult.success || !mySchoolResult.data) {
+      return {
+        success: true,
+        data: []
+      };
+    }
+
+    const school = mySchoolResult.data;
+
+    // 2. 获取管理员信息（创建者）
+    const members = [{
+      id: school._id + '_admin',
+      nickname: school.adminName || '管理员',
+      subject: '',
+      grade: '',
+      isAdmin: true,
+      joinTime: formatJoinTime(school.createdTime)
+    }];
+
+    // 3. 获取普通成员
+    const memberRecords = await db.collection('school_members')
+      .where({
+        schoolId: school._id,
+        status: 'active'
+      })
+      .orderBy('joinTime', 'desc')
+      .get();
+
+    memberRecords.data.forEach(member => {
+      members.push({
+        id: member._id,
+        nickname: member.memberName || member.nickname || '教师',
+        subject: member.subject || '',
+        grade: member.grade || '',
+        isAdmin: false,
+        joinTime: formatJoinTime(member.joinTime)
+      });
+    });
+
+    return {
+      success: true,
+      data: members
+    };
+
+  } catch (error) {
+    console.error('获取学校成员错误:', error);
+    return {
+      success: false,
+      message: '获取成员列表失败',
+      data: []
+    };
+  }
+}
+
+/**
+ * 获取教师信息（从本地存储或数据库）
+ */
+async function getTeacherInfo(openid) {
+  // 这里简化处理，实际可以从数据库获取
+  // 目前从云函数调用时传入的参数中获取
+  return {
+    userId: openid,
+    nickname: '教师',
+    subject: '',
+    grade: '',
+    region: ''
+  };
+}
+
+/**
+ * 格式化加入时间
+ */
+function formatJoinTime(date) {
+  if (!date) return '';
+  
+  const d = new Date(date);
+  const now = new Date();
+  const diff = now - d;
+  
+  // 小于1天
+  if (diff < 86400000) {
+    return '今天加入';
+  }
+  
+  // 小于30天
+  if (diff < 2592000000) {
+    const days = Math.floor(diff / 86400000);
+    return `${days}天前加入`;
+  }
+  
+  // 显示具体日期
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
 }
 
 
