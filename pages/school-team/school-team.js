@@ -185,7 +185,7 @@ Page({
         title: '确认提交',
         content: '请确认所填信息准确无误，提交后将进入审核流程',
         confirmText: '确认提交',
-        cancelText: '再检查一下',
+        cancelText: '再检查',  // 修改为3个字符，符合微信限制
         success: (res) => {
           console.log('弹窗 success 回调被触发');
           console.log('弹窗结果:', res);
