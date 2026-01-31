@@ -1,0 +1,47 @@
+<!--pages/reviewer/history/index.wxml-->
+<view class="history-container">
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <picker class="filter-picker" mode="selector" range="{{typeOptions}}" value="{{typeIndex}}" bindchange="onTypeChange">
+      <view class="picker-display">
+        <text>{{typeOptions[typeIndex]}}</text>
+        <text class="picker-arrow">▾</text>
+      </view>
+    </picker>
+    <picker class="filter-picker" mode="selector" range="{{resultOptions}}" value="{{resultIndex}}" bindchange="onResultChange">
+      <view class="picker-display">
+        <text>{{resultOptions[resultIndex]}}</text>
+        <text class="picker-arrow">▾</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 历史列表 -->
+  <scroll-view class="history-list" scroll-y wx:if="{{historyList.length > 0}}">
+    <view 
+      class="history-item"
+      wx:for="{{historyList}}"
+      wx:key="id"
+    >
+      <view class="item-header">
+        <text class="item-title">{{item.title}}</text>
+        <text class="item-result {{item.result === 'pass' ? 'pass' : 'reject'}}">
+          {{item.result === 'pass' ? '已通过' : '已驳回'}}
+        </text>
+      </view>
+      <view class="item-meta">
+        <text class="meta-text">审核时间：{{item.reviewTime}}</text>
+      </view>
+      <view class="item-opinion" wx:if="{{item.opinion}}">
+        <text class="opinion-label">审核意见：</text>
+        <text class="opinion-text">{{item.opinion}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="empty-state" wx:else>
+    <text class="empty-icon">📋</text>
+    <text class="empty-text">暂无审核记录</text>
+  </view>
+</view>
+

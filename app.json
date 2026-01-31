@@ -21,7 +21,12 @@
     "pages/points-record/points-record",
     "pages/contact/contact",
     "pages/reviewer-login/reviewer-login",
-    "pages/reviewer/home/index"
+    "pages/reviewer/home/index",
+    "pages/reviewer/project-detail/index",
+    "pages/reviewer/school-detail/index",
+    "pages/reviewer/profile/index",
+    "pages/reviewer/temp-tasks/index",
+    "pages/reviewer/history/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

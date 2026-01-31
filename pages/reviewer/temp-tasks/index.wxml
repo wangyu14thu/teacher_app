@@ -1,0 +1,33 @@
+<!--pages/reviewer/temp-tasks/index.wxml-->
+<view class="temp-tasks-container">
+  <view class="task-list" wx:if="{{tempTasks.length > 0}}">
+    <view 
+      class="task-item"
+      wx:for="{{tempTasks}}"
+      wx:key="id"
+      bindtap="continueReview"
+      data-id="{{item.id}}"
+      data-type="{{item.type}}"
+    >
+      <view class="task-header">
+        <text class="task-title">{{item.title}}</text>
+        <text class="task-badge">{{item.type === 'project' ? '项目' : '学校'}}</text>
+      </view>
+      <text class="task-time">暂存于 {{item.savedTime}}</text>
+      <button 
+        class="btn-delete" 
+        bindtap="deleteTask"
+        data-id="{{item.id}}"
+        catchtap="preventBubble"
+      >
+        删除
+      </button>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <text class="empty-icon">💾</text>
+    <text class="empty-text">暂无暂存任务</text>
+  </view>
+</view>
+

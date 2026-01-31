@@ -38,6 +38,33 @@ exports.main = async (event, context) => {
       case 'getProfile':
         return await getProfile(event, openid);
       
+      case 'getPendingTasks':
+        return await getPendingTasks(event, openid);
+      
+      case 'getTaskDetail':
+        return await getTaskDetail(event, openid);
+      
+      case 'submitReview':
+        return await submitReview(event, openid);
+      
+      case 'batchReject':
+        return await batchReject(event, openid);
+      
+      case 'transferTask':
+        return await transferTask(event, openid);
+      
+      case 'saveTempTask':
+        return await saveTempTask(event, openid);
+      
+      case 'getTempTasks':
+        return await getTempTasks(event, openid);
+      
+      case 'getReviewHistory':
+        return await getReviewHistory(event, openid);
+      
+      case 'getStatistics':
+        return await getStatistics(event, openid);
+      
       default:
         return {
           success: false,
