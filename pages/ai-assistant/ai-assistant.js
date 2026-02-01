@@ -358,7 +358,6 @@ Page({
       wx.setStorageSync('chatHistory', chatHistory);
     }
   },
-  },
 
   // 接收AI回复
   receiveAIResponse(userInput) {
