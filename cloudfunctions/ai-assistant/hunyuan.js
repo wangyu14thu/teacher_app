@@ -154,7 +154,7 @@ function getAvailableTools() {
       Function: {
         Name: "search_cases",
         Description: "搜索PBL项目案例库，查找相关的教学案例",
-        Parameters: {
+        Parameters: JSON.stringify({
           type: "object",
           properties: {
             keywords: {
@@ -171,7 +171,7 @@ function getAvailableTools() {
             }
           },
           required: ["keywords"]
-        }
+        })
       }
     },
     {
@@ -179,7 +179,7 @@ function getAvailableTools() {
       Function: {
         Name: "generate_driving_question",
         Description: "根据项目主题生成驱动性问题",
-        Parameters: {
+        Parameters: JSON.stringify({
           type: "object",
           properties: {
             theme: {
@@ -196,7 +196,7 @@ function getAvailableTools() {
             }
           },
           required: ["theme"]
-        }
+        })
       }
     },
     {
@@ -204,7 +204,7 @@ function getAvailableTools() {
       Function: {
         Name: "generate_interdisciplinary_concept",
         Description: "为项目推荐合适的跨学科概念",
-        Parameters: {
+        Parameters: JSON.stringify({
           type: "object",
           properties: {
             theme: {
@@ -213,7 +213,7 @@ function getAvailableTools() {
             }
           },
           required: ["theme"]
-        }
+        })
       }
     },
     {
@@ -221,7 +221,7 @@ function getAvailableTools() {
       Function: {
         Name: "fill_project_field",
         Description: "将生成的内容填充到项目设计表单的指定字段",
-        Parameters: {
+        Parameters: JSON.stringify({
           type: "object",
           properties: {
             fieldName: {
@@ -234,7 +234,7 @@ function getAvailableTools() {
             }
           },
           required: ["fieldName", "content"]
-        }
+        })
       }
     }
   ];
