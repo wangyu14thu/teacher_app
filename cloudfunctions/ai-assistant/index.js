@@ -38,6 +38,9 @@ exports.main = async (event, context) => {
       case 'getKnowledgeList':
         return await getKnowledgeList(event, openid);
       
+      case 'getUsageStats':
+        return await getUsageStats(event, openid);
+      
       default:
         return {
           success: false,
@@ -61,6 +64,16 @@ async function handleChat(event, openid) {
 
   try {
     console.log('收到对话请求:', { openid, message, sessionId });
+
+    // 0. 检查每日提问限额
+    const usageCheck = await checkDailyUsage(openid);
+    if (!usageCheck.allowed) {
+      return {
+        success: false,
+        message: usageCheck.message,
+        code: 'QUOTA_EXCEEDED'
+      };
+    }
 
     // 1. 获取或创建会话
     const session = await getOrCreateSession(sessionId, openid, projectContext);
@@ -90,13 +103,17 @@ async function handleChat(event, openid) {
     
     await addMessageToSession(session._id, assistantMessage);
 
+    // 6. 记录使用次数
+    await recordUsage(openid);
+
     return {
       success: true,
       data: {
         sessionId: session._id,
         message: aiResponse.content,
         toolCalls: aiResponse.toolCalls || [],
-        suggestions: aiResponse.suggestions || []
+        suggestions: aiResponse.suggestions || [],
+        remainingQuota: usageCheck.remaining - 1 // 返回剩余次数
       }
     };
 
@@ -666,6 +683,142 @@ async function getKnowledgeList(event, openid) {
       success: false,
       message: '获取知识库失败',
       data: []
+    };
+  }
+}
+
+/**
+ * 检查每日使用限额
+ */
+async function checkDailyUsage(openid) {
+  const DAILY_LIMIT = 30; // 每日限额30次
+  
+  try {
+    // 获取今天的日期（格式：2026-02-01）
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 查询今天的使用记录
+    const result = await db.collection('ai_usage')
+      .where({
+        userId: openid,
+        date: today
+      })
+      .get();
+    
+    if (result.data.length === 0) {
+      // 今天还没有使用记录，可以使用
+      return {
+        allowed: true,
+        remaining: DAILY_LIMIT,
+        message: ''
+      };
+    }
+    
+    const usageRecord = result.data[0];
+    const currentCount = usageRecord.count || 0;
+    
+    if (currentCount >= DAILY_LIMIT) {
+      return {
+        allowed: false,
+        remaining: 0,
+        message: `您今天的提问次数已用完（${DAILY_LIMIT}次），明天再来吧！💡提示：合理规划问题可以更高效地使用AI助手。`
+      };
+    }
+    
+    return {
+      allowed: true,
+      remaining: DAILY_LIMIT - currentCount,
+      message: ''
+    };
+    
+  } catch (error) {
+    console.error('检查使用限额错误:', error);
+    // 出错时允许使用，避免影响用户体验
+    return {
+      allowed: true,
+      remaining: DAILY_LIMIT,
+      message: ''
+    };
+  }
+}
+
+/**
+ * 记录使用次数
+ */
+async function recordUsage(openid) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 查询今天的记录
+    const result = await db.collection('ai_usage')
+      .where({
+        userId: openid,
+        date: today
+      })
+      .get();
+    
+    if (result.data.length === 0) {
+      // 创建新记录
+      await db.collection('ai_usage').add({
+        data: {
+          userId: openid,
+          date: today,
+          count: 1,
+          lastUsedAt: new Date(),
+          createdAt: new Date()
+        }
+      });
+    } else {
+      // 更新现有记录
+      const record = result.data[0];
+      await db.collection('ai_usage')
+        .doc(record._id)
+        .update({
+          data: {
+            count: _.inc(1),
+            lastUsedAt: new Date()
+          }
+        });
+    }
+    
+  } catch (error) {
+    console.error('记录使用次数错误:', error);
+    // 记录失败不影响正常流程
+  }
+}
+
+/**
+ * 获取使用统计
+ */
+async function getUsageStats(event, openid) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const result = await db.collection('ai_usage')
+      .where({
+        userId: openid,
+        date: today
+      })
+      .get();
+    
+    const DAILY_LIMIT = 30;
+    const currentCount = result.data.length > 0 ? result.data[0].count : 0;
+    
+    return {
+      success: true,
+      data: {
+        todayUsed: currentCount,
+        dailyLimit: DAILY_LIMIT,
+        remaining: DAILY_LIMIT - currentCount,
+        percentage: Math.round((currentCount / DAILY_LIMIT) * 100)
+      }
+    };
+    
+  } catch (error) {
+    console.error('获取使用统计错误:', error);
+    return {
+      success: false,
+      message: '获取统计失败'
     };
   }
 }

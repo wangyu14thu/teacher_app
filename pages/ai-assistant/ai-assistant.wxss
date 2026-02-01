@@ -216,6 +216,39 @@
   overflow: hidden;
 }
 
+/* 使用统计栏 */
+.usage-bar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20rpx 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.15);
+}
+
+.usage-text {
+  font-size: 28rpx;
+  color: white;
+  font-weight: 500;
+}
+
+.usage-tip {
+  font-size: 24rpx;
+  color: #fff9c4;
+  padding: 4rpx 12rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20rpx;
+}
+
+.usage-warning {
+  font-size: 24rpx;
+  color: #ffcdd2;
+  padding: 4rpx 12rpx;
+  background: rgba(255, 87, 34, 0.3);
+  border-radius: 20rpx;
+  font-weight: 500;
+}
+
 .chat-history {
   flex: 1;
   background: #f5f7fa;

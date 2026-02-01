@@ -58,6 +58,13 @@
 
   <!-- AI助手 -->
   <view class="ai-chat-container" wx:if="{{currentTab === 'ai'}}">
+    <!-- 使用提示栏 -->
+    <view class="usage-bar">
+      <text class="usage-text">今日剩余：{{remainingQuota}}/{{dailyLimit}}次</text>
+      <text class="usage-tip" wx:if="{{remainingQuota <= 5 && remainingQuota > 0}}">💡 提问次数不多了</text>
+      <text class="usage-warning" wx:if="{{remainingQuota === 0}}">⚠️ 今日次数已用完</text>
+    </view>
+    
     <!-- 聊天记录 -->
     <scroll-view class="chat-history" scroll-y scroll-into-view="{{scrollToId}}" scroll-with-animation>
       <view class="chat-messages">

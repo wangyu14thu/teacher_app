@@ -39,7 +39,11 @@ Page({
     chatHistory: [],
     inputText: '',
     scrollToId: '',
-    isAiTyping: false
+    isAiTyping: false,
+    // 使用统计
+    todayUsed: 0,
+    dailyLimit: 30,
+    remainingQuota: 30
   },
 
   onLoad(options) {
@@ -47,6 +51,8 @@ Page({
     this.loadChatHistory();
     // 加载系统消息
     this.loadSystemMessages();
+    // 加载使用统计
+    this.loadUsageStats();
   },
 
   onShow() {
@@ -256,13 +262,23 @@ Page({
   },
 
   // 发送消息
-  sendMessage() {
-    const { inputText, chatHistory } = this.data;
+  async sendMessage() {
+    const { inputText, chatHistory, remainingQuota } = this.data;
     
     if (!inputText || !inputText.trim()) {
       wx.showToast({
         title: '请输入内容',
         icon: 'none'
+      });
+      return;
+    }
+
+    // 检查剩余次数
+    if (remainingQuota <= 0) {
+      wx.showModal({
+        title: '提问次数已用完',
+        content: '您今天的提问次数已用完（30次），明天再来吧！\n\n💡提示：合理规划问题可以更高效地使用AI助手。',
+        showCancel: false
       });
       return;
     }
@@ -287,10 +303,61 @@ Page({
     // 保存到本地
     wx.setStorageSync('chatHistory', chatHistory);
     
-    // 模拟AI回复
-    setTimeout(() => {
-      this.receiveAIResponse(inputText);
-    }, 1500);
+    // 调用云函数
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'ai-assistant',
+        data: {
+          action: 'chat',
+          message: userMessage.content,
+          sessionId: this.data.sessionId || undefined
+        }
+      });
+
+      console.log('AI返回:', res);
+
+      if (!res.result || !res.result.success) {
+        // 处理限额超出错误
+        if (res.result?.code === 'QUOTA_EXCEEDED') {
+          wx.showModal({
+            title: '提问次数已用完',
+            content: res.result.message,
+            showCancel: false
+          });
+          this.setData({
+            isAiTyping: false,
+            remainingQuota: 0
+          });
+          return;
+        }
+        
+        throw new Error(res.result?.message || '请求失败');
+      }
+
+      // 更新剩余次数
+      if (res.result.data.remainingQuota !== undefined) {
+        this.setData({
+          remainingQuota: res.result.data.remainingQuota
+        });
+      }
+
+      this.receiveAIResponse(res.result.data);
+    } catch (error) {
+      console.error('AI调用失败:', error);
+      wx.showToast({
+        title: '发送失败，请重试',
+        icon: 'none'
+      });
+      
+      // 移除用户消息
+      chatHistory.pop();
+      this.setData({
+        chatHistory,
+        isAiTyping: false
+      });
+      wx.setStorageSync('chatHistory', chatHistory);
+    }
+  },
   },
 
   // 接收AI回复
@@ -484,5 +551,33 @@ Page({
         }
       }
     });
+  },
+
+  // 加载使用统计
+  async loadUsageStats() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'ai-assistant',
+        data: {
+          action: 'getUsageStats'
+        }
+      });
+
+      if (res.result && res.result.success) {
+        this.setData({
+          todayUsed: res.result.data.todayUsed,
+          dailyLimit: res.result.data.dailyLimit,
+          remainingQuota: res.result.data.remaining
+        });
+      }
+    } catch (error) {
+      console.error('加载使用统计失败:', error);
+      // 失败时使用默认值
+      this.setData({
+        todayUsed: 0,
+        dailyLimit: 30,
+        remainingQuota: 30
+      });
+    }
   }
 });
