@@ -59,47 +59,66 @@
   <!-- AI助手 -->
   <view class="ai-chat-container" wx:if="{{currentTab === 'ai'}}">
     <!-- 聊天记录 -->
-    <scroll-view class="chat-history" scroll-y scroll-into-view="{{scrollToId}}">
+    <scroll-view class="chat-history" scroll-y scroll-into-view="{{scrollToId}}" scroll-with-animation>
       <view class="chat-messages">
-        <view class="chat-message {{msg.sender === 'user' ? 'user-message' : 'ai-message'}}" 
-              wx:for="{{chatHistory}}" 
-              wx:key="id"
-              id="msg-{{msg.id}}">
-          <view class="message-avatar">
-            <text class="avatar-emoji">{{msg.sender === 'user' ? '👨‍🏫' : '🤖'}}</text>
+        <!-- 用户消息 - 左侧 -->
+        <view wx:for="{{chatHistory}}" wx:key="id" id="msg-{{item.id}}">
+          <view wx:if="{{item.sender === 'user'}}" class="message-row user-row">
+            <image class="message-avatar" src="/images/me.png" mode="aspectFill"></image>
+            <view class="message-bubble user-bubble">
+              <text class="message-text">{{item.content}}</text>
+              <text class="message-timestamp">{{item.time}}</text>
+            </view>
           </view>
-          <view class="message-bubble">
-            <text class="message-text">{{msg.content}}</text>
-            
-            <!-- 工具调用展示 -->
-            <view wx:if="{{msg.toolCalls && msg.toolCalls.length > 0}}" class="tool-calls">
-              <view wx:for="{{msg.toolCalls}}" wx:for-item="tool" wx:key="index" class="tool-call-item">
-                <text class="tool-icon">🔧</text>
-                <text class="tool-name">{{tool.tool}}</text>
-                <text class="tool-status">{{tool.status}}</text>
+          
+          <!-- AI消息 - 右侧 -->
+          <view wx:if="{{item.sender === 'ai'}}" class="message-row ai-row">
+            <view class="message-bubble ai-bubble">
+              <text class="message-text">{{item.content}}</text>
+              
+              <!-- 工具调用展示 -->
+              <view wx:if="{{item.toolCalls && item.toolCalls.length > 0}}" class="tool-calls">
+                <view wx:for="{{item.toolCalls}}" wx:for-item="tool" wx:key="index" class="tool-call-item">
+                  <text class="tool-icon">🔧</text>
+                  <text class="tool-name">{{tool.tool}}</text>
+                  <text class="tool-status">{{tool.status}}</text>
+                </view>
               </view>
+              
+              <!-- 建议按钮 -->
+              <view wx:if="{{item.suggestions && item.suggestions.length > 0}}" class="suggestions">
+                <button 
+                  wx:for="{{item.suggestions}}" 
+                  wx:for-item="suggestion"
+                  wx:key="index" 
+                  class="suggestion-btn"
+                  data-suggestion="{{suggestion}}"
+                  bindtap="handleSuggestion"
+                >
+                  {{suggestion.text}}
+                </button>
+              </view>
+              
+              <text class="message-timestamp">{{item.time}}</text>
             </view>
-            
-            <!-- 建议按钮 -->
-            <view wx:if="{{msg.suggestions && msg.suggestions.length > 0}}" class="suggestions">
-              <button 
-                wx:for="{{msg.suggestions}}" 
-                wx:for-item="suggestion"
-                wx:key="index" 
-                class="suggestion-btn"
-                data-suggestion="{{suggestion}}"
-                bindtap="handleSuggestion"
-              >
-                {{suggestion.text}}
-              </button>
-            </view>
-            
-            <text class="message-timestamp">{{msg.time}}</text>
+            <image class="message-avatar" src="/images/ai-assistant.png" mode="aspectFill"></image>
           </view>
         </view>
         
+        <!-- AI正在输入 -->
+        <view wx:if="{{isAiTyping}}" class="message-row ai-row">
+          <view class="message-bubble ai-bubble typing-bubble">
+            <view class="typing-indicator">
+              <view class="typing-dot"></view>
+              <view class="typing-dot"></view>
+              <view class="typing-dot"></view>
+            </view>
+          </view>
+          <image class="message-avatar" src="/images/ai-assistant.png" mode="aspectFill"></image>
+        </view>
+        
         <!-- 空状态 -->
-        <view class="empty-chat" wx:if="{{chatHistory.length === 0}}">
+        <view class="empty-chat" wx:if="{{chatHistory.length === 0 && !isAiTyping}}">
           <text class="empty-icon">🤖</text>
           <text class="empty-title">AI助手</text>
           <text class="empty-desc">您好！我是您的AI助手，可以帮助您：</text>
@@ -115,14 +134,14 @@
 
     <!-- 输入框 -->
     <view class="chat-input-bar">
-      <button class="btn-clear-chat" bindtap="clearChat">清除</button>
-      <input 
+      <textarea 
         class="chat-input" 
         placeholder="输入您的问题..." 
         value="{{inputText}}"
         bindinput="onInputChange"
-        confirm-type="send"
-        bindconfirm="sendMessage"
+        auto-height
+        maxlength="500"
+        show-confirm-bar="{{false}}"
       />
       <button class="btn-send {{inputText ? 'active' : ''}}" bindtap="sendMessage">
         发送
