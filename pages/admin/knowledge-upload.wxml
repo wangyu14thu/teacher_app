@@ -1,0 +1,94 @@
+<!--pages/admin/knowledge-upload.wxml-->
+<view class="knowledge-upload-container">
+  <!-- 头部 -->
+  <view class="header">
+    <text class="title">AI助手知识库</text>
+    <text class="subtitle">上传案例文档，丰富AI知识</text>
+  </view>
+
+  <!-- 快速添加表单 -->
+  <view class="quick-add-form">
+    <view class="form-section">
+      <text class="section-title">快速添加案例</text>
+      
+      <view class="form-item">
+        <text class="label">案例标题</text>
+        <input class="input" placeholder="如：校园测量工程" bindinput="onTitleInput" value="{{formData.title}}" />
+      </view>
+      
+      <view class="form-row">
+        <view class="form-item half">
+          <text class="label">年级</text>
+          <picker mode="selector" range="{{grades}}" bindchange="onGradeChange" value="{{formData.gradeIndex}}">
+            <view class="picker">{{grades[formData.gradeIndex] || '请选择'}}</view>
+          </picker>
+        </view>
+        
+        <view class="form-item half">
+          <text class="label">学科</text>
+          <input class="input" placeholder="如：数学" bindinput="onSubjectInput" value="{{formData.subject}}" />
+        </view>
+      </view>
+      
+      <view class="form-item">
+        <text class="label">驱动性问题</text>
+        <textarea class="textarea" placeholder="作为[角色]，如何..." bindinput="onDrivingQuestionInput" value="{{formData.drivingQuestion}}" />
+      </view>
+      
+      <view class="form-item">
+        <text class="label">跨学科概念</text>
+        <input class="input" placeholder="如：测量与数据" bindinput="onConceptInput" value="{{formData.interdisciplinaryConcept}}" />
+      </view>
+      
+      <view class="form-item">
+        <text class="label">完整内容</text>
+        <textarea class="textarea large" placeholder="粘贴完整案例内容..." bindinput="onContentInput" value="{{formData.content}}" />
+      </view>
+      
+      <view class="form-item">
+        <text class="label">关键点（逗号分隔）</text>
+        <input class="input" placeholder="如：测量工具,数据记录,团队协作" bindinput="onKeyPointsInput" value="{{formData.keyPointsText}}" />
+      </view>
+      
+      <button class="btn-submit" bindtap="submitKnowledge">添加到知识库</button>
+    </view>
+  </view>
+
+  <!-- 知识库列表 -->
+  <view class="knowledge-list">
+    <view class="list-header">
+      <text class="list-title">已有知识（{{knowledgeList.length}}条）</text>
+      <button class="btn-refresh" bindtap="loadKnowledgeList">刷新</button>
+    </view>
+    
+    <view class="list-content">
+      <view 
+        wx:for="{{knowledgeList}}" 
+        wx:key="_id" 
+        class="knowledge-item"
+      >
+        <view class="item-header">
+          <text class="item-title">{{item.title}}</text>
+          <view class="item-meta">
+            <text class="meta-tag">{{item.grade}}年级</text>
+            <text class="meta-tag">{{item.subject}}</text>
+          </view>
+        </view>
+        
+        <text class="item-preview">{{item.drivingQuestion}}</text>
+        
+        <view class="item-footer">
+          <text class="item-time">{{item.uploadTime}}</text>
+          <button class="btn-delete" data-id="{{item._id}}" bindtap="deleteKnowledge">删除</button>
+        </view>
+      </view>
+      
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{knowledgeList.length === 0}}">
+        <text class="empty-icon">📚</text>
+        <text class="empty-text">知识库为空，快来添加第一条案例吧！</text>
+      </view>
+    </view>
+  </view>
+</view>
+

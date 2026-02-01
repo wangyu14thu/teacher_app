@@ -297,35 +297,82 @@ Page({
   receiveAIResponse(userInput) {
     const { chatHistory } = this.data;
     
-    // TODO: 调用AI接口获取真实回复
-    // 这里使用模拟回复
-    let aiResponse = '您好！我是您的AI助手。';
-    
-    if (userInput.includes('项目') || userInput.includes('设计')) {
-      aiResponse = '关于项目设计，我建议您从以下几个方面入手：\n\n1. 明确项目主题和现实背景\n2. 确定跨学科概念\n3. 设计驱动性问题\n4. 规划子问题链\n\n您想了解哪个方面的具体内容呢？';
-    } else if (userInput.includes('跨学科')) {
-      aiResponse = '跨学科概念是项目式学习的核心。一个好的跨学科概念应该：\n\n• 能够贯穿多个学科\n• 具有较强的抽象性\n• 与学生生活相关\n• 有助于深度理解\n\n例如："结构与功能"、"因果关系"、"系统与要素"等。';
-    } else if (userInput.includes('驱动性问题')) {
-      aiResponse = '驱动性问题通常采用以下格式：\n\n"作为[角色]，如何为[受众]解决[问题]或设计[产品]，达到[效果]或实现[目的]？"\n\n例如："作为小小规划师，我们如何为学校设计一套智慧校园改造方案，让校园环境更美好、更智能、更适合学习？"';
+    // 调用云函数获取AI回复
+    this.callAIAssistant(userInput);
+  },
+
+  // 调用AI助手云函数
+  async callAIAssistant(message) {
+    try {
+      const { currentSessionId, chatHistory } = this.data;
+      
+      // 获取项目上下文
+      const projectContext = wx.getStorageSync('currentProject') || null;
+      
+      const result = await wx.cloud.callFunction({
+        name: 'ai-assistant',
+        data: {
+          action: 'chat',
+          message: message,
+          sessionId: currentSessionId,
+          projectContext: projectContext
+        }
+      });
+
+      console.log('AI助手响应:', result);
+
+      if (result.result && result.result.success) {
+        const data = result.result.data;
+        
+        // 保存会话ID
+        if (data.sessionId && !currentSessionId) {
+          this.setData({ currentSessionId: data.sessionId });
+        }
+
+        // 添加AI消息
+        const aiMessage = {
+          id: Date.now(),
+          sender: 'ai',
+          content: data.message,
+          time: this.formatTime(new Date()),
+          toolCalls: data.toolCalls || [],
+          suggestions: data.suggestions || []
+        };
+        
+        chatHistory.push(aiMessage);
+        
+        this.setData({
+          chatHistory,
+          isAiTyping: false,
+          scrollToId: `msg-${aiMessage.id}`
+        });
+        
+        // 保存到本地
+        wx.setStorageSync('chatHistory', chatHistory);
+      } else {
+        throw new Error(result.result?.message || 'AI回复失败');
+      }
+
+    } catch (error) {
+      console.error('AI助手调用失败:', error);
+      
+      // 降级到本地响应
+      const aiMessage = {
+        id: Date.now(),
+        sender: 'ai',
+        content: '抱歉，AI服务暂时不可用。请稍后再试。',
+        time: this.formatTime(new Date())
+      };
+      
+      const { chatHistory } = this.data;
+      chatHistory.push(aiMessage);
+      
+      this.setData({
+        chatHistory,
+        isAiTyping: false,
+        scrollToId: `msg-${aiMessage.id}`
+      });
     }
-    
-    const aiMessage = {
-      id: Date.now(),
-      sender: 'ai',
-      content: aiResponse,
-      time: this.formatTime(new Date())
-    };
-    
-    chatHistory.push(aiMessage);
-    
-    this.setData({
-      chatHistory,
-      isAiTyping: false,
-      scrollToId: `msg-${aiMessage.id}`
-    });
-    
-    // 保存到本地
-    wx.setStorageSync('chatHistory', chatHistory);
   },
 
   // 格式化时间
@@ -333,5 +380,109 @@ Page({
     const hour = date.getHours().toString().padStart(2, '0');
     const minute = date.getMinutes().toString().padStart(2, '0');
     return `${hour}:${minute}`;
+  },
+
+  // 处理建议按钮点击
+  handleSuggestion(e) {
+    const { suggestion } = e.currentTarget.dataset;
+    
+    if (!suggestion) return;
+
+    switch (suggestion.action) {
+      case 'search_more':
+        this.setData({ inputText: '搜索更多案例' });
+        this.sendMessage();
+        break;
+      
+      case 'apply_to_project':
+        this.applyToProject(suggestion);
+        break;
+      
+      case 'regenerate':
+        this.setData({ inputText: '重新生成' });
+        this.sendMessage();
+        break;
+      
+      case 'start_design':
+        wx.navigateTo({
+          url: '/pages/project-design/project-design'
+        });
+        break;
+      
+      case 'view_case':
+        if (suggestion.caseId) {
+          wx.navigateTo({
+            url: `/pages/case-detail/case-detail?id=${suggestion.caseId}`
+          });
+        }
+        break;
+      
+      default:
+        if (suggestion.text) {
+          this.setData({ inputText: suggestion.text });
+          this.sendMessage();
+        }
+    }
+  },
+
+  // 应用到项目
+  applyToProject(suggestion) {
+    wx.showModal({
+      title: '应用到项目',
+      content: '是否将AI生成的内容应用到项目设计中？',
+      success: (res) => {
+        if (res.confirm) {
+          // 保存到本地，项目设计页面会读取
+          wx.setStorageSync('aiSuggestion', suggestion);
+          
+          wx.showToast({
+            title: '已保存建议',
+            icon: 'success'
+          });
+          
+          setTimeout(() => {
+            wx.navigateTo({
+              url: '/pages/project-design/project-design?fromAI=1'
+            });
+          }, 1500);
+        }
+      }
+    });
+  },
+
+  // 清除会话
+  async clearChat() {
+    wx.showModal({
+      title: '清除对话',
+      content: '确定要清除当前对话记录吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          const { currentSessionId } = this.data;
+          
+          // 调用云函数清除会话
+          if (currentSessionId) {
+            await wx.cloud.callFunction({
+              name: 'ai-assistant',
+              data: {
+                action: 'clearSession',
+                sessionId: currentSessionId
+              }
+            });
+          }
+          
+          // 清除本地数据
+          this.setData({
+            chatHistory: [],
+            currentSessionId: null
+          });
+          wx.removeStorageSync('chatHistory');
+          
+          wx.showToast({
+            title: '已清除',
+            icon: 'success'
+          });
+        }
+      }
+    });
   }
 });

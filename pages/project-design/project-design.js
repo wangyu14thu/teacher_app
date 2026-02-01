@@ -42,6 +42,11 @@ Page({
     if (options.projectId) {
       this.loadProjectData(options.projectId);
     }
+    
+    // 如果从AI助手跳转过来
+    if (options.fromAI === '1') {
+      this.applyAISuggestion();
+    }
   },
 
   // 加载项目数据

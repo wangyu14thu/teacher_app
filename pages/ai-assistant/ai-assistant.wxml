@@ -70,6 +70,30 @@
           </view>
           <view class="message-bubble">
             <text class="message-text">{{msg.content}}</text>
+            
+            <!-- 工具调用展示 -->
+            <view wx:if="{{msg.toolCalls && msg.toolCalls.length > 0}}" class="tool-calls">
+              <view wx:for="{{msg.toolCalls}}" wx:for-item="tool" wx:key="index" class="tool-call-item">
+                <text class="tool-icon">🔧</text>
+                <text class="tool-name">{{tool.tool}}</text>
+                <text class="tool-status">{{tool.status}}</text>
+              </view>
+            </view>
+            
+            <!-- 建议按钮 -->
+            <view wx:if="{{msg.suggestions && msg.suggestions.length > 0}}" class="suggestions">
+              <button 
+                wx:for="{{msg.suggestions}}" 
+                wx:for-item="suggestion"
+                wx:key="index" 
+                class="suggestion-btn"
+                data-suggestion="{{suggestion}}"
+                bindtap="handleSuggestion"
+              >
+                {{suggestion.text}}
+              </button>
+            </view>
+            
             <text class="message-timestamp">{{msg.time}}</text>
           </view>
         </view>
@@ -91,6 +115,7 @@
 
     <!-- 输入框 -->
     <view class="chat-input-bar">
+      <button class="btn-clear-chat" bindtap="clearChat">清除</button>
       <input 
         class="chat-input" 
         placeholder="输入您的问题..." 

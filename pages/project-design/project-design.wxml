@@ -92,7 +92,13 @@
     </view>
     
     <view class="form-item">
-      <text class="form-label">驱动性问题</text>
+      <view class="label-with-ai">
+        <text class="form-label">驱动性问题</text>
+        <button class="btn-ai-help" bindtap="openAIAssistant" data-field="drivingQuestion">
+          <text class="ai-icon">🤖</text>
+          <text>AI助手</text>
+        </button>
+      </view>
     </view>
     <view class="form-item-with-btn">
       <textarea class="form-textarea-ai" placeholder="点击右侧按钮生成驱动性问题" value="{{formData.drivingQuestion}}" bindinput="onInputChange" data-field="drivingQuestion" />
@@ -104,7 +110,13 @@
     <text class="form-tip">温馨提示：仅供参考，教师可自行评估修改。</text>
 
     <view class="form-item" style="margin-top: 32rpx;">
-      <text class="form-label">子问题链</text>
+      <view class="label-with-ai">
+        <text class="form-label">子问题链</text>
+        <button class="btn-ai-help" bindtap="openAIAssistant" data-field="subQuestions">
+          <text class="ai-icon">🤖</text>
+          <text>AI助手</text>
+        </button>
+      </view>
     </view>
     <view class="form-item-with-btn">
       <textarea class="form-textarea-ai" placeholder="点击右侧按钮生成子问题链" value="{{formData.subQuestions}}" bindinput="onInputChange" data-field="subQuestions" />
