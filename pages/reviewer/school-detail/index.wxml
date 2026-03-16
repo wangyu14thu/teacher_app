@@ -1,0 +1,82 @@
+<!--pages/reviewer/school-detail/index.wxml-->
+<view class="school-detail-container">
+  <!-- 学校基本信息卡片 -->
+  <view class="info-card">
+    <view class="card-header">
+      <text class="card-title">{{schoolData.schoolName}}</text>
+      <text class="badge type">学校申请</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">申请人：</text>
+      <text class="info-value">{{schoolData.contactName}} ({{schoolData.position}})</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">联系电话：</text>
+      <text class="info-value">{{schoolData.phone}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">学校地址：</text>
+      <text class="info-value">{{schoolData.schoolAddress}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">学校规模：</text>
+      <text class="info-value">{{schoolData.schoolSize}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">申请时间：</text>
+      <text class="info-value">{{schoolData.submitTime}}</text>
+    </view>
+  </view>
+
+  <!-- 申请说明 -->
+  <view class="section-card">
+    <view class="section-header">
+      <text class="section-icon">📄</text>
+      <text class="section-title">申请说明</text>
+    </view>
+    <text class="section-content">{{schoolData.description}}</text>
+  </view>
+
+  <!-- 审核操作区 -->
+  <view class="action-bar">
+    <view class="decision-buttons">
+      <button 
+        class="btn-decision btn-pass {{reviewDecision === 'pass' ? 'active' : ''}}"
+        bindtap="selectDecision"
+        data-decision="pass"
+      >
+        <text class="btn-icon">✓</text>
+        <text class="btn-text">通过</text>
+      </button>
+      <button 
+        class="btn-decision btn-reject {{reviewDecision === 'reject' ? 'active' : ''}}"
+        bindtap="selectDecision"
+        data-decision="reject"
+      >
+        <text class="btn-icon">✗</text>
+        <text class="btn-text">驳回</text>
+      </button>
+    </view>
+
+    <!-- 驳回原因选择 -->
+    <view class="opinion-section" wx:if="{{reviewDecision === 'reject'}}">
+      <text class="opinion-label required">驳回原因（必选）</text>
+      <radio-group bindchange="onRejectReasonChange">
+        <label class="opinion-option" wx:for="{{rejectReasons}}" wx:key="id">
+          <radio value="{{item.id}}" checked="{{selectedRejectReason === item.id}}"/>
+          <text class="opinion-text">{{item.text}}</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <!-- 提交按钮 -->
+    <button 
+      class="btn-submit" 
+      bindtap="submitReview"
+      disabled="{{!canSubmit}}"
+    >
+      提交审核
+    </button>
+  </view>
+</view>
+

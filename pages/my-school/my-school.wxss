@@ -132,3 +132,316 @@
   border: none;
 }
 
+/* 邀请码区域 */
+.invite-code-section {
+  margin: 0 30rpx 30rpx;
+  background: white;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+
+.invite-code-header {
+  margin-bottom: 24rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.invite-code-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 16rpx;
+}
+
+.invite-code {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #667eea;
+  letter-spacing: 4rpx;
+}
+
+.btn-copy {
+  padding: 16rpx 32rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 24rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+.btn-copy::after {
+  border: none;
+}
+
+.invite-tip {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+}
+
+/* 没有学校时 */
+.no-school-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 40rpx;
+}
+
+.no-school-icon {
+  font-size: 200rpx;
+  margin-bottom: 40rpx;
+  opacity: 0.3;
+}
+
+.no-school-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 16rpx;
+}
+
+.no-school-desc {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 48rpx;
+  text-align: center;
+}
+
+/* 按钮组 */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  width: 100%;
+  padding: 0 40rpx;
+}
+
+.btn-join {
+  width: 100%;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 40rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  border: none;
+}
+
+.btn-join::after {
+  border: none;
+}
+
+/* 管理员徽章 */
+.admin-badge {
+  padding: 8rpx 16rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 24rpx;
+  font-size: 22rpx;
+}
+
+.invite-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+/* 成员列表 */
+.members-section {
+  margin: 20rpx 30rpx;
+  background: white;
+  border-radius: 24rpx;
+  padding: 40rpx 30rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  margin-bottom: 30rpx;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  background: #f8f9fa;
+  border-radius: 16rpx;
+}
+
+.member-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-right: 20rpx;
+}
+
+.member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-name {
+  font-size: 30rpx;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.member-meta {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.role-badge {
+  padding: 8rpx 16rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 24rpx;
+  font-size: 22rpx;
+}
+
+.join-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.empty-members {
+  padding: 80rpx 0;
+  text-align: center;
+}
+
+.empty-members .empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 加入学校弹窗 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 600rpx;
+  background: white;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40rpx 30rpx 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.modal-close {
+  font-size: 40rpx;
+  color: #999;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-body {
+  padding: 40rpx 30rpx;
+}
+
+.input-label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+}
+
+.invite-input {
+  width: 100%;
+  height: 88rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 32rpx;
+  text-align: center;
+  letter-spacing: 8rpx;
+  text-transform: uppercase;
+}
+
+.input-tip {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 16rpx;
+  text-align: center;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.btn-cancel,
+.btn-confirm {
+  flex: 1;
+  padding: 32rpx;
+  font-size: 32rpx;
+  border: none;
+  background: transparent;
+}
+
+.btn-cancel {
+  color: #999;
+}
+
+.btn-cancel::after,
+.btn-confirm::after {
+  border: none;
+}
+
+.btn-confirm {
+  color: #667eea;
+  font-weight: bold;
+  border-left: 1rpx solid #f0f0f0;
+}
+
+

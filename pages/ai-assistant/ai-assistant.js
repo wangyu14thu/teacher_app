@@ -39,7 +39,11 @@ Page({
     chatHistory: [],
     inputText: '',
     scrollToId: '',
-    isAiTyping: false
+    isAiTyping: false,
+    // 使用统计
+    todayUsed: 0,
+    dailyLimit: 30,
+    remainingQuota: 30
   },
 
   onLoad(options) {
@@ -47,6 +51,8 @@ Page({
     this.loadChatHistory();
     // 加载系统消息
     this.loadSystemMessages();
+    // 加载使用统计
+    this.loadUsageStats();
   },
 
   onShow() {
@@ -78,16 +84,122 @@ Page({
   },
 
   // 加载系统消息
-  loadSystemMessages() {
-    // TODO: 从云端加载系统消息
-    // 这里使用模拟数据
-    const messages = wx.getStorageSync('systemMessages') || this.data.messages;
-    const unreadCount = messages.filter(m => !m.read).length;
+  async loadSystemMessages() {
+    try {
+      wx.showLoading({ title: '加载中...' });
+      
+      // 从云数据库获取系统消息（按当前用户的 openid）
+      const db = wx.cloud.database();
+      
+      // 调用云函数获取当前用户的 openid
+      const res = await wx.cloud.callFunction({
+        name: 'reviewer',
+        data: {
+          action: 'getUserMessages'
+        }
+      });
+
+      console.log('云函数返回:', res);
+
+      if (!res.result || !res.result.success) {
+        throw new Error('获取消息失败');
+      }
+
+      const messages = (res.result.data || []).map((msg, index) => {
+        return {
+          id: msg._id || index,
+          title: msg.title || '系统通知',
+          preview: this.getMessagePreview(msg.content),
+          time: this.formatMessageTime(msg.createdTime),
+          read: msg.status === 'read',
+          type: msg.type || 'system',
+          inviteCode: msg.inviteCode || '',
+          actionText: this.getActionText(msg.type),
+          fullContent: msg.content || '',
+          _id: msg._id // 保存原始ID用于标记已读
+        };
+      });
+      
+      console.log('格式化后的消息:', messages);
+      
+      const unreadCount = messages.filter(m => !m.read).length;
+      
+      this.setData({
+        messages,
+        unreadCount
+      });
+      
+      wx.hideLoading();
+      
+    } catch (error) {
+      console.error('加载系统消息失败:', error);
+      wx.hideLoading();
+      
+      // 如果加载失败，使用空数组
+      this.setData({
+        messages: [],
+        unreadCount: 0
+      });
+      
+      wx.showToast({
+        title: '加载消息失败',
+        icon: 'none'
+      });
+    }
+  },
+
+  // 获取消息预览文本（前30个字符）
+  getMessagePreview(content) {
+    if (!content) return '';
+    return content.length > 30 ? content.substring(0, 30) + '...' : content;
+  },
+
+  // 格式化消息时间
+  formatMessageTime(date) {
+    if (!date) return '';
     
-    this.setData({
-      messages,
-      unreadCount
-    });
+    const d = new Date(date);
+    const now = new Date();
+    const diff = now - d;
+    
+    // 小于1小时
+    if (diff < 3600000) {
+      const minutes = Math.floor(diff / 60000);
+      return minutes <= 1 ? '刚刚' : `${minutes}分钟前`;
+    }
+    
+    // 小于24小时
+    if (diff < 86400000) {
+      const hours = Math.floor(diff / 3600000);
+      return `${hours}小时前`;
+    }
+    
+    // 小于7天
+    if (diff < 604800000) {
+      const days = Math.floor(diff / 86400000);
+      return `${days}天前`;
+    }
+    
+    // 超过7天，显示具体日期
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hour = String(d.getHours()).padStart(2, '0');
+    const minute = String(d.getMinutes()).padStart(2, '0');
+    
+    return `${month}月${day}日 ${hour}:${minute}`;
+  },
+
+  // 根据消息类型获取操作按钮文字
+  getActionText(type) {
+    const actionTexts = {
+      'school_approved': '复制邀请码',
+      'school_rejected': '',
+      'project_approved': '',
+      'project_rejected': '查看反馈',
+      'evaluation': '查看反馈详情',
+      'system': ''
+    };
+    return actionTexts[type] || '';
   },
 
   // 更新未读数
@@ -99,27 +211,16 @@ Page({
   },
 
   // 查看消息
-  viewMessage(e) {
+  async viewMessage(e) {
     const { id } = e.currentTarget.dataset;
     const { messages } = this.data;
     
     const message = messages.find(m => m.id === id);
     if (!message) return;
     
-    // 标记为已读
-    message.read = true;
-    this.setData({
-      messages
-    });
-    wx.setStorageSync('systemMessages', messages);
-    this.updateUnreadCount();
-    
-    // 显示完整内容
-    wx.showModal({
-      title: message.title,
-      content: message.fullContent,
-      showCancel: false,
-      confirmText: '我知道了'
+    // 跳转到消息详情页
+    wx.navigateTo({
+      url: `/pages/message-detail/message-detail?id=${message._id || id}`
     });
   },
 
@@ -161,13 +262,23 @@ Page({
   },
 
   // 发送消息
-  sendMessage() {
-    const { inputText, chatHistory } = this.data;
+  async sendMessage() {
+    const { inputText, chatHistory, remainingQuota } = this.data;
     
     if (!inputText || !inputText.trim()) {
       wx.showToast({
         title: '请输入内容',
         icon: 'none'
+      });
+      return;
+    }
+
+    // 检查剩余次数
+    if (remainingQuota <= 0) {
+      wx.showModal({
+        title: '提问次数已用完',
+        content: '您今天的提问次数已用完（30次），明天再来吧！\n\n💡提示：合理规划问题可以更高效地使用AI助手。',
+        showCancel: false
       });
       return;
     }
@@ -192,45 +303,142 @@ Page({
     // 保存到本地
     wx.setStorageSync('chatHistory', chatHistory);
     
-    // 模拟AI回复
-    setTimeout(() => {
-      this.receiveAIResponse(inputText);
-    }, 1500);
+    // 调用云函数
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'ai-assistant',
+        data: {
+          action: 'chat',
+          message: userMessage.content,
+          sessionId: this.data.sessionId || undefined
+        }
+      });
+
+      console.log('AI返回:', res);
+
+      if (!res.result || !res.result.success) {
+        // 处理限额超出错误
+        if (res.result?.code === 'QUOTA_EXCEEDED') {
+          wx.showModal({
+            title: '提问次数已用完',
+            content: res.result.message,
+            showCancel: false
+          });
+          this.setData({
+            isAiTyping: false,
+            remainingQuota: 0
+          });
+          return;
+        }
+        
+        throw new Error(res.result?.message || '请求失败');
+      }
+
+      // 更新剩余次数
+      if (res.result.data.remainingQuota !== undefined) {
+        this.setData({
+          remainingQuota: res.result.data.remainingQuota
+        });
+      }
+
+      this.receiveAIResponse(res.result.data);
+    } catch (error) {
+      console.error('AI调用失败:', error);
+      wx.showToast({
+        title: '发送失败，请重试',
+        icon: 'none'
+      });
+      
+      // 移除用户消息
+      chatHistory.pop();
+      this.setData({
+        chatHistory,
+        isAiTyping: false
+      });
+      wx.setStorageSync('chatHistory', chatHistory);
+    }
   },
 
   // 接收AI回复
   receiveAIResponse(userInput) {
     const { chatHistory } = this.data;
     
-    // TODO: 调用AI接口获取真实回复
-    // 这里使用模拟回复
-    let aiResponse = '您好！我是您的AI助手。';
-    
-    if (userInput.includes('项目') || userInput.includes('设计')) {
-      aiResponse = '关于项目设计，我建议您从以下几个方面入手：\n\n1. 明确项目主题和现实背景\n2. 确定跨学科概念\n3. 设计驱动性问题\n4. 规划子问题链\n\n您想了解哪个方面的具体内容呢？';
-    } else if (userInput.includes('跨学科')) {
-      aiResponse = '跨学科概念是项目式学习的核心。一个好的跨学科概念应该：\n\n• 能够贯穿多个学科\n• 具有较强的抽象性\n• 与学生生活相关\n• 有助于深度理解\n\n例如："结构与功能"、"因果关系"、"系统与要素"等。';
-    } else if (userInput.includes('驱动性问题')) {
-      aiResponse = '驱动性问题通常采用以下格式：\n\n"作为[角色]，如何为[受众]解决[问题]或设计[产品]，达到[效果]或实现[目的]？"\n\n例如："作为小小规划师，我们如何为学校设计一套智慧校园改造方案，让校园环境更美好、更智能、更适合学习？"';
+    // 调用云函数获取AI回复
+    this.callAIAssistant(userInput);
+  },
+
+  // 调用AI助手云函数
+  async callAIAssistant(message) {
+    try {
+      const { currentSessionId, chatHistory } = this.data;
+      
+      // 获取项目上下文
+      const projectContext = wx.getStorageSync('currentProject') || null;
+      
+      const result = await wx.cloud.callFunction({
+        name: 'ai-assistant',
+        data: {
+          action: 'chat',
+          message: message,
+          sessionId: currentSessionId,
+          projectContext: projectContext
+        }
+      });
+
+      console.log('AI助手响应:', result);
+
+      if (result.result && result.result.success) {
+        const data = result.result.data;
+        
+        // 保存会话ID
+        if (data.sessionId && !currentSessionId) {
+          this.setData({ currentSessionId: data.sessionId });
+        }
+
+        // 添加AI消息
+        const aiMessage = {
+          id: Date.now(),
+          sender: 'ai',
+          content: data.message,
+          time: this.formatTime(new Date()),
+          toolCalls: data.toolCalls || [],
+          suggestions: data.suggestions || []
+        };
+        
+        chatHistory.push(aiMessage);
+        
+        this.setData({
+          chatHistory,
+          isAiTyping: false,
+          scrollToId: `msg-${aiMessage.id}`
+        });
+        
+        // 保存到本地
+        wx.setStorageSync('chatHistory', chatHistory);
+      } else {
+        throw new Error(result.result?.message || 'AI回复失败');
+      }
+
+    } catch (error) {
+      console.error('AI助手调用失败:', error);
+      
+      // 降级到本地响应
+      const aiMessage = {
+        id: Date.now(),
+        sender: 'ai',
+        content: '抱歉，AI服务暂时不可用。请稍后再试。',
+        time: this.formatTime(new Date())
+      };
+      
+      const { chatHistory } = this.data;
+      chatHistory.push(aiMessage);
+      
+      this.setData({
+        chatHistory,
+        isAiTyping: false,
+        scrollToId: `msg-${aiMessage.id}`
+      });
     }
-    
-    const aiMessage = {
-      id: Date.now(),
-      sender: 'ai',
-      content: aiResponse,
-      time: this.formatTime(new Date())
-    };
-    
-    chatHistory.push(aiMessage);
-    
-    this.setData({
-      chatHistory,
-      isAiTyping: false,
-      scrollToId: `msg-${aiMessage.id}`
-    });
-    
-    // 保存到本地
-    wx.setStorageSync('chatHistory', chatHistory);
   },
 
   // 格式化时间
@@ -238,5 +446,137 @@ Page({
     const hour = date.getHours().toString().padStart(2, '0');
     const minute = date.getMinutes().toString().padStart(2, '0');
     return `${hour}:${minute}`;
+  },
+
+  // 处理建议按钮点击
+  handleSuggestion(e) {
+    const { suggestion } = e.currentTarget.dataset;
+    
+    if (!suggestion) return;
+
+    switch (suggestion.action) {
+      case 'search_more':
+        this.setData({ inputText: '搜索更多案例' });
+        this.sendMessage();
+        break;
+      
+      case 'apply_to_project':
+        this.applyToProject(suggestion);
+        break;
+      
+      case 'regenerate':
+        this.setData({ inputText: '重新生成' });
+        this.sendMessage();
+        break;
+      
+      case 'start_design':
+        wx.navigateTo({
+          url: '/pages/project-design/project-design'
+        });
+        break;
+      
+      case 'view_case':
+        if (suggestion.caseId) {
+          wx.navigateTo({
+            url: `/pages/case-detail/case-detail?id=${suggestion.caseId}`
+          });
+        }
+        break;
+      
+      default:
+        if (suggestion.text) {
+          this.setData({ inputText: suggestion.text });
+          this.sendMessage();
+        }
+    }
+  },
+
+  // 应用到项目
+  applyToProject(suggestion) {
+    wx.showModal({
+      title: '应用到项目',
+      content: '是否将AI生成的内容应用到项目设计中？',
+      success: (res) => {
+        if (res.confirm) {
+          // 保存到本地，项目设计页面会读取
+          wx.setStorageSync('aiSuggestion', suggestion);
+          
+          wx.showToast({
+            title: '已保存建议',
+            icon: 'success'
+          });
+          
+          setTimeout(() => {
+            wx.navigateTo({
+              url: '/pages/project-design/project-design?fromAI=1'
+            });
+          }, 1500);
+        }
+      }
+    });
+  },
+
+  // 清除会话
+  async clearChat() {
+    wx.showModal({
+      title: '清除对话',
+      content: '确定要清除当前对话记录吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          const { currentSessionId } = this.data;
+          
+          // 调用云函数清除会话
+          if (currentSessionId) {
+            await wx.cloud.callFunction({
+              name: 'ai-assistant',
+              data: {
+                action: 'clearSession',
+                sessionId: currentSessionId
+              }
+            });
+          }
+          
+          // 清除本地数据
+          this.setData({
+            chatHistory: [],
+            currentSessionId: null
+          });
+          wx.removeStorageSync('chatHistory');
+          
+          wx.showToast({
+            title: '已清除',
+            icon: 'success'
+          });
+        }
+      }
+    });
+  },
+
+  // 加载使用统计
+  async loadUsageStats() {
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'ai-assistant',
+        data: {
+          action: 'getUsageStats'
+        }
+      });
+
+      if (res.result && res.result.success) {
+        this.setData({
+          todayUsed: res.result.data.todayUsed,
+          dailyLimit: res.result.data.dailyLimit,
+          remainingQuota: res.result.data.remaining
+        });
+      }
+    } catch (error) {
+      console.error('加载使用统计失败:', error);
+      // 失败时使用默认值
+      this.setData({
+        todayUsed: 0,
+        dailyLimit: 30,
+        remainingQuota: 30
+      });
+    }
   }
 });

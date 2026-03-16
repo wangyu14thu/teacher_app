@@ -1,0 +1,28 @@
+<!--pages/message-detail/message-detail.wxml-->
+<scroll-view scroll-y class="message-detail-container">
+  <!-- 消息头部 -->
+  <view class="message-header">
+    <text class="message-title">{{message.title}}</text>
+    <text class="message-time">{{message.time}}</text>
+  </view>
+
+  <!-- 消息内容 -->
+  <view class="message-content">
+    <text class="content-text">{{message.fullContent}}</text>
+  </view>
+
+  <!-- 邀请码区域（如果有） -->
+  <view wx:if="{{message.inviteCode}}" class="invite-code-section">
+    <view class="invite-label">邀请码</view>
+    <view class="invite-code-card">
+      <text class="invite-code">{{message.inviteCode}}</text>
+      <button class="btn-copy" bindtap="copyInviteCode">复制</button>
+    </view>
+  </view>
+
+  <!-- 底部操作按钮 -->
+  <view class="bottom-actions">
+    <button class="btn-delete" bindtap="deleteMessage">删除消息</button>
+  </view>
+</scroll-view>
+

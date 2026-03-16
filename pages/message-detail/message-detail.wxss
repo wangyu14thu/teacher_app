@@ -1,0 +1,111 @@
+/* pages/message-detail/message-detail.wxss */
+.message-detail-container {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding-bottom: 120rpx;
+}
+
+.message-header {
+  background: white;
+  padding: 40rpx 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.message-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.message-time {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.message-content {
+  background: white;
+  margin: 20rpx 0;
+  padding: 40rpx 30rpx;
+  min-height: 400rpx;
+}
+
+.content-text {
+  font-size: 30rpx;
+  line-height: 1.8;
+  color: #333;
+  word-wrap: break-word;
+}
+
+/* 邀请码区域 */
+.invite-code-section {
+  background: white;
+  margin: 20rpx 0;
+  padding: 40rpx 30rpx;
+}
+
+.invite-label {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+}
+
+.invite-code-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 16rpx;
+  padding: 32rpx;
+}
+
+.invite-code {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #667eea;
+  letter-spacing: 4rpx;
+}
+
+.btn-copy {
+  padding: 16rpx 32rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 24rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+.btn-copy::after {
+  border: none;
+}
+
+/* 底部操作 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx 30rpx;
+  background: white;
+  box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: center;
+}
+
+.btn-delete {
+  width: 100%;
+  padding: 24rpx;
+  background: white;
+  color: #ff4d4f;
+  border: 2rpx solid #ff4d4f;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+.btn-delete::after {
+  border: none;
+}
+

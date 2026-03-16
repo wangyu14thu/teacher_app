@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "openapi": []
+  },
+  "env": {
+    "HUNYUAN_SECRET_ID": "",
+    "HUNYUAN_SECRET_KEY": "",
+    "HUNYUAN_MODEL": "hunyuan-standard",
+    "HUNYUAN_REGION": "ap-guangzhou"
+  }
+}
+

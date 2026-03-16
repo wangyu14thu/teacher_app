@@ -1,0 +1,126 @@
+/* pages/reviewer/history/index.wxss */
+page {
+  background: #f5f7fa;
+}
+
+.history-container {
+  min-height: 100vh;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 16rpx;
+  padding: 20rpx 30rpx;
+  background: white;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.filter-picker {
+  flex: 1;
+}
+
+.picker-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f5f5f5;
+  padding: 16rpx 20rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  color: #333;
+}
+
+.picker-arrow {
+  color: #999;
+  font-size: 24rpx;
+}
+
+.history-list {
+  height: calc(100vh - 120rpx);
+  padding: 20rpx 30rpx;
+}
+
+.history-item {
+  background: white;
+  padding: 32rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  margin-bottom: 20rpx;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.item-title {
+  flex: 1;
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-right: 16rpx;
+}
+
+.item-result {
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.item-result.pass {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.item-result.reject {
+  background: #fff1f0;
+  color: #ff4d4f;
+}
+
+.item-meta {
+  margin-bottom: 12rpx;
+}
+
+.meta-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.item-opinion {
+  padding-top: 16rpx;
+  border-top: 1rpx dashed #e8e8e8;
+}
+
+.opinion-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.opinion-text {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 40rpx;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 32rpx;
+  opacity: 0.6;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+

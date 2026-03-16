@@ -1,0 +1,198 @@
+<!--pages/reviewer/home/index.wxml-->
+<view class="reviewer-home-container">
+  <!-- 顶部导航栏 -->
+  <view class="top-bar">
+    <view class="top-left">
+      <text class="app-icon">🛡️</text>
+      <text class="app-name">审核工作台</text>
+    </view>
+    <view class="top-right">
+      <text class="user-name">{{reviewerInfo.name}}</text>
+      <button class="btn-logout" bindtap="handleLogout">
+        <text class="logout-icon">🚪</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 关键数据卡片 -->
+  <view class="stats-cards">
+    <view class="stat-card urgent">
+      <text class="stat-number">{{todayPending}}</text>
+      <text class="stat-label">今日待审</text>
+      <view class="stat-icon">⏰</view>
+    </view>
+    <view class="stat-card success">
+      <text class="stat-number">{{weekCompleted}}</text>
+      <text class="stat-label">本周已完成</text>
+      <view class="stat-icon">✅</view>
+    </view>
+  </view>
+
+  <!-- 任务选项卡 -->
+  <view class="task-tabs">
+    <view 
+      class="tab-item {{currentTab === 'project' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="project"
+    >
+      <text class="tab-text">待审核项目</text>
+      <view class="tab-badge" wx:if="{{projectCount > 0}}">{{projectCount}}</view>
+    </view>
+    <view 
+      class="tab-item {{currentTab === 'school' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="school"
+    >
+      <text class="tab-text">待审核学校</text>
+      <view class="tab-badge" wx:if="{{schoolCount > 0}}">{{schoolCount}}</view>
+    </view>
+  </view>
+
+  <!-- 筛选器和批量操作 -->
+  <view class="filter-bar" wx:if="{{currentTab === 'project'}}">
+    <view class="filter-section">
+      <picker class="filter-picker" mode="selector" range="{{gradeOptions}}" value="{{gradeIndex}}" bindchange="onGradeChange">
+        <view class="picker-display">
+          <text class="filter-icon">📚</text>
+          <text>{{gradeIndex !== null ? gradeOptions[gradeIndex] : '全部年级'}}</text>
+          <text class="picker-arrow">▾</text>
+        </view>
+      </picker>
+      <picker class="filter-picker" mode="selector" range="{{subjectOptions}}" value="{{subjectIndex}}" bindchange="onSubjectChange">
+        <view class="picker-display">
+          <text class="filter-icon">📖</text>
+          <text>{{subjectIndex !== null ? subjectOptions[subjectIndex] : '全部学科'}}</text>
+          <text class="picker-arrow">▾</text>
+        </view>
+      </picker>
+    </view>
+    <view class="batch-actions" wx:if="{{selectedTasks.length > 0}}">
+      <text class="batch-text">已选{{selectedTasks.length}}项</text>
+      <button class="btn-batch-reject" bindtap="showBatchRejectModal">批量驳回</button>
+      <button class="btn-batch-cancel" bindtap="cancelBatchSelect">取消</button>
+    </view>
+  </view>
+
+  <!-- 任务列表 -->
+  <scroll-view class="task-list" scroll-y>
+    <!-- 项目审核任务 -->
+    <view class="task-section" wx:if="{{currentTab === 'project'}}">
+      <view 
+        class="task-item {{item.urgent ? 'urgent' : ''}}"
+        wx:for="{{filteredProjects}}"
+        wx:key="id"
+        bindtap="viewTaskDetail"
+        data-id="{{item.id}}"
+        data-type="project"
+      >
+        <checkbox 
+          class="task-checkbox" 
+          wx:if="{{batchMode}}"
+          value="{{item.id}}"
+          checked="{{selectedTasks.indexOf(item.id) > -1}}"
+          bindtap="onTaskSelect"
+          catchtap="preventBubble"
+        />
+        <view class="task-content">
+          <view class="task-header">
+            <text class="task-title">{{item.projectName}}</text>
+            <view class="task-badges">
+              <text class="badge urgent" wx:if="{{item.urgent}}">紧急</text>
+              <text class="badge type">{{item.type === 'publish' ? '发布' : '评估'}}</text>
+            </view>
+          </view>
+          <view class="task-meta">
+            <text class="meta-item">📚 {{item.grade}} · {{item.subject}}</text>
+            <text class="meta-item">👨‍🏫 {{item.teacherName}}</text>
+          </view>
+          <view class="task-footer">
+            <text class="task-time">{{item.submitTime}}</text>
+            <text class="task-arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{filteredProjects.length === 0}}">
+        <text class="empty-icon">📭</text>
+        <text class="empty-text">暂无待审核项目</text>
+      </view>
+    </view>
+
+    <!-- 学校审核任务 -->
+    <view class="task-section" wx:if="{{currentTab === 'school'}}">
+      <view 
+        class="task-item"
+        wx:for="{{schools}}"
+        wx:key="id"
+        bindtap="viewTaskDetail"
+        data-id="{{item.id}}"
+        data-type="school"
+      >
+        <view class="task-content full-width">
+          <view class="task-header">
+            <text class="task-title">{{item.schoolName}}</text>
+            <view class="task-badges">
+              <text class="badge type">学校申请</text>
+            </view>
+          </view>
+          <view class="task-meta">
+            <text class="meta-item">👤 {{item.contactName}} · {{item.position}}</text>
+            <text class="meta-item">📍 {{item.schoolAddress}}</text>
+          </view>
+          <view class="task-footer">
+            <text class="task-time">{{item.submitTime}}</text>
+            <text class="task-arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{schools.length === 0}}">
+        <text class="empty-icon">📭</text>
+        <text class="empty-text">暂无待审核学校</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部快捷入口 -->
+  <view class="bottom-shortcuts">
+    <view class="shortcut-item" bindtap="navigateToTempTasks">
+      <text class="shortcut-icon">💾</text>
+      <text class="shortcut-text">暂存任务</text>
+      <view class="shortcut-badge" wx:if="{{tempCount > 0}}">{{tempCount}}</view>
+    </view>
+    <view class="shortcut-item" bindtap="navigateToProfile">
+      <text class="shortcut-icon">📊</text>
+      <text class="shortcut-text">审核统计</text>
+    </view>
+    <view class="shortcut-item" bindtap="toggleBatchMode">
+      <text class="shortcut-icon">{{batchMode ? '✅' : '☑️'}}</text>
+      <text class="shortcut-text">{{batchMode ? '退出批量' : '批量操作'}}</text>
+    </view>
+  </view>
+
+  <!-- 批量驳回弹窗 -->
+  <view class="modal-mask" wx:if="{{showBatchRejectModal}}" bindtap="closeBatchRejectModal">
+    <view class="modal-container" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">批量驳回原因</text>
+        <text class="modal-close" bindtap="closeBatchRejectModal">×</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <radio-group bindchange="onBatchRejectReasonChange">
+          <label class="reject-option" wx:for="{{rejectReasons}}" wx:key="id">
+            <radio value="{{item.id}}" checked="{{batchRejectReason === item.id}}"/>
+            <text class="reject-text">{{item.text}}</text>
+          </label>
+        </radio-group>
+      </scroll-view>
+      <view class="modal-footer">
+        <button class="btn-modal-cancel" bindtap="closeBatchRejectModal">取消</button>
+        <button class="btn-modal-confirm" bindtap="confirmBatchReject" disabled="{{!batchRejectReason}}">
+          确认驳回 {{selectedTasks.length}} 项
+        </button>
+      </view>
+    </view>
+  </view>
+</view>

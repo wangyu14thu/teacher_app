@@ -1,0 +1,283 @@
+/* pages/reviewer-login/reviewer-login.wxss */
+page {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+  min-height: 100vh;
+}
+
+.reviewer-login-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 40rpx;
+}
+
+/* Logo区域 */
+.logo-section {
+  text-align: center;
+  margin-bottom: 60rpx;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.logo-icon {
+  display: block;
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+  filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.2));
+}
+
+.logo-text {
+  display: block;
+  font-size: 32rpx;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 300;
+  letter-spacing: 4rpx;
+}
+
+/* 登录卡片 */
+.login-card {
+  width: 100%;
+  max-width: 600rpx;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 24rpx;
+  padding: 50rpx 40rpx 40rpx;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10rpx);
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 50rpx;
+  padding-bottom: 30rpx;
+  border-bottom: 2rpx solid #e8eaed;
+}
+
+.login-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #1e3c72;
+  margin-bottom: 12rpx;
+}
+
+.login-subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: #7e8ba3;
+  letter-spacing: 2rpx;
+  text-transform: uppercase;
+}
+
+/* 表单容器 */
+.form-container {
+  margin-bottom: 30rpx;
+}
+
+.form-group {
+  margin-bottom: 32rpx;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #f5f7fa;
+  border: 2rpx solid #e8eaed;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+  height: 96rpx;
+  transition: all 0.3s;
+}
+
+.input-wrapper.error {
+  border-color: #ff4d4f;
+  background: #fff1f0;
+}
+
+.input-icon {
+  font-size: 36rpx;
+  margin-right: 16rpx;
+  opacity: 0.6;
+}
+
+.form-input {
+  flex: 1;
+  height: 100%;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.input-placeholder {
+  color: #999;
+  font-size: 26rpx;
+}
+
+.error-tip {
+  display: block;
+  font-size: 24rpx;
+  color: #ff4d4f;
+  margin-top: 12rpx;
+  margin-left: 8rpx;
+  animation: shake 0.3s;
+}
+
+/* 全局错误提示 */
+.global-error {
+  display: flex;
+  align-items: center;
+  background: #fff1f0;
+  border: 2rpx solid #ffccc7;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 32rpx;
+  animation: slideDown 0.3s ease-out;
+}
+
+.error-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.error-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #ff4d4f;
+  line-height: 1.5;
+}
+
+/* 登录按钮 */
+.btn-login {
+  width: 100%;
+  height: 96rpx;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 16rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 20rpx rgba(30, 60, 114, 0.3);
+  transition: all 0.3s;
+}
+
+.btn-login::after {
+  border: none;
+}
+
+.btn-login:not(.loading):active {
+  transform: translateY(2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(30, 60, 114, 0.3);
+}
+
+.btn-login.loading {
+  background: linear-gradient(135deg, #7e8ba3 0%, #a8b4c5 100%);
+  opacity: 0.8;
+}
+
+.loading-content {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+/* Spinner动画 */
+.spinner {
+  width: 32rpx;
+  height: 32rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 安全提示 */
+.security-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 30rpx;
+  border-top: 2rpx solid #f0f0f0;
+  margin-top: 20rpx;
+}
+
+.notice-icon {
+  font-size: 28rpx;
+  margin-right: 8rpx;
+  opacity: 0.5;
+}
+
+.notice-text {
+  font-size: 22rpx;
+  color: #999;
+  letter-spacing: 1rpx;
+}
+
+/* 底部装饰 */
+.footer-decoration {
+  margin-top: 60rpx;
+}
+
+.decoration-line {
+  width: 80rpx;
+  height: 6rpx;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3rpx;
+}
+
+/* 动画 */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-8rpx);
+  }
+  75% {
+    transform: translateX(8rpx);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-20rpx);
+  }
+  to {
+    opacity: 1;
+    max-height: 200rpx;
+    transform: translateY(0);
+  }
+}
+

@@ -177,26 +177,6 @@
         </view>
       </view>
 
-      <!-- 证明材料摘要 -->
-      <view class="summary-section">
-        <text class="summary-section-title">证明材料</text>
-        <view class="summary-item">
-          <text class="summary-label">已上传证件</text>
-          <text class="summary-value">{{licenseImages.length}} 张照片</text>
-        </view>
-        <view class="summary-images">
-          <image 
-            class="summary-image" 
-            wx:for="{{licenseImages}}" 
-            wx:key="index" 
-            src="{{item}}" 
-            mode="aspectFill"
-            bindtap="previewImage" 
-            data-index="{{index}}"
-          />
-        </view>
-      </view>
-
       <!-- 申请说明 -->
       <view class="summary-section" wx:if="{{formData.description}}">
         <text class="summary-section-title">申请说明</text>
@@ -206,8 +186,6 @@
       <!-- 修改入口 -->
       <view class="edit-links">
         <text class="edit-link" bindtap="goToStep" data-step="1">修改基础信息</text>
-        <text class="link-divider">|</text>
-        <text class="edit-link" bindtap="goToStep" data-step="2">修改证明材料</text>
       </view>
     </view>
 
@@ -226,18 +204,16 @@
     </button>
     <button 
       class="btn-next {{canProceed ? '' : 'disabled'}}" 
-      wx:if="{{currentStep < 3}}" 
+      wx:if="{{currentStep === 1}}" 
       bindtap="nextStep"
-      disabled="{{!canProceed}}"
     >
       <text>下一步</text>
       <text class="btn-icon">›</text>
     </button>
     <button 
       class="btn-submit {{canSubmit ? '' : 'disabled'}}" 
-      wx:if="{{currentStep === 3}}" 
+      wx:if="{{currentStep === 2}}" 
       bindtap="submitApplication"
-      disabled="{{!canSubmit}}"
     >
       <text class="btn-icon">✓</text>
       <text>确认信息并提交审核</text>
