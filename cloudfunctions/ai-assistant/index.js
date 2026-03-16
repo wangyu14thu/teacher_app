@@ -209,53 +209,69 @@ async function buildConversationHistory(sessionId) {
 }
 
 /**
- * 调用AI（真实混元API + 工具调用）
+ * 调用AI（真实混元API + 完整工具调用循环）
+ *
+ * 循环逻辑：
+ *   调用混元 → 有 tool_calls → 执行工具 → 工具结果回传混元 → 重复
+ *   直到 finishReason !== 'tool_calls' 或达到最大循环次数
  */
 async function callAI(messages, projectContext) {
   try {
-    // 获取可用工具
     const tools = getAvailableTools();
-    
-    // 调用混元API
-    const apiResponse = await callHunyuanAPI(messages, tools, false);
-    
-    if (!apiResponse.success) {
-      throw new Error('AI调用失败');
-    }
+    const MAX_ITERATIONS = 5;
+    let currentMessages = [...messages];
+    let allToolCalls = [];
 
-    // 处理工具调用
-    let finalContent = apiResponse.content;
-    const toolCalls = [];
-    
-    if (apiResponse.toolCalls && apiResponse.toolCalls.length > 0) {
+    for (let i = 0; i < MAX_ITERATIONS; i++) {
+      const apiResponse = await callHunyuanAPI(currentMessages, tools, false);
+
+      if (!apiResponse.success) {
+        throw new Error('AI调用失败');
+      }
+
+      // 没有工具调用，或模型已给出最终回复
+      const hasToolCalls = apiResponse.toolCalls && apiResponse.toolCalls.length > 0;
+      if (!hasToolCalls || apiResponse.finishReason !== 'tool_calls') {
+        return {
+          content: apiResponse.content,
+          toolCalls: allToolCalls,
+          suggestions: generateSuggestions(apiResponse.content, projectContext),
+          usage: apiResponse.usage
+        };
+      }
+
+      // 把 assistant 消息（含 ToolCalls）追加到历史
+      currentMessages.push({
+        role: 'assistant',
+        content: apiResponse.content || '',
+        toolCalls: apiResponse.toolCalls
+      });
+
+      // 执行所有工具，把结果追加到历史
       for (const toolCall of apiResponse.toolCalls) {
         const toolResult = await executeToolCall(toolCall, projectContext);
-        toolCalls.push({
+
+        allToolCalls.push({
           tool: toolCall.Function.Name,
           status: 'completed',
           result: toolResult
         });
-        
-        // 将工具结果融入回复
-        if (toolResult.data) {
-          finalContent += '\n\n' + formatToolResult(toolCall.Function.Name, toolResult.data);
-        }
+
+        // role: 'tool' 是混元 Function Calling 规范的工具结果角色
+        currentMessages.push({
+          role: 'tool',
+          content: JSON.stringify(toolResult.data || toolResult),
+          toolCallId: toolCall.Id
+        });
       }
     }
 
-    // 生成建议按钮
-    const suggestions = generateSuggestions(finalContent, projectContext);
-
-    return {
-      content: finalContent,
-      toolCalls: toolCalls,
-      suggestions: suggestions,
-      usage: apiResponse.usage
-    };
+    // 超出最大循环次数，降级
+    console.warn('工具调用循环达到最大次数，降级处理');
+    return await fallbackAIResponse(messages, projectContext);
 
   } catch (error) {
     console.error('AI调用错误:', error);
-    // 降级到智能模拟响应
     return await fallbackAIResponse(messages, projectContext);
   }
 }

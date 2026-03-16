@@ -42,10 +42,21 @@ async function callHunyuanAPI(messages, tools = [], stream = false) {
   try {
     const params = {
       Model: config.HUNYUAN_MODEL,
-      Messages: messages.map(msg => ({
-        Role: msg.role,
-        Content: msg.content
-      })),
+      Messages: messages.map(msg => {
+        const mapped = {
+          Role: msg.role,
+          Content: msg.content || ''
+        };
+        // 工具调用的 assistant 消息：携带 ToolCalls
+        if (msg.toolCalls && msg.toolCalls.length > 0) {
+          mapped.ToolCalls = msg.toolCalls;
+        }
+        // 工具结果消息：携带 ToolCallId
+        if (msg.toolCallId) {
+          mapped.ToolCallId = msg.toolCallId;
+        }
+        return mapped;
+      }),
       Stream: stream,
       Temperature: 0.7,
       TopP: 0.8
