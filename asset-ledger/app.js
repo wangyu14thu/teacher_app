@@ -11,7 +11,15 @@
     credit: { label: "信用卡", short: "卡", kind: "liability", icon: "credit" },
     other: { label: "其他资产", short: "他", kind: "asset", icon: "other" }
   };
-  const palette = { bank: "#557d95", wealth: "#6f8d80", cash: "#68a88c", investment: "#c69a42", other: "#9a7e6b", credit: "#d4513f" };
+  const palette = { bank: "#ad8540", wealth: "#9a7430", cash: "#c29a49", investment: "#d29e2f", other: "#9b815c", credit: "#d4513f" };
+  const ACCOUNT_ICONS = {
+    bank: '<path d="m3 9 9-5 9 5M5 10h14M6 10v7m4-7v7m4-7v7m4-7v7M4 20h16"></path>',
+    wealth: '<path d="M4 19V9m5 10V5m5 14v-7m5 7V3"></path>',
+    cash: '<rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M7 10h4m-4 4h7m4-2h.01"></path>',
+    investment: '<path d="M4 18 9 11l4 3 7-9"></path><path d="M16 5h4v4"></path>',
+    credit: '<rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18M7 15h4"></path>',
+    other: '<circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path>'
+  };
 
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
@@ -132,7 +140,7 @@
     const meta = TYPE_META[account.type] || TYPE_META.other;
     const isLiability = accountKind(account) === "liability";
     const details = [meta.label, account.institution].filter(Boolean).join(" · ");
-    return `<article class="account-card" data-account-id="${account.id}"><div class="account-icon ${account.type === "credit" ? "credit" : account.type === "investment" ? "investment" : ""}">${meta.short}</div><div class="account-copy"><strong>${escapeHtml(account.name)}</strong><small>${escapeHtml(details)}${account.note ? ` · ${escapeHtml(account.note)}` : ""}</small></div><div class="account-value"><strong class="${isLiability ? "debt" : ""}">${isLiability ? "-" : ""}${money(account.amount)}</strong><small>${account.updatedAt ? dateLabel(account.updatedAt) : "未记录"}</small>${account.type === "investment" ? `<button class="update-mini" data-update-id="${account.id}">记一笔</button>` : ""}</div></article>`;
+    return `<article class="account-card" data-account-id="${account.id}"><div class="account-icon ${account.type === "credit" ? "credit" : account.type === "investment" ? "investment" : ""}"><svg viewBox="0 0 24 24" aria-hidden="true">${ACCOUNT_ICONS[account.type] || ACCOUNT_ICONS.other}</svg></div><div class="account-copy"><strong>${escapeHtml(account.name)}</strong><small>${escapeHtml(details)}${account.note ? ` · ${escapeHtml(account.note)}` : ""}</small></div><div class="account-value"><strong class="${isLiability ? "debt" : ""}">${isLiability ? "-" : ""}${money(account.amount)}</strong><small>${account.updatedAt ? dateLabel(account.updatedAt) : "未记录"}</small>${account.type === "investment" ? `<button class="update-mini" data-update-id="${account.id}">记一笔</button>` : ""}</div></article>`;
   }
   function emptyState(title, description, action) { return `<div class="empty-state"><strong>${title}</strong><p>${description}</p><button data-empty-add="${action}">${action}</button></div>`; }
   function escapeHtml(value) { return String(value || "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])); }
@@ -144,7 +152,7 @@
     const keys = options.series || ["net"]; const values = points.flatMap(point => keys.map(key => Number(point[key] || 0))); const max = Math.max(...values, 1); const min = Math.min(...values, 0); const range = max - min || 1;
     const pad = options.product ? 6 : options.compact ? 4 : 15; const x = index => pad + (width - pad * 2) * (index / Math.max(points.length - 1, 1)); const y = value => height - pad - (height - pad * 2) * ((value - min) / range);
     if (!options.compact) { ctx.strokeStyle = "#e5eae6"; ctx.lineWidth = 1; for (let i = 1; i < 4; i += 1) { ctx.beginPath(); ctx.moveTo(pad, (height / 4) * i); ctx.lineTo(width - pad, (height / 4) * i); ctx.stroke(); } }
-    const colors = { net: "#173f35", assets: "#c69a42", amount: "#557d95" };
+    const colors = { net: "#704c16", assets: "#c39536", amount: "#9a7430" };
     keys.forEach(key => { ctx.beginPath(); points.forEach((point, index) => { const px = x(index); const py = y(Number(point[key] || 0)); if (index === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }); ctx.strokeStyle = colors[key] || "#173f35"; ctx.lineWidth = options.product ? 2 : options.compact ? 2.4 : 2; ctx.lineJoin = "round"; ctx.stroke(); if (options.compact && key === "net") { const last = points.at(-1); ctx.fillStyle = colors[key]; ctx.beginPath(); ctx.arc(x(points.length - 1), y(last.net), 3.5, 0, Math.PI * 2); ctx.fill(); } });
   }
 
@@ -159,15 +167,7 @@
     $("#account-name").value = account?.name || ""; $("#account-amount").value = account?.amount ?? ""; $("#account-note").value = account?.note || ""; $("#product-category").value = account?.category || "基金"; $("#delete-account").hidden = !account; $("#form-error").textContent = ""; renderTypeOptions(); updateEditorFields(); $("#institution").value = account?.institution || BANKS[0]; showSheet("editor-sheet");
   }
   function renderTypeOptions() {
-    const icons = {
-      bank: '<path d="m3 9 9-5 9 5M5 10h14M6 10v7m4-7v7m4-7v7m4-7v7M4 20h16"></path>',
-      wealth: '<path d="M4 19V9m5 10V5m5 14v-7m5 7V3"></path>',
-      cash: '<rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M7 10h4m-4 4h7m4-2h.01"></path>',
-      investment: '<path d="M4 18 9 11l4 3 7-9"></path><path d="M16 5h4v4"></path>',
-      credit: '<rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18M7 15h4"></path>',
-      other: '<circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path>'
-    };
-    $("#type-options").innerHTML = Object.entries(TYPE_META).map(([type, meta]) => `<button type="button" class="type-option ${selectedType === type ? "active" : ""}" data-type="${type}"><svg viewBox="0 0 24 24">${icons[type]}</svg>${meta.label}</button>`).join("");
+    $("#type-options").innerHTML = Object.entries(TYPE_META).map(([type, meta]) => `<button type="button" class="type-option ${selectedType === type ? "active" : ""}" data-type="${type}"><svg viewBox="0 0 24 24">${ACCOUNT_ICONS[type]}</svg>${meta.label}</button>`).join("");
     $$("[data-type]").forEach(button => button.addEventListener("click", () => { selectedType = button.dataset.type; renderTypeOptions(); updateEditorFields(); }));
   }
   function updateEditorFields() {
