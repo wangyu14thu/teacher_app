@@ -12,24 +12,25 @@
     other: { label: "其他资产", short: "他", kind: "asset", icon: "other" }
   };
   const palette = { bank: "#ad8540", wealth: "#9a7430", cash: "#c29a49", investment: "#d29e2f", other: "#9b815c", credit: "#d4513f" };
-  const BANK_BRANDS = {
-    "中国工商银行": { color: "#c51b22", mark: "工" },
-    "中国建设银行": { color: "#0756a6", mark: "建" },
-    "中国银行": { color: "#d51f2a", mark: "中" },
-    "中国农业银行": { color: "#149447", mark: "农" },
-    "交通银行": { color: "#1557a7", mark: "交" },
-    "中国邮政储蓄银行": { color: "#009d67", mark: "邮" },
-    "招商银行": { color: "#d71920", mark: "招" },
-    "浦发银行": { color: "#1260a8", mark: "浦" },
-    "中信银行": { color: "#a92c2c", mark: "信" },
-    "中国民生银行": { color: "#1681be", mark: "民" },
-    "兴业银行": { color: "#007cba", mark: "兴" },
-    "中国光大银行": { color: "#eb6824", mark: "光" },
-    "平安银行": { color: "#008b72", mark: "平" },
-    "华夏银行": { color: "#c31f2b", mark: "华" },
-    "宁波银行": { color: "#ee7624", mark: "宁" },
-    "北京银行": { color: "#0c76b8", mark: "京" },
-    "上海银行": { color: "#eb6e2e", mark: "上" }
+  const BANK_LOGOS = {
+    "中国工商银行": "assets/banks/icbc.svg",
+    "中国建设银行": "assets/banks/ccb.svg",
+    "中国银行": "assets/banks/boc.svg",
+    "中国农业银行": "assets/banks/abc.svg",
+    "交通银行": "assets/banks/bocom.svg",
+    "中国邮政储蓄银行": "assets/banks/psbc.svg",
+    "招商银行": "assets/banks/cmb.svg",
+    "浦发银行": "assets/banks/spdb.svg",
+    "中信银行": "assets/banks/citic.svg",
+    "中国民生银行": "assets/banks/cmbc.svg",
+    "兴业银行": "assets/banks/cib.svg",
+    "中国光大银行": "assets/banks/ceb.svg",
+    "广发银行": "assets/banks/cgb.svg",
+    "平安银行": "assets/banks/pab.svg",
+    "华夏银行": "assets/banks/hxb.svg",
+    "宁波银行": "assets/banks/nbcb.svg",
+    "北京银行": "assets/banks/bob.svg",
+    "上海银行": "assets/banks/bosc.svg"
   };
   const ACCOUNT_ICONS = {
     bank: '<path d="m3 9 9-5 9 5M5 10h14M6 10v7m4-7v7m4-7v7m4-7v7M4 20h16"></path>',
@@ -159,9 +160,13 @@
     const meta = TYPE_META[account.type] || TYPE_META.other;
     const isLiability = accountKind(account) === "liability";
     const details = [meta.label, account.institution].filter(Boolean).join(" · ");
-    const brand = account.type === "bank" || account.type === "credit" ? BANK_BRANDS[account.institution] : null;
-    const logo = brand ? `<span class="brand-logo" style="--brand:${brand.color}">${brand.mark}</span>` : `<svg viewBox="0 0 24 24" aria-hidden="true">${ACCOUNT_ICONS[account.type] || ACCOUNT_ICONS.other}</svg>`;
-    return `<article class="account-card" data-account-id="${account.id}"><div class="account-icon ${account.type === "credit" ? "credit" : account.type === "investment" ? "investment" : ""} ${brand ? "has-brand" : ""}">${logo}</div><div class="account-copy"><strong>${escapeHtml(account.name)}</strong><small>${escapeHtml(details)}${account.note ? ` · ${escapeHtml(account.note)}` : ""}</small></div><div class="account-value"><strong class="${isLiability ? "debt" : ""}">${isLiability ? "-" : ""}${money(account.amount)}</strong><small>${account.updatedAt ? dateLabel(account.updatedAt) : "未记录"}</small>${account.type === "investment" ? `<button class="update-mini" data-update-id="${account.id}">记一笔</button>` : ""}</div></article>`;
+    const hasBankLogo = Boolean(BANK_LOGOS[account.institution]);
+    const logo = hasBankLogo ? bankLogo(account.institution, "brand-logo") : `<svg viewBox="0 0 24 24" aria-hidden="true">${ACCOUNT_ICONS[account.type] || ACCOUNT_ICONS.other}</svg>`;
+    return `<article class="account-card" data-account-id="${account.id}"><div class="account-icon ${account.type === "credit" ? "credit" : account.type === "investment" ? "investment" : ""} ${hasBankLogo ? "has-brand" : ""}">${logo}</div><div class="account-copy"><strong>${escapeHtml(account.name)}</strong><small>${escapeHtml(details)}${account.note ? ` · ${escapeHtml(account.note)}` : ""}</small></div><div class="account-value"><strong class="${isLiability ? "debt" : ""}">${isLiability ? "-" : ""}${money(account.amount)}</strong><small>${account.updatedAt ? dateLabel(account.updatedAt) : "未记录"}</small>${account.type === "investment" ? `<button class="update-mini" data-update-id="${account.id}">记一笔</button>` : ""}</div></article>`;
+  }
+  function bankLogo(bank, className = "bank-logo") {
+    const source = BANK_LOGOS[bank];
+    return source ? `<img class="${className}" src="${source}" alt="" loading="lazy">` : `<span class="${className} bank-logo-fallback"><svg viewBox="0 0 24 24" aria-hidden="true">${ACCOUNT_ICONS.bank}</svg></span>`;
   }
   function emptyState(title, description, action) { return `<div class="empty-state"><strong>${title}</strong><p>${description}</p><button data-empty-add="${action}">${action}</button></div>`; }
   function escapeHtml(value) { return String(value || "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])); }
@@ -185,17 +190,34 @@
   function openEditor(id = null) {
     const account = id ? state.accounts.find(item => item.id === id) : null;
     $("#editor-kicker").textContent = account ? "编辑账户" : "新建记录"; $("#editor-title").textContent = account ? "编辑账户" : "添加账户"; $("#edit-id").value = account?.id || ""; selectedType = account?.type || "bank";
-    $("#account-name").value = account?.name || ""; $("#account-amount").value = account?.amount ?? ""; $("#account-note").value = account?.note || ""; $("#product-category").value = account?.category || "基金"; $("#delete-account").hidden = !account; $("#form-error").textContent = ""; renderTypeOptions(); updateEditorFields(); $("#institution").value = account?.institution || BANKS[0]; showSheet("editor-sheet");
+    $("#account-name").value = account?.name || ""; $("#account-amount").value = account?.amount ?? ""; $("#account-note").value = account?.note || ""; $("#product-category").value = account?.category || "基金"; $("#delete-account").hidden = !account; $("#form-error").textContent = ""; renderTypeOptions(); updateEditorFields(account?.institution || BANKS[0]); showSheet("editor-sheet");
   }
   function renderTypeOptions() {
     $("#type-options").innerHTML = Object.entries(TYPE_META).map(([type, meta]) => `<button type="button" class="type-option ${selectedType === type ? "active" : ""}" data-type="${type}"><svg viewBox="0 0 24 24">${ACCOUNT_ICONS[type]}</svg>${meta.label}</button>`).join("");
     $$("[data-type]").forEach(button => button.addEventListener("click", () => { selectedType = button.dataset.type; renderTypeOptions(); updateEditorFields(); }));
   }
-  function updateEditorFields() {
+  function updateEditorFields(institution = $("#institution").value || BANKS[0]) {
     $("#institution-field").hidden = selectedType === "cash" || selectedType === "other";
     $("#category-field").hidden = selectedType !== "investment";
     $("#amount-label").textContent = selectedType === "credit" ? "当前待还" : selectedType === "investment" ? "当前净值" : "当前余额";
-    const select = $("#institution"); select.innerHTML = BANKS.map(bank => `<option value="${bank}">${bank}</option>`).join("");
+    renderBankSelector(BANKS.includes(institution) ? institution : BANKS[0]);
+  }
+  function renderBankSelector(selectedBank) {
+    $("#institution").value = selectedBank;
+    $("#bank-select-trigger").innerHTML = `<span class="bank-choice">${bankLogo(selectedBank)}<strong>${escapeHtml(selectedBank)}</strong></span><svg class="bank-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"></path></svg>`;
+    $("#bank-options").innerHTML = BANKS.map(bank => `<button type="button" class="bank-option" role="option" data-bank="${escapeHtml(bank)}" aria-selected="${bank === selectedBank}">${bankLogo(bank)}<span>${escapeHtml(bank)}</span>${bank === selectedBank ? '<svg class="bank-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>' : ""}</button>`).join("");
+    $$(".bank-option").forEach(option => option.addEventListener("click", () => { renderBankSelector(option.dataset.bank); closeBankSelector(); $("#bank-select-trigger").focus(); }));
+  }
+  function openBankSelector() {
+    $("#bank-options").hidden = false;
+    $("#bank-select-trigger").setAttribute("aria-expanded", "true");
+    $("#bank-select").classList.add("open");
+    $("#bank-options [aria-selected='true']")?.scrollIntoView({ block: "nearest" });
+  }
+  function closeBankSelector() {
+    $("#bank-options").hidden = true;
+    $("#bank-select-trigger").setAttribute("aria-expanded", "false");
+    $("#bank-select").classList.remove("open");
   }
   function openUpdate(id) { const account = state.accounts.find(item => item.id === id); if (!account) return; $("#update-id").value = id; $("#update-title").textContent = account.name; $("#update-date").value = today(); $("#update-amount").value = account.amount; showSheet("update-sheet"); }
   function showSheet(id) { $("#sheet-backdrop").hidden = false; $("#editor-sheet").hidden = id !== "editor-sheet"; $("#update-sheet").hidden = id !== "update-sheet"; document.body.style.overflow = "hidden"; }
@@ -207,6 +229,9 @@
     $$(".bottom-nav button").forEach(button => button.addEventListener("click", () => navigate(button.dataset.target)));
     $$('[data-nav="assets"]').forEach(button => button.addEventListener("click", () => navigate("assets")));
     $("#add-button").addEventListener("click", () => openEditor());
+    $("#bank-select-trigger").addEventListener("click", () => $("#bank-options").hidden ? openBankSelector() : closeBankSelector());
+    document.addEventListener("click", event => { if (!event.target.closest("#bank-select")) closeBankSelector(); });
+    document.addEventListener("keydown", event => { if (event.key === "Escape") closeBankSelector(); });
     $("#privacy-toggle").addEventListener("click", () => { state.privacy = !state.privacy; saveState(); render(); });
     $("#sheet-backdrop").addEventListener("click", closeSheets); $$('[data-close-sheet]').forEach(button => button.addEventListener("click", closeSheets));
     $("#account-form").addEventListener("submit", saveAccount); $("#update-form").addEventListener("submit", saveUpdate);
