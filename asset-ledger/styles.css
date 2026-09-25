@@ -149,7 +149,7 @@ main { padding: 0 16px calc(var(--nav-height) + var(--safe-bottom) + 24px); }
 .sheet-header .icon-button { background: transparent; }
 .type-picker { margin: 0 0 17px; padding: 0; border: 0; }
 .type-picker legend, .field > span { display: block; margin-bottom: 8px; color: var(--muted); font-size: 12px; font-weight: 700; }
-#type-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+#type-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .type-option { min-width: 0; min-height: 58px; padding: 6px 2px; border: 1px solid var(--line); border-radius: 6px; background: white; color: var(--muted); font-size: 10px; cursor: pointer; }
 .type-option svg { display: block; width: 20px; height: 20px; margin: 0 auto 5px; }
 .type-option.active { border-color: var(--green); color: var(--green); background: var(--green-soft); font-weight: 700; }
