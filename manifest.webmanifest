@@ -1,0 +1,11 @@
+{
+  "name": "方寸账本 - 本地资产管理",
+  "short_name": "方寸账本",
+  "description": "只在本机保存数据的个人资产、负债与理财趋势账本",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6f7f2",
+  "theme_color": "#f6f7f2",
+  "orientation": "portrait-primary",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
