@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=gold-3">
+  <link rel="stylesheet" href="styles.css?v=banklogos-4">
 </head>
 <body>
   <div class="app-shell">
@@ -118,7 +118,14 @@
       <input type="hidden" id="edit-id">
       <fieldset class="type-picker"><legend>类型</legend><div id="type-options"></div></fieldset>
       <label class="field"><span>名称</span><input id="account-name" maxlength="30" placeholder="例如：工资卡" required></label>
-      <label class="field" id="institution-field"><span>银行 / 机构</span><select id="institution"></select></label>
+      <div class="field" id="institution-field">
+        <span>银行 / 机构</span>
+        <div class="bank-select" id="bank-select">
+          <input type="hidden" id="institution">
+          <button class="bank-select-trigger" id="bank-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="bank-options"></button>
+          <div class="bank-options" id="bank-options" role="listbox" aria-label="选择银行" hidden></div>
+        </div>
+      </div>
       <label class="field"><span id="amount-label">当前余额</span><div class="amount-input"><span>¥</span><input id="account-amount" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required></div></label>
       <label class="field" id="category-field" hidden><span>产品类型</span><select id="product-category"><option>基金</option><option>银行理财</option><option>股票</option><option>债券</option><option>黄金</option><option>保险</option><option>其他</option></select></label>
       <label class="field"><span>备注（选填）</span><input id="account-note" maxlength="50" placeholder="记录用途或卡号后四位"></label>
@@ -143,6 +150,6 @@
     <div><h3 id="confirm-title">确认操作</h3><p id="confirm-message"></p><div class="dialog-actions"><button id="confirm-cancel">取消</button><button class="danger-button" id="confirm-ok">确认</button></div></div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=gold-3"></script>
+  <script src="app.js?v=banklogos-4"></script>
 </body>
 </html>

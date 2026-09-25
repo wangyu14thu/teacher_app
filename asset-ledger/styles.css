@@ -252,7 +252,23 @@ body { background: #fffdf7; }
 .account-icon.credit { color: #a74737; border-color: #f0c7c0; background: #fff1ee; }
 .account-icon.investment { color: #9b7200; border-color: #eed68b; background: #fff8d8; }
 .account-icon.has-brand { background: #f7f7f5; border-color: #ededeb; }
-.brand-logo { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--brand); font-family: "PingFang SC", sans-serif; font-size: 15px; font-weight: 800; line-height: 1; box-shadow: inset 0 1px 2px #ffffff66, 0 1px 2px #00000012; }
+.brand-logo { width: 30px; height: 30px; display: block; object-fit: contain; filter: saturate(.94); }
+.bank-select { position: relative; }
+.bank-select-trigger { width: 100%; min-height: 50px; padding: 7px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #25231e; background: #fff; border: 1px solid #e5e2da; border-radius: 8px; text-align: left; }
+.bank-select-trigger:focus-visible, .bank-select.open .bank-select-trigger { outline: none; border-color: #d9ad13; box-shadow: 0 0 0 3px #ffdc3d38; }
+.bank-choice { min-width: 0; display: flex; align-items: center; gap: 11px; }
+.bank-choice strong { overflow: hidden; font-size: 15px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.bank-logo { width: 30px; height: 30px; flex: 0 0 30px; display: block; object-fit: contain; }
+.bank-logo-fallback { display: grid; place-items: center; color: #89722e; background: #fff6c9; border: 1px solid #ead478; border-radius: 50%; }
+.bank-logo-fallback svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.bank-chevron { width: 18px; height: 18px; flex: 0 0 18px; fill: none; stroke: #8f8c84; stroke-width: 2; transition: transform .18s ease; }
+.bank-select.open .bank-chevron { transform: rotate(180deg); }
+.bank-options { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; max-height: min(310px, 44vh); padding: 6px; overflow-y: auto; background: #fff; border: 1px solid #e6e2d9; border-radius: 8px; box-shadow: 0 16px 36px #2d260f24; overscroll-behavior: contain; }
+.bank-option { width: 100%; min-height: 46px; padding: 7px 9px; display: flex; align-items: center; gap: 11px; color: #292721; background: transparent; border: 0; border-radius: 6px; text-align: left; }
+.bank-option:hover, .bank-option:focus-visible { outline: none; background: #fff8d6; }
+.bank-option[aria-selected="true"] { background: #fff3ae; }
+.bank-option span:not(.bank-logo) { flex: 1; font-size: 14px; }
+.bank-check { width: 18px; height: 18px; fill: none; stroke: #9b7200; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .primary-button { background: #25231e; color: #fffdf7; box-shadow: none; }
 .fab { background: #d79c00; box-shadow: 0 8px 18px #d39d002e; }
 .bottom-nav { background: #fffdf7f5; border-top-color: #eee9df; }
