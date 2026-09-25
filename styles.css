@@ -216,3 +216,51 @@ body { background-color: #eee4d0; }
 .bottom-nav button.active svg { opacity: .96; }
 .icon-button { color: #7c581d; border-color: #d9bd7c99; background: linear-gradient(145deg, #fffdf6b8, #e5c77a42); box-shadow: inset 0 1px #ffffffc7, 0 5px 14px #81591d14; }
 .icon-button svg, .type-option svg { opacity: .78; filter: drop-shadow(0 1px #ffffff9c); }
+
+
+/* 参考图方向：高亮柠檬黄 + 白色留白 + 品牌徽标 */
+:root {
+  --paper: #fffdf7;
+  --surface: #ffffff;
+  --ink: #1d1b17;
+  --muted: #9299a0;
+  --line: #ece9e1;
+  --green: #26231d;
+  --green-soft: #fff0a9;
+  --mint: #f5cc27;
+  --gold: #d89e00;
+  --blue: #7f8790;
+}
+html, body, .app-shell { background: #fffdf7; }
+body { background: #fffdf7; }
+.topbar { background: #fffdf7ee; border-bottom-color: #f0ede6; }
+.topbar h1 { color: #191713; }
+.net-panel { color: #25211a; background: #ffdc3d; border: 0; border-radius: 17px; box-shadow: 0 13px 30px #cf9e181f; }
+.net-panel::before { opacity: .65; background: linear-gradient(125deg, transparent 22%, #fff7bd5c 48%, transparent 72%); }
+.net-panel::after { border-color: #7d621a3d; }
+.net-heading, .net-stats span, .delta-line { color: #6d5a21; }
+.net-stats { border-top-color: #6e581d2e; background: #fff2a52e; }
+.net-stats div + div { border-left-color: #6e581d2e; }
+.net-stats .liability { color: #8f4236; }
+.section-block { border-top-color: #f0ede6; }
+.section-title h2, .settings-intro h2, .sheet-header h2 { color: #1d1b17; }
+.text-button { color: #a06c00; }
+.allocation, .trend-panel, .product-trend-card, .settings-group, .empty-state, .account-card { background: #ffffff; border-color: #ece9e1; box-shadow: 0 6px 20px #1d1b1708; }
+.account-card:hover { border-color: #e5b51e; }
+.account-icon, .settings-row .row-icon, .settings-mark { color: #8c6504; border-color: #ead57d; background: #fff7ce; box-shadow: none; }
+.account-icon::after, .settings-row .row-icon::after, .settings-mark::after { background: linear-gradient(135deg, #ffffffb0 0 18%, transparent 33% 68%, #e4bd3c16 90%); }
+.account-icon.credit { color: #a74737; border-color: #f0c7c0; background: #fff1ee; }
+.account-icon.investment { color: #9b7200; border-color: #eed68b; background: #fff8d8; }
+.account-icon.has-brand { background: #f7f7f5; border-color: #ededeb; }
+.brand-logo { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--brand); font-family: "PingFang SC", sans-serif; font-size: 15px; font-weight: 800; line-height: 1; box-shadow: inset 0 1px 2px #ffffff66, 0 1px 2px #00000012; }
+.primary-button { background: #25231e; color: #fffdf7; box-shadow: none; }
+.fab { background: #d79c00; box-shadow: 0 8px 18px #d39d002e; }
+.bottom-nav { background: #fffdf7f5; border-top-color: #eee9df; }
+.bottom-nav button.active { color: #ad7500; }
+.bottom-nav button { color: #a7adb3; }
+.segmented, .period-row { background: #f4f3ef; border-color: #ece9e1; }
+.segmented button.active, .period-row button.active { color: #26231d; background: #ffdc3d; border-color: #ffdc3d; }
+.type-option { background: #fff; border-color: #ece9e1; }
+.type-option.active { color: #26231d; border-color: #e8c126; background: #ffdc3d; box-shadow: none; }
+.update-mini { border-color: #f0d778; color: #8d6707; background: #fff8d8; }
+.icon-button { color: #a27400; border-color: #ead57d; background: #fffdf4; box-shadow: none; }

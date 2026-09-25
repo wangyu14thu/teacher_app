@@ -12,6 +12,25 @@
     other: { label: "其他资产", short: "他", kind: "asset", icon: "other" }
   };
   const palette = { bank: "#ad8540", wealth: "#9a7430", cash: "#c29a49", investment: "#d29e2f", other: "#9b815c", credit: "#d4513f" };
+  const BANK_BRANDS = {
+    "中国工商银行": { color: "#c51b22", mark: "工" },
+    "中国建设银行": { color: "#0756a6", mark: "建" },
+    "中国银行": { color: "#d51f2a", mark: "中" },
+    "中国农业银行": { color: "#149447", mark: "农" },
+    "交通银行": { color: "#1557a7", mark: "交" },
+    "中国邮政储蓄银行": { color: "#009d67", mark: "邮" },
+    "招商银行": { color: "#d71920", mark: "招" },
+    "浦发银行": { color: "#1260a8", mark: "浦" },
+    "中信银行": { color: "#a92c2c", mark: "信" },
+    "中国民生银行": { color: "#1681be", mark: "民" },
+    "兴业银行": { color: "#007cba", mark: "兴" },
+    "中国光大银行": { color: "#eb6824", mark: "光" },
+    "平安银行": { color: "#008b72", mark: "平" },
+    "华夏银行": { color: "#c31f2b", mark: "华" },
+    "宁波银行": { color: "#ee7624", mark: "宁" },
+    "北京银行": { color: "#0c76b8", mark: "京" },
+    "上海银行": { color: "#eb6e2e", mark: "上" }
+  };
   const ACCOUNT_ICONS = {
     bank: '<path d="m3 9 9-5 9 5M5 10h14M6 10v7m4-7v7m4-7v7m4-7v7M4 20h16"></path>',
     wealth: '<path d="M4 19V9m5 10V5m5 14v-7m5 7V3"></path>',
@@ -140,7 +159,9 @@
     const meta = TYPE_META[account.type] || TYPE_META.other;
     const isLiability = accountKind(account) === "liability";
     const details = [meta.label, account.institution].filter(Boolean).join(" · ");
-    return `<article class="account-card" data-account-id="${account.id}"><div class="account-icon ${account.type === "credit" ? "credit" : account.type === "investment" ? "investment" : ""}"><svg viewBox="0 0 24 24" aria-hidden="true">${ACCOUNT_ICONS[account.type] || ACCOUNT_ICONS.other}</svg></div><div class="account-copy"><strong>${escapeHtml(account.name)}</strong><small>${escapeHtml(details)}${account.note ? ` · ${escapeHtml(account.note)}` : ""}</small></div><div class="account-value"><strong class="${isLiability ? "debt" : ""}">${isLiability ? "-" : ""}${money(account.amount)}</strong><small>${account.updatedAt ? dateLabel(account.updatedAt) : "未记录"}</small>${account.type === "investment" ? `<button class="update-mini" data-update-id="${account.id}">记一笔</button>` : ""}</div></article>`;
+    const brand = account.type === "bank" || account.type === "credit" ? BANK_BRANDS[account.institution] : null;
+    const logo = brand ? `<span class="brand-logo" style="--brand:${brand.color}">${brand.mark}</span>` : `<svg viewBox="0 0 24 24" aria-hidden="true">${ACCOUNT_ICONS[account.type] || ACCOUNT_ICONS.other}</svg>`;
+    return `<article class="account-card" data-account-id="${account.id}"><div class="account-icon ${account.type === "credit" ? "credit" : account.type === "investment" ? "investment" : ""} ${brand ? "has-brand" : ""}">${logo}</div><div class="account-copy"><strong>${escapeHtml(account.name)}</strong><small>${escapeHtml(details)}${account.note ? ` · ${escapeHtml(account.note)}` : ""}</small></div><div class="account-value"><strong class="${isLiability ? "debt" : ""}">${isLiability ? "-" : ""}${money(account.amount)}</strong><small>${account.updatedAt ? dateLabel(account.updatedAt) : "未记录"}</small>${account.type === "investment" ? `<button class="update-mini" data-update-id="${account.id}">记一笔</button>` : ""}</div></article>`;
   }
   function emptyState(title, description, action) { return `<div class="empty-state"><strong>${title}</strong><p>${description}</p><button data-empty-add="${action}">${action}</button></div>`; }
   function escapeHtml(value) { return String(value || "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])); }
