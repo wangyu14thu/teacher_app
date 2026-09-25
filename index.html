@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=banklogos-4">
+  <link rel="stylesheet" href="styles.css?v=desktop-6">
 </head>
 <body>
   <div class="app-shell">
@@ -41,12 +41,12 @@
           </div>
         </article>
 
-        <section class="section-block">
+        <section class="section-block allocation-section">
           <div class="section-title"><h2>资产分布</h2><button class="text-button" data-nav="assets">查看全部</button></div>
           <div class="allocation" id="allocation"></div>
         </section>
 
-        <section class="section-block">
+        <section class="section-block accounts-section">
           <div class="section-title"><h2>最近账户</h2><span id="account-count"></span></div>
           <div class="account-list" id="recent-accounts"></div>
         </section>
@@ -83,7 +83,7 @@
         <section class="settings-intro">
           <div class="settings-mark"><svg viewBox="0 0 24 24"><path d="M5 11V8a7 7 0 0 1 14 0v3"></path><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M12 15v2"></path></svg></div>
           <h2>数据只属于你</h2>
-          <p>不注册、不联网、不上传。所有账目都保存在这台设备的浏览器中。</p>
+          <p>不注册、不上传。所有账目都保存在当前设备的浏览器中。</p>
         </section>
         <div class="settings-group">
           <button class="settings-row" id="export-data"><span class="row-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"></path><path d="M4 17v3h16v-3"></path></svg></span><span><strong>导出备份</strong><small>保存为 JSON 文件</small></span><span class="chevron">›</span></button>
@@ -100,13 +100,16 @@
 
     <button class="fab" id="add-button" aria-label="添加账户" title="添加账户">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+      <span>添加账户</span>
     </button>
 
     <nav class="bottom-nav" aria-label="主导航">
+      <div class="desktop-brand"><img src="icon.svg" alt=""><span><strong>方寸账本</strong><small>本地资产管理</small></span></div>
       <button class="active" data-target="home"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H3Z"></path><path d="M9 20v-6h6v6"></path></svg><span>总览</span></button>
       <button data-target="assets"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"></rect><path d="M3 10h18M8 5V3m8 2V3"></path></svg><span>账户</span></button>
       <button data-target="trends"><svg viewBox="0 0 24 24"><path d="M4 18 9 11l4 3 7-9"></path><path d="M16 5h4v4"></path></svg><span>趋势</span></button>
       <button data-target="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1A7 7 0 0 0 15 6l-.3-2.6h-4L10.4 6A7 7 0 0 0 8.8 7L6.4 6 4.5 9.5 6.6 11a7 7 0 0 0 0 2l-2.1 1.5L6.4 18l2.4-1a7 7 0 0 0 1.6 1l.3 2.6h4L15 18a7 7 0 0 0 1.6-1l2.4 1 2-3.5-2.1-1.5a7 7 0 0 0 .1-1Z"></path></svg><span>设置</span></button>
+      <div class="desktop-nav-note"><span class="status-dot"></span><span>数据仅存当前浏览器</span></div>
     </nav>
   </div>
 
