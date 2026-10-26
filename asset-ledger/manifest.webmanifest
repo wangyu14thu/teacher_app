@@ -1,14 +1,23 @@
 {
-  "name": "方寸账本 - 本地资产管理",
-  "short_name": "方寸账本",
-  "description": "只在本机保存数据的个人资产、负债与理财趋势账本",
+  "name": "收益记录本 - 本地理财账本",
+  "short_name": "收益记录本",
+  "description": "每天填写累计收益，自动汇总每日、每周和每月收益",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#fffdf7",
-  "theme_color": "#ffdc3d",
-  "orientation": "portrait-primary",
+  "background_color": "#f5f7fa",
+  "theme_color": "#4269a9",
   "icons": [
-    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
-    {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"}
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
