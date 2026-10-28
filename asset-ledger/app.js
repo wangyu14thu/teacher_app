@@ -63,6 +63,7 @@
     $('#month-total').textContent = money(monthly.reduce((s,n) => s+n,0));
     $('#month-total').className = color(monthly.reduce((s,n) => s+n,0));
     $('#return-total').textContent = money(accumulated);
+    $('#return-total').className = color(accumulated);
     $('#holding-total').textContent = money(principal+accumulated);
     let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>理财本金</th>${products.map(p => `<th colspan="2">${money(cents(p.principal))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>累计收益</th><th class="change-head">涨跌</th>').join('')}<th>累计总收益</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
     days.forEach((date,i) => {
@@ -70,11 +71,11 @@
       html += `<tr class="${day===0||day===6?'weekend ':''}${date===localDate()?'today':''}"><th>${Number(date.slice(5,7))}.${Number(date.slice(8))} <small>周${'日一二三四五六'[day]}</small></th>`;
       products.forEach(p => {
         const value = data.records[date]?.[p.id], change = delta(p,date);
-        html += `<td class="entry">${value===undefined?'—':money(cents(value))}</td><td class="delta ${color(change)}">${change===null?'—':money(change)}</td>`;
+        html += `<td class="entry ${value===undefined?'muted':color(cents(value))}">${value===undefined?'—':money(cents(value))}</td><td class="delta ${color(change)}">${change===null?'—':money(change)}</td>`;
       });
       const total = products.reduce((s,p) => s+lastValue(p,date),0);
       const tooltip = recorded && recorded < products.length ? '部分产品已记录，未填产品沿用上次累计收益' : '';
-      html += `<td class="total ${recorded?'':'muted'}" title="${tooltip}">${recorded?money(total)+(recorded<products.length?' *':''):'—'}</td><td class="total ${recorded?color(daily(date)):'muted'}">${recorded?money(daily(date)):'—'}</td>`;
+      html += `<td class="total ${recorded?color(total):'muted'}" title="${tooltip}">${recorded?money(total)+(recorded<products.length?' *':''):'—'}</td><td class="total ${recorded?color(daily(date)):'muted'}">${recorded?money(daily(date)):'—'}</td>`;
       if (i===0 || day===1) {
         const count = Math.min(day===0?1:8-day,days.length-i), group = days.slice(i,i+count);
         const sum = group.reduce((s,d) => s+daily(d),0), has = group.some(d => Object.keys(data.records[d] || {}).length);
@@ -83,8 +84,44 @@
       html += '</tr>';
     });
     html += `</tbody><tfoot><tr><th>本月收益</th>${products.map((p,i) => `<td colspan="2" class="${color(monthly[i])}">${money(monthly[i])}</td>`).join('')}<td colspan="3" class="${color(monthly.reduce((s,n)=>s+n,0))}">${money(monthly.reduce((s,n)=>s+n,0))}</td></tr><tr><th>月末持仓金额</th>${products.map(p => `<td colspan="2">${money(cents(p.principal)+lastValue(p,end))}</td>`).join('')}<td colspan="3">${money(principal+accumulated)}</td></tr></tfoot>`;
-    $('#ledger').innerHTML = html;
+    $('#ledger').innerHTML = products.length ? html : '<tbody><tr><td class="empty-state"><h3>账本为空，从第一个产品开始</h3><p>点击「管理产品」添加产品，再点击「新增记录」填写最新持仓金额。</p></td></tr></tbody>';
+    renderTrends();
   }
+  function renderTrends() {
+    const all = $('#trend-range').value === 'all';
+    $('#trend-cards').innerHTML = data.products.length ? data.products.map(p => {
+      const points = dates().filter(d => (all || d.startsWith(month)) && Object.hasOwn(data.records[d],p.id))
+        .map(date => ({date,value:cents(data.records[date][p.id])}));
+      if (!points.length) return `<article class="trend-card"><h3>${esc(p.name)}</h3><p class="empty-state">此范围内暂无记录，新增记录后将在这里显示趋势。</p></article>`;
+      const values = points.map(p => p.value), low = Math.min(0,...values), high = Math.max(0,...values);
+      const padding = Math.max((high-low)*.12,100), min = low-padding, max = high+padding;
+      const first = Date.parse(points[0].date), last = Date.parse(points.at(-1).date);
+      const x = d => last===first ? 360 : 100+(Date.parse(d)-first)/(last-first)*520;
+      const y = v => 220-(v-min)/(max-min)*180;
+      const ticks = Array.from({length:5},(_,i) => min+(max-min)*i/4);
+      const latest = points.at(-1), change = latest.value-points[0].value;
+      const labels = [...new Set([points[0].date,points[Math.floor((points.length-1)/2)].date,latest.date])];
+      const gradient = `curve-${p.id}`;
+      return `<article class="trend-card"><div class="trend-card-head"><h3>${esc(p.name)}</h3><div><strong class="${color(latest.value)}">${money(latest.value)}</strong><small>最近累计收益 · ${latest.date}</small></div></div>
+        <div class="chart-scroll"><svg viewBox="0 0 700 270" role="img" aria-label="${esc(p.name)}累计收益趋势，${points.length}条记录，最新${money(latest.value)}元">
+        <defs><linearGradient id="${gradient}" x1="0" x2="0" y1="40" y2="220" gradientUnits="userSpaceOnUse"><stop offset="${(y(0)-40)/180}" stop-color="#b42332"/><stop offset="${(y(0)-40)/180}" stop-color="#16704b"/></linearGradient></defs>
+        ${ticks.map(v => `<line x1="100" x2="620" y1="${y(v)}" y2="${y(v)}" stroke="#e2e7ef"/><text x="90" y="${y(v)+4}" text-anchor="end">${money(Math.round(v))}</text>`).join('')}
+        <line x1="100" x2="620" y1="${y(0)}" y2="${y(0)}" stroke="#8090a3" stroke-dasharray="4 4"/>
+        <polyline fill="none" stroke="url(#${gradient})" stroke-width="3" stroke-linejoin="round" points="${points.map(pt=>`${x(pt.date)},${y(pt.value)}`).join(' ')}"/>
+        ${points.map(pt=>`<circle tabindex="0" cx="${x(pt.date)}" cy="${y(pt.value)}" r="4" fill="${pt.value<0?'#16704b':'#b42332'}"><title>${pt.date}：${money(pt.value)} 元</title></circle>`).join('')}
+        ${labels.map(d=>`<text x="${x(d)}" y="250" text-anchor="middle">${d.slice(5)}</text>`).join('')}</svg></div>
+        <p class="trend-note">${points.length} 条记录 · 区间增减 <span class="${color(change)}">${money(change)} 元</span>${points.length===1?' · 记录两次后显示连线':''}</p>
+        <details><summary>查看曲线数据</summary><ul class="trend-values">${points.map(pt=>`<li><span>${pt.date}</span><strong class="${color(pt.value)}">${money(pt.value)} 元</strong></li>`).join('')}</ul></details></article>`;
+    }).join('') : '<div class="empty-state"><h3>还没有理财产品</h3><p>先在「管理产品」中添加产品，再通过「新增记录」录入金额。</p></div>';
+  }
+  function switchPage(trends) {
+    $('#ledger-page').hidden=trends; $('#trends-page').hidden=!trends;
+    $('#show-ledger').setAttribute('aria-pressed',String(!trends));
+    $('#show-trends').setAttribute('aria-pressed',String(trends));
+  }
+  $('#show-ledger').onclick=()=>switchPage(false);
+  $('#show-trends').onclick=()=>switchPage(true);
+  $('#trend-range').onchange=renderTrends;
   function renderRecordFields() {
     const date = $('#record-date').value;
     $('#record-fields').innerHTML = data.products.map(p => {
@@ -164,6 +201,12 @@
   try {if(localStorage.getItem('fangcun-ledger-v1')){$('#legacy-backup').hidden=false;$('#legacy-backup').onclick=()=>download(localStorage.getItem('fangcun-ledger-v1'),'application/json',`旧版账本备份-${localDate()}.json`);}}catch{}
   window.addEventListener('storage',event=>{if(event.key===KEY){data=load();render();notify('已同步此浏览器另一窗口的修改');}});
   render();
+  if (location.hash === '#trends') switchPage(true);
+  // A reset link is explicit user intent; ordinary visits never clear saved records.
+  if (new URLSearchParams(location.search).get('reset') === '1') {
+    history.replaceState(null,'',location.pathname + location.hash);
+    $('#clear-all').click();
+  }
   if(storageBroken){$('#save-status').textContent='本地数据读取失败';notify('原始数据已保留，请先导出备份再检查存储。');}
   if('serviceWorker' in navigator && location.protocol !== 'file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 })();
