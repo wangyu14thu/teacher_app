@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#4269a9"><meta name="description" content="简单的本地理财收益记录表，每天记一笔，自动汇总。">
-<title>收益记录本</title><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="styles.css?v=ledger-11">
+<title>收益记录本</title><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="styles.css?v=ledger-12">
 </head>
 <body>
 <main>
@@ -20,7 +20,7 @@
 <dialog id="products-dialog"><form id="product-form"><div class="dialog-head"><div><small>账本设置</small><h2>管理理财产品</h2></div><button type="button" id="close-dialog" aria-label="关闭">×</button></div><p class="hint">本金用于计算持仓金额；期初收益是开始记账前已有的累计收益，用于计算第一笔涨跌。修改后会重新计算历史汇总。</p><div class="product-labels"><span>产品名称</span><span>本金（元）</span><span>期初收益（元）</span><span></span></div><div id="product-rows"></div><button type="button" id="add-product">＋ 添加产品</button><p id="product-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="primary">保存产品设置</button></div></form></dialog>
 <dialog id="record-dialog"><form id="record-form"><div class="dialog-head"><h2>新增 / 修改记录</h2><button type="button" id="close-record" aria-label="关闭">×</button></div><p class="hint">填写银行显示的最新持仓总金额（包含本金和收益），自动计算累计收益和涨跌。选择已有记录的日期可修改；留空表示该产品当天未记录，保存会替换当天记录。</p><label class="record-date">记录日期<input id="record-date" type="date" min="1900-01-01" max="9999-12-31" required></label><div id="record-fields"></div><p id="record-error" role="alert"></p><div class="dialog-actions"><button type="button" id="cancel-record">取消</button> <button type="submit" class="primary">保存记录</button></div></form></dialog>
 <input id="import-file" type="file" accept="application/json,.json" hidden><div id="toast" role="status" hidden></div>
-<dialog id="key-dialog"><form id="key-form"><div class="dialog-head"><h2>DeepSeek 设置</h2><button id="key-close" type="button" aria-label="关闭设置">×</button></div><p class="hint">API Key 仅用于本次页面，刷新后清除。发送时经本站服务器转发至 DeepSeek，不写入账本、备份或服务器配置。</p><label for="deepseek-key">DeepSeek API Key</label><input id="deepseek-key" type="password" autocomplete="off" spellcheck="false" maxlength="512" placeholder="粘贴你的 API Key"><p id="key-state" role="status"></p><p class="hint">测试连接会发送一条简短消息，可能产生少量 API 费用。清除后将使用服务器默认配置（如有）。</p><div class="dialog-actions"><button id="key-clear" type="button">清除密钥</button> <button id="key-test" type="button">测试连接</button> <button type="submit" class="primary">应用到本次页面</button></div></form></dialog>
+<dialog id="key-dialog"><form id="key-form"><div class="dialog-head"><h2>DeepSeek 设置</h2><button id="key-close" type="button" aria-label="关闭设置">×</button></div><p id="key-help" class="hint">API Key 仅用于本次页面，刷新后清除。发送时经本站服务器转发至 DeepSeek，不写入账本、备份或服务器配置。</p><label for="deepseek-key">DeepSeek API Key</label><input id="deepseek-key" type="password" autocomplete="off" spellcheck="false" maxlength="512" placeholder="粘贴你的 API Key"><p id="key-state" role="status"></p><p class="hint">测试连接会发送一条简短消息，可能产生少量 API 费用。GitHub Pages 版清除后需重新填写；服务器版可使用默认配置。</p><div class="dialog-actions"><button id="key-clear" type="button">清除密钥</button> <button id="key-test" type="button">测试连接</button> <button type="submit" class="primary">应用到本次页面</button></div></form></dialog>
 <aside id="sprite-chat" class="sprite-chat" aria-label="与芽芽对话" hidden>
 <div class="chat-head"><div><strong>🌱 芽芽的小树洞</strong><small>DeepSeek · 陪你聊聊记账和生活</small></div><button id="chat-settings" type="button">设置</button><button id="chat-close" aria-label="关闭聊天">×</button></div>
 <p class="chat-privacy">只发送你输入的聊天内容，账本不会自动分享。对话仅在本次页面中保留。</p>
@@ -28,6 +28,6 @@
 <div id="chat-status" role="status"></div><form id="chat-form"><label for="chat-input" class="sr-only">想对芽芽说的话</label><textarea id="chat-input" rows="2" maxlength="4000" placeholder="和芽芽说说话…" required></textarea><div class="chat-actions"><button type="button" id="chat-clear">清除对话</button><button type="submit" id="chat-send" class="primary">发送 ✨</button></div></form>
 </aside>
 <button id="sprite-toggle" aria-label="与小精灵芽芽聊天" aria-expanded="false" aria-controls="sprite-chat"><span class="sprite-caption">找芽芽聊聊</span><span class="sprite-body" aria-hidden="true"><span class="sprite-leaf"></span><span class="sprite-eyes">• •</span><span class="sprite-smile">ᴗ</span></span></button>
-<script src="chat.js?v=ledger-11"></script>
-<script src="app.js?v=ledger-11"></script>
+<script src="chat.js?v=ledger-12"></script>
+<script src="app.js?v=ledger-12"></script>
 </body></html>
