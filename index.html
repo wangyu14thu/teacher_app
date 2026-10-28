@@ -1,158 +1,33 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#ffdc3d">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="方寸账本">
-  <title>方寸账本</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=desktop-6">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#4269a9"><meta name="description" content="简单的本地理财收益记录表，每天记一笔，自动汇总。">
+<title>收益记录本</title><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="styles.css?v=ledger-12">
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow" id="today-label"></p>
-        <h1 id="page-title">方寸账本</h1>
-      </div>
-      <button class="icon-button" id="privacy-toggle" aria-label="隐藏金额" title="隐藏金额">
-        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
-      </button>
-    </header>
-
-    <main>
-      <section class="screen active" id="screen-home" data-screen-label="总览">
-        <article class="net-panel">
-          <div class="net-heading">
-            <span>净资产</span>
-            <span class="privacy-note"><span class="status-dot"></span>仅存于本机</span>
-          </div>
-          <strong class="money hero-money" id="net-worth"></strong>
-          <div class="delta-line" id="net-delta"></div>
-          <canvas id="hero-chart" class="hero-chart" aria-label="净资产趋势图"></canvas>
-          <div class="net-stats">
-            <div><span>总资产</span><strong class="money" id="total-assets"></strong></div>
-            <div><span>总负债</span><strong class="money liability" id="total-liabilities"></strong></div>
-          </div>
-        </article>
-
-        <section class="section-block allocation-section">
-          <div class="section-title"><h2>资产分布</h2><button class="text-button" data-nav="assets">查看全部</button></div>
-          <div class="allocation" id="allocation"></div>
-        </section>
-
-        <section class="section-block accounts-section">
-          <div class="section-title"><h2>最近账户</h2><span id="account-count"></span></div>
-          <div class="account-list" id="recent-accounts"></div>
-        </section>
-      </section>
-
-      <section class="screen" id="screen-assets" data-screen-label="账户">
-        <div class="segmented" role="tablist" aria-label="账户分类">
-          <button class="active" data-filter="all">全部</button>
-          <button data-filter="asset">资产</button>
-          <button data-filter="liability">负债</button>
-          <button data-filter="investment">理财</button>
-        </div>
-        <div class="assets-summary" id="assets-summary"></div>
-        <div class="account-list full-list" id="all-accounts"></div>
-      </section>
-
-      <section class="screen" id="screen-trends" data-screen-label="趋势">
-        <div class="period-row" role="group" aria-label="趋势周期">
-          <button data-period="7">7天</button><button class="active" data-period="30">30天</button><button data-period="90">90天</button><button data-period="365">1年</button>
-        </div>
-        <article class="trend-panel">
-          <span class="panel-label">净资产变化</span>
-          <strong class="money trend-value" id="trend-value"></strong>
-          <div class="trend-legend"><span><i class="legend-net"></i>净资产</span><span><i class="legend-asset"></i>总资产</span></div>
-          <canvas id="trend-chart" class="trend-chart" aria-label="资产趋势图"></canvas>
-        </article>
-        <section class="section-block">
-          <div class="section-title"><h2>理财产品走势</h2><span>每日记录</span></div>
-          <div id="product-trends" class="product-trends"></div>
-        </section>
-      </section>
-
-      <section class="screen" id="screen-settings" data-screen-label="设置">
-        <section class="settings-intro">
-          <div class="settings-mark"><svg viewBox="0 0 24 24"><path d="M5 11V8a7 7 0 0 1 14 0v3"></path><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M12 15v2"></path></svg></div>
-          <h2>数据只属于你</h2>
-          <p>不注册、不上传。所有账目都保存在当前设备的浏览器中。</p>
-        </section>
-        <div class="settings-group">
-          <button class="settings-row" id="export-data"><span class="row-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"></path><path d="M4 17v3h16v-3"></path></svg></span><span><strong>导出备份</strong><small>保存为 JSON 文件</small></span><span class="chevron">›</span></button>
-          <label class="settings-row" for="import-data"><span class="row-icon"><svg viewBox="0 0 24 24"><path d="M12 21V9m0 0 4 4m-4-4-4 4"></path><path d="M4 7V4h16v3"></path></svg></span><span><strong>导入备份</strong><small>从备份恢复全部数据</small></span><span class="chevron">›</span></label>
-          <input type="file" id="import-data" accept="application/json" hidden>
-        </div>
-        <div class="settings-group">
-          <button class="settings-row" id="load-demo"><span class="row-icon"><svg viewBox="0 0 24 24"><path d="M4 19V9m5 10V5m5 14v-7m5 7V3"></path></svg></span><span><strong>载入示例数据</strong><small>看看完整的图表与账户</small></span><span class="chevron">›</span></button>
-          <button class="settings-row danger-row" id="clear-data"><span class="row-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16m-10 4v6m4-6v6"></path><path d="m9 7 1-3h4l1 3m3 0-1 14H7L6 7"></path></svg></span><span><strong>清空全部数据</strong><small>此操作无法撤销</small></span><span class="chevron">›</span></button>
-        </div>
-        <p class="version">方寸账本 · 本地版 1.0</p>
-      </section>
-    </main>
-
-    <button class="fab" id="add-button" aria-label="添加账户" title="添加账户">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
-      <span>添加账户</span>
-    </button>
-
-    <nav class="bottom-nav" aria-label="主导航">
-      <div class="desktop-brand"><img src="icon.svg" alt=""><span><strong>方寸账本</strong><small>本地资产管理</small></span></div>
-      <button class="active" data-target="home"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H3Z"></path><path d="M9 20v-6h6v6"></path></svg><span>总览</span></button>
-      <button data-target="assets"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"></rect><path d="M3 10h18M8 5V3m8 2V3"></path></svg><span>账户</span></button>
-      <button data-target="trends"><svg viewBox="0 0 24 24"><path d="M4 18 9 11l4 3 7-9"></path><path d="M16 5h4v4"></path></svg><span>趋势</span></button>
-      <button data-target="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1A7 7 0 0 0 15 6l-.3-2.6h-4L10.4 6A7 7 0 0 0 8.8 7L6.4 6 4.5 9.5 6.6 11a7 7 0 0 0 0 2l-2.1 1.5L6.4 18l2.4-1a7 7 0 0 0 1.6 1l.3 2.6h4L15 18a7 7 0 0 0 1.6-1l2.4 1 2-3.5-2.1-1.5a7 7 0 0 0 .1-1Z"></path></svg><span>设置</span></button>
-      <div class="desktop-nav-note"><span class="status-dot"></span><span>数据仅存当前浏览器</span></div>
-    </nav>
-  </div>
-
-  <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
-  <section class="bottom-sheet" id="editor-sheet" aria-modal="true" role="dialog" aria-labelledby="editor-title" hidden>
-    <div class="sheet-handle"></div>
-    <div class="sheet-header"><div><p class="eyebrow" id="editor-kicker">新建</p><h2 id="editor-title">添加账户</h2></div><button class="icon-button" data-close-sheet aria-label="关闭"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></div>
-    <form id="account-form">
-      <input type="hidden" id="edit-id">
-      <fieldset class="type-picker"><legend>类型</legend><div id="type-options"></div></fieldset>
-      <label class="field"><span>名称</span><input id="account-name" maxlength="30" placeholder="例如：工资卡" required></label>
-      <div class="field" id="institution-field">
-        <span>银行 / 机构</span>
-        <div class="bank-select" id="bank-select">
-          <input type="hidden" id="institution">
-          <button class="bank-select-trigger" id="bank-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="bank-options"></button>
-          <div class="bank-options" id="bank-options" role="listbox" aria-label="选择银行" hidden></div>
-        </div>
-      </div>
-      <label class="field"><span id="amount-label">当前余额</span><div class="amount-input"><span>¥</span><input id="account-amount" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required></div></label>
-      <label class="field" id="category-field" hidden><span>产品类型</span><select id="product-category"><option>基金</option><option>银行理财</option><option>股票</option><option>债券</option><option>黄金</option><option>保险</option><option>其他</option></select></label>
-      <label class="field"><span>备注（选填）</span><input id="account-note" maxlength="50" placeholder="记录用途或卡号后四位"></label>
-      <div class="form-error" id="form-error" aria-live="polite"></div>
-      <button class="primary-button" type="submit">保存账户</button>
-      <button class="delete-button" id="delete-account" type="button" hidden>删除此账户</button>
-    </form>
-  </section>
-
-  <section class="bottom-sheet compact-sheet" id="update-sheet" aria-modal="true" role="dialog" aria-labelledby="update-title" hidden>
-    <div class="sheet-handle"></div>
-    <div class="sheet-header"><div><p class="eyebrow">每日记录</p><h2 id="update-title">更新金额</h2></div><button class="icon-button" data-close-sheet aria-label="关闭"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></div>
-    <form id="update-form">
-      <input type="hidden" id="update-id">
-      <label class="field"><span>日期</span><input type="date" id="update-date" required></label>
-      <label class="field"><span>当日金额</span><div class="amount-input"><span>¥</span><input id="update-amount" type="number" step="0.01" min="0" inputmode="decimal" required></div></label>
-      <button class="primary-button" type="submit">保存记录</button>
-    </form>
-  </section>
-
-  <div class="confirm-dialog" id="confirm-dialog" role="alertdialog" aria-modal="true" hidden>
-    <div><h3 id="confirm-title">确认操作</h3><p id="confirm-message"></p><div class="dialog-actions"><button id="confirm-cancel">取消</button><button class="danger-button" id="confirm-ok">确认</button></div></div>
-  </div>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=banklogos-4"></script>
-</body>
-</html>
+<main>
+<header><div><div class="eyebrow">MY DAILY LEDGER · 本地账本</div><h1>收益记录本<span>每天记一笔，收益看得清。</span></h1></div><span class="local-badge"><i></i> 数据仅保存在本机</span></header>
+<section class="toolbar" aria-label="表格工具"><div class="month-tools"><button id="prev-month" aria-label="上个月">‹</button><input id="month" type="month" min="1900-01" max="9999-12" aria-label="查看月份"><button id="next-month" aria-label="下个月">›</button><button id="today">本月</button></div><div class="actions"><button id="manage">管理产品</button><button id="backup">导出备份</button><button id="restore">导入备份</button><button id="clear-all">清空全部数据</button><button id="csv">导出表格</button><button id="record-today" class="primary">＋ 新增记录</button></div></section>
+<nav class="view-tabs" aria-label="页面切换"><button id="show-ledger" aria-pressed="true">收益明细</button><button id="show-trends" aria-pressed="false">产品趋势</button></nav>
+<section class="summary" aria-label="收益概览"><div><span>理财总本金</span><strong id="principal-total">0.00</strong></div><div><span>本月收益</span><strong id="month-total">0.00</strong></div><div><span>累计收益</span><strong id="return-total">0.00</strong></div><div><span>总持仓金额</span><strong id="holding-total">0.00</strong></div></section>
+<section id="ledger-page"><div class="table-heading"><div><h2 id="table-title">每日收益</h2><span id="save-status" role="status">本机保存</span></div><p>弹窗填写最新持仓金额，收益自动计算 · 单位：元</p></div>
+<div class="table-wrap" tabindex="0" aria-label="每日收益表，可横向滚动"><table id="ledger"></table></div>
+</section>
+<section id="trends-page" hidden><div class="trend-toolbar"><div><h2>产品收益趋势</h2><p>按实际记录日期连线，空缺日期不代表零收益。</p></div><label>查看范围 <select id="trend-range"><option value="month">当前月份</option><option value="all">全部记录</option></select></label></div><div id="trend-cards"></div></section>
+<footer><p>点击「新增记录」填写最新持仓金额，表格仅展示计算结果。红色为增加，绿色为减少。* 表示当天仅填写了部分产品。</p><p>涨跌 = 本次累计收益 − 上次记录（首笔减去期初收益）。跨天补记时，差额记在补记当天。周收益按周一至周日汇总，跨月周仅统计本月部分。</p><p>数据保存在当前浏览器，建议定期「导出备份」。<button id="legacy-backup" hidden>导出旧版账本数据</button></p></footer>
+</main>
+<dialog id="products-dialog"><form id="product-form"><div class="dialog-head"><div><small>账本设置</small><h2>管理理财产品</h2></div><button type="button" id="close-dialog" aria-label="关闭">×</button></div><p class="hint">本金用于计算持仓金额；期初收益是开始记账前已有的累计收益，用于计算第一笔涨跌。修改后会重新计算历史汇总。</p><div class="product-labels"><span>产品名称</span><span>本金（元）</span><span>期初收益（元）</span><span></span></div><div id="product-rows"></div><button type="button" id="add-product">＋ 添加产品</button><p id="product-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="primary">保存产品设置</button></div></form></dialog>
+<dialog id="record-dialog"><form id="record-form"><div class="dialog-head"><h2>新增 / 修改记录</h2><button type="button" id="close-record" aria-label="关闭">×</button></div><p class="hint">填写银行显示的最新持仓总金额（包含本金和收益），自动计算累计收益和涨跌。选择已有记录的日期可修改；留空表示该产品当天未记录，保存会替换当天记录。</p><label class="record-date">记录日期<input id="record-date" type="date" min="1900-01-01" max="9999-12-31" required></label><div id="record-fields"></div><p id="record-error" role="alert"></p><div class="dialog-actions"><button type="button" id="cancel-record">取消</button> <button type="submit" class="primary">保存记录</button></div></form></dialog>
+<input id="import-file" type="file" accept="application/json,.json" hidden><div id="toast" role="status" hidden></div>
+<dialog id="key-dialog"><form id="key-form"><div class="dialog-head"><h2>DeepSeek 设置</h2><button id="key-close" type="button" aria-label="关闭设置">×</button></div><p id="key-help" class="hint">API Key 仅用于本次页面，刷新后清除。发送时经本站服务器转发至 DeepSeek，不写入账本、备份或服务器配置。</p><label for="deepseek-key">DeepSeek API Key</label><input id="deepseek-key" type="password" autocomplete="off" spellcheck="false" maxlength="512" placeholder="粘贴你的 API Key"><p id="key-state" role="status"></p><p class="hint">测试连接会发送一条简短消息，可能产生少量 API 费用。GitHub Pages 版清除后需重新填写；服务器版可使用默认配置。</p><div class="dialog-actions"><button id="key-clear" type="button">清除密钥</button> <button id="key-test" type="button">测试连接</button> <button type="submit" class="primary">应用到本次页面</button></div></form></dialog>
+<aside id="sprite-chat" class="sprite-chat" aria-label="与芽芽对话" hidden>
+<div class="chat-head"><div><strong>🌱 芽芽的小树洞</strong><small>DeepSeek · 陪你聊聊记账和生活</small></div><button id="chat-settings" type="button">设置</button><button id="chat-close" aria-label="关闭聊天">×</button></div>
+<p class="chat-privacy">只发送你输入的聊天内容，账本不会自动分享。对话仅在本次页面中保留。</p>
+<div id="chat-log" role="log" aria-live="polite" aria-label="聊天记录"><div class="chat-bubble assistant">你好呀，我是芽芽 🌱 今天也一起把小日子记清楚吧！</div></div>
+<div id="chat-status" role="status"></div><form id="chat-form"><label for="chat-input" class="sr-only">想对芽芽说的话</label><textarea id="chat-input" rows="2" maxlength="4000" placeholder="和芽芽说说话…" required></textarea><div class="chat-actions"><button type="button" id="chat-clear">清除对话</button><button type="submit" id="chat-send" class="primary">发送 ✨</button></div></form>
+</aside>
+<button id="sprite-toggle" aria-label="与小精灵芽芽聊天" aria-expanded="false" aria-controls="sprite-chat"><span class="sprite-caption">找芽芽聊聊</span><span class="sprite-body" aria-hidden="true"><span class="sprite-leaf"></span><span class="sprite-eyes">• •</span><span class="sprite-smile">ᴗ</span></span></button>
+<script src="chat.js?v=ledger-12"></script>
+<script src="app.js?v=ledger-12"></script>
+</body></html>

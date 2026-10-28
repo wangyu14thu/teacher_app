@@ -1,263 +1,212 @@
 (() => {
-  "use strict";
-
-  const STORAGE_KEY = "fangcun-ledger-v1";
-  const BANKS = ["中国工商银行", "中国建设银行", "中国银行", "中国农业银行", "交通银行", "中国邮政储蓄银行", "招商银行", "浦发银行", "中信银行", "中国民生银行", "兴业银行", "中国光大银行", "广发银行", "平安银行", "华夏银行", "宁波银行", "北京银行", "上海银行", "其他银行 / 机构"];
-  const TYPE_META = {
-    bank: { label: "银行账户", short: "银", kind: "asset", icon: "bank" },
-    wealth: { label: "理财账户", short: "财", kind: "asset", icon: "wealth" },
-    cash: { label: "现金", short: "现", kind: "asset", icon: "cash" },
-    investment: { label: "理财产品", short: "理", kind: "investment", icon: "investment" },
-    credit: { label: "信用卡", short: "卡", kind: "liability", icon: "credit" },
-    other: { label: "其他资产", short: "他", kind: "asset", icon: "other" }
-  };
-  const palette = { bank: "#ad8540", wealth: "#9a7430", cash: "#c29a49", investment: "#d29e2f", other: "#9b815c", credit: "#d4513f" };
-  const BANK_LOGOS = {
-    "中国工商银行": "assets/banks/icbc.svg",
-    "中国建设银行": "assets/banks/ccb.svg",
-    "中国银行": "assets/banks/boc.svg",
-    "中国农业银行": "assets/banks/abc.svg",
-    "交通银行": "assets/banks/bocom.svg",
-    "中国邮政储蓄银行": "assets/banks/psbc.svg",
-    "招商银行": "assets/banks/cmb.svg",
-    "浦发银行": "assets/banks/spdb.svg",
-    "中信银行": "assets/banks/citic.svg",
-    "中国民生银行": "assets/banks/cmbc.svg",
-    "兴业银行": "assets/banks/cib.svg",
-    "中国光大银行": "assets/banks/ceb.svg",
-    "广发银行": "assets/banks/cgb.svg",
-    "平安银行": "assets/banks/pab.svg",
-    "华夏银行": "assets/banks/hxb.svg",
-    "宁波银行": "assets/banks/nbcb.svg",
-    "北京银行": "assets/banks/bob.svg",
-    "上海银行": "assets/banks/bosc.svg"
-  };
-  const ACCOUNT_ICONS = {
-    bank: '<path d="m3 9 9-5 9 5M5 10h14M6 10v7m4-7v7m4-7v7m4-7v7M4 20h16"></path>',
-    wealth: '<path d="M4 19V9m5 10V5m5 14v-7m5 7V3"></path>',
-    cash: '<rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M7 10h4m-4 4h7m4-2h.01"></path>',
-    investment: '<path d="M4 18 9 11l4 3 7-9"></path><path d="M16 5h4v4"></path>',
-    credit: '<rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 10h18M7 15h4"></path>',
-    other: '<circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path>'
-  };
-
+  'use strict';
+  const KEY = 'fangcun-returns-v2';
   const $ = selector => document.querySelector(selector);
-  const $$ = selector => [...document.querySelectorAll(selector)];
-  const today = () => new Date().toISOString().slice(0, 10);
-  const dateLabel = date => new Intl.DateTimeFormat("zh-CN", { month: "short", day: "numeric" }).format(new Date(`${date}T12:00:00`));
-  const money = value => {
-    const amount = Number(value || 0);
-    if (state.privacy) return "••••••";
-    return `${amount < 0 ? "-" : ""}¥${Math.abs(amount).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-  const compactMoney = value => {
-    if (state.privacy) return "••••";
-    const amount = Number(value || 0);
-    if (Math.abs(amount) >= 10000) return `${amount < 0 ? "-" : ""}¥${(Math.abs(amount) / 10000).toFixed(1)}万`;
-    return money(amount);
-  };
-  const uid = () => `a_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  const clone = value => JSON.parse(JSON.stringify(value));
-  const baseDate = new Date();
-  const iso = daysAgo => { const date = new Date(baseDate); date.setDate(date.getDate() - daysAgo); return date.toISOString().slice(0, 10); };
-
-  const demoAccounts = [
-    { id: "demo-bank", type: "bank", name: "日常储蓄卡", institution: "招商银行", amount: 42860.31, note: "工资与日常开销", updatedAt: iso(0), history: [{ date: iso(30), amount: 37200 }, { date: iso(20), amount: 40100 }, { date: iso(10), amount: 41780 }, { date: iso(0), amount: 42860.31 }] },
-    { id: "demo-invest", type: "investment", name: "稳健理财组合", institution: "南方基金", amount: 86340.22, note: "每日记录净值", category: "基金", updatedAt: iso(0), history: [{ date: iso(30), amount: 82450 }, { date: iso(20), amount: 84100 }, { date: iso(10), amount: 85820 }, { date: iso(0), amount: 86340.22 }] },
-    { id: "demo-cash", type: "cash", name: "随身现金", institution: "", amount: 1200, note: "", updatedAt: iso(3), history: [{ date: iso(30), amount: 1800 }, { date: iso(20), amount: 1400 }, { date: iso(10), amount: 1200 }, { date: iso(3), amount: 1200 }] },
-    { id: "demo-credit", type: "credit", name: "生活信用卡", institution: "中国建设银行", amount: 2830.66, note: "本期待还", updatedAt: iso(0), history: [{ date: iso(30), amount: 1830 }, { date: iso(20), amount: 3310 }, { date: iso(10), amount: 2200 }, { date: iso(0), amount: 2830.66 }] }
-  ];
-
-  let state = loadState();
-  let activeFilter = "all";
-  let trendPeriod = 30;
-  let selectedType = "bank";
-  let toastTimer;
-
-  function loadState() {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (parsed && Array.isArray(parsed.accounts)) return { accounts: parsed.accounts, privacy: Boolean(parsed.privacy) };
-    } catch (error) { console.warn("Unable to load local data", error); }
-    return { accounts: [], privacy: false };
-  }
-  function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  function accountKind(account) { return TYPE_META[account.type]?.kind || "asset"; }
-  function assetTotal() { return state.accounts.filter(account => accountKind(account) !== "liability").reduce((sum, account) => sum + Number(account.amount || 0), 0); }
-  function liabilityTotal() { return state.accounts.filter(account => accountKind(account) === "liability").reduce((sum, account) => sum + Number(account.amount || 0), 0); }
-  function netWorth() { return assetTotal() - liabilityTotal(); }
-  function sortedAccounts() { return [...state.accounts].sort((a, b) => Number(b.amount) - Number(a.amount)); }
-  function historyPoints(days = 30) {
-    const dates = [];
-    for (let i = days - 1; i >= 0; i -= 1) dates.push(iso(i));
-    return dates.map(date => {
-      let assets = 0; let liabilities = 0;
-      state.accounts.forEach(account => {
-        const entries = [...(account.history || []), { date: account.updatedAt || today(), amount: account.amount }].filter(item => item.date <= date).sort((a, b) => a.date.localeCompare(b.date));
-        const latest = entries.at(-1);
-        if (!latest) return;
-        if (accountKind(account) === "liability") liabilities += Number(latest.amount || 0); else assets += Number(latest.amount || 0);
-      });
-      return { date, assets, liabilities, net: assets - liabilities };
+  const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const localDate = () => new Intl.DateTimeFormat('sv-SE', {timeZone:'Asia/Shanghai', year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const cents = n => Math.round(Number(n) * 100);
+  const money = n => (n / 100).toLocaleString('zh-CN', {minimumFractionDigits:2,maximumFractionDigits:2});
+  const color = n => n > 0 ? 'gain' : n < 0 ? 'loss' : 'muted';
+  const uid = () => `p_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
+  const validAmount = n => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= 1e9 && Math.abs(n * 100 - Math.round(n * 100)) < .0001;
+  const validDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= '1900-01-01' && d <= '9999-12-31' && new Date(`${d}T12:00:00Z`).toISOString().slice(0,10) === d;
+  let month = localDate().slice(0,7), timer, draft, storageBroken = false;
+  function validate(data) {
+    if (!data || data.version !== 2 || !Array.isArray(data.products) || data.products.length > 100 || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw Error('备份格式不正确');
+    const ids = new Set();
+    const products = data.products.map(p => {
+      if (!p || typeof p.id !== 'string' || !/^p_[\w-]{1,100}$/.test(p.id) || ids.has(p.id) || typeof p.name !== 'string' || !p.name.trim() || p.name.length > 60 || !validAmount(p.principal) || p.principal < 0 || !validAmount(p.baseline)) throw Error('产品信息不正确');
+      ids.add(p.id); return {id:p.id,name:p.name.trim(),principal:p.principal,baseline:p.baseline};
     });
+    const records = {};
+    for (const [date, row] of Object.entries(data.records)) {
+      if (!validDate(date) || !row || typeof row !== 'object' || Array.isArray(row)) throw Error('记录日期不正确');
+      const clean = {};
+      for (const [id, value] of Object.entries(row)) { if (!ids.has(id) || !validAmount(value)) throw Error('收益记录不正确'); clean[id] = value; }
+      if (Object.keys(clean).length) records[date] = clean;
+    }
+    return {version:2,products,records};
   }
-  function currentChange() {
-    const points = historyPoints(2);
-    return points[1].net - points[0].net;
+  function load() {
+    storageBroken = false;
+    try { const raw = localStorage.getItem(KEY); if (raw !== null) return validate(JSON.parse(raw)); }
+    catch { storageBroken = true; }
+    return {version:2,products:[],records:{}};
   }
-
+  let data = load();
+  function notify(text) { $('#toast').textContent = text; $('#toast').hidden = false; clearTimeout(timer); timer = setTimeout(() => { $('#toast').hidden = true; },4500); }
+  function commit(next) {
+    if (storageBroken) { notify('本地数据读取失败。请先导出原始数据，检查浏览器存储后刷新。'); return false; }
+    try { localStorage.setItem(KEY,JSON.stringify(next)); data = next; $('#save-status').textContent = '已保存到本机'; return true; }
+    catch { $('#save-status').textContent = '保存失败'; notify('保存失败：请检查浏览器存储权限或空间，并导出备份。'); return false; }
+  }
+  const dates = () => Object.keys(data.records).sort();
+  function lastValue(product,date,inclusive = true) {
+    const prev = dates().filter(d => (inclusive ? d <= date : d < date) && Object.hasOwn(data.records[d],product.id)).at(-1);
+    return prev ? cents(data.records[prev][product.id]) : cents(product.baseline);
+  }
+  function delta(product,date) { return Object.hasOwn(data.records[date] || {},product.id) ? cents(data.records[date][product.id]) - lastValue(product,date,false) : null; }
+  function daily(date) { return data.products.reduce((sum,p) => sum + (delta(p,date) ?? 0),0); }
+  function monthDates() {
+    const [year,m] = month.split('-').map(Number);
+    return Array.from({length:new Date(year,m,0).getDate()},(_,i) => `${month}-${String(i+1).padStart(2,'0')}`);
+  }
+  const weekday = date => new Date(`${date}T12:00:00Z`).getUTCDay();
   function render() {
-    renderHome(); renderAssets(); renderTrends(); renderPrivacy(); updateHeader();
-  }
-  function updateHeader() {
-    const active = $(".screen.active")?.dataset.screenLabel || "总览";
-    $("#page-title").textContent = active === "总览" ? "方寸账本" : active;
-    const now = new Date();
-    $("#today-label").textContent = new Intl.DateTimeFormat("zh-CN", { weekday: "long", month: "long", day: "numeric" }).format(now);
-  }
-  function renderHome() {
-    $("#net-worth").textContent = money(netWorth());
-    $("#total-assets").textContent = compactMoney(assetTotal());
-    $("#total-liabilities").textContent = compactMoney(liabilityTotal());
-    const change = currentChange();
-    $("#net-delta").textContent = change === 0 ? "较昨日暂无变化" : `${change > 0 ? "↑" : "↓"} ${money(Math.abs(change))} 较昨日`;
-    drawChart($("#hero-chart"), historyPoints(30), { series: ["net"], compact: true });
-    const totals = {};
-    state.accounts.forEach(account => { totals[account.type] = (totals[account.type] || 0) + Number(account.amount || 0); });
-    const total = Object.entries(totals).filter(([type]) => type !== "credit").reduce((sum, [, value]) => sum + value, 0);
-    $("#allocation").innerHTML = total ? `<div class="allocation-bar">${Object.entries(totals).filter(([type]) => type !== "credit").map(([type, value]) => `<span style="width:${Math.max(value / total * 100, 1)}%;background:${palette[type] || palette.other}"></span>`).join("")}</div><div class="allocation-legend">${Object.entries(totals).filter(([type]) => type !== "credit").map(([type, value]) => `<div class="allocation-item"><i style="background:${palette[type] || palette.other}"></i><span>${TYPE_META[type]?.label || "其他"}</span><strong>${state.privacy ? "••••" : `${Math.round(value / total * 100)}%`}</strong></div>`).join("")}</div>` : emptyState("还没有资产分布", "添加账户后，这里会显示你的资产构成。", "添加第一笔");
-    const accounts = sortedAccounts().slice(0, 4);
-    $("#account-count").textContent = state.accounts.length ? `${state.accounts.length} 个账户` : "开始记录";
-    $("#recent-accounts").innerHTML = accounts.length ? accounts.map(accountCard).join("") : emptyState("从一笔账户开始", "银行账户、现金、信用卡和理财，都可以放进同一本账。", "添加第一笔");
-    wireAccountCards($("#recent-accounts"));
-  }
-  function renderAssets() {
-    const filtered = sortedAccounts().filter(account => activeFilter === "all" || accountKind(account) === activeFilter || (activeFilter === "investment" && account.type === "investment"));
-    $("#assets-summary").innerHTML = `<span>${filtered.length} 个账户</span><strong>${compactMoney(filtered.filter(a => accountKind(a) !== "liability").reduce((sum, a) => sum + Number(a.amount || 0), 0))} 资产</strong>`;
-    $("#all-accounts").innerHTML = filtered.length ? filtered.map(accountCard).join("") : emptyState("这里还没有账户", "试试切换分类，或者添加一笔新的记录。", "添加账户");
-    wireAccountCards($("#all-accounts"));
-    $$("[data-filter]").forEach(button => button.classList.toggle("active", button.dataset.filter === activeFilter));
+    const days = monthDates(), end = days.at(-1), start = days[0], products = data.products;
+    $('#month').value = month;
+    $('#table-title').textContent = `${Number(month.slice(0,4))} 年 ${Number(month.slice(5))} 月 · 每日收益`;
+    const principal = products.reduce((s,p) => s + cents(p.principal),0);
+    const accumulated = products.reduce((s,p) => s + lastValue(p,end),0);
+    const monthly = products.map(p => lastValue(p,end) - lastValue(p,start,false));
+    $('#principal-total').textContent = money(principal);
+    $('#month-total').textContent = money(monthly.reduce((s,n) => s+n,0));
+    $('#month-total').className = color(monthly.reduce((s,n) => s+n,0));
+    $('#return-total').textContent = money(accumulated);
+    $('#return-total').className = color(accumulated);
+    $('#holding-total').textContent = money(principal+accumulated);
+    let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>理财本金</th>${products.map(p => `<th colspan="2">${money(cents(p.principal))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>累计收益</th><th class="change-head">涨跌</th>').join('')}<th>累计总收益</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
+    days.forEach((date,i) => {
+      const day = weekday(date), recorded = Object.keys(data.records[date] || {}).length;
+      html += `<tr class="${day===0||day===6?'weekend ':''}${date===localDate()?'today':''}"><th>${Number(date.slice(5,7))}.${Number(date.slice(8))} <small>周${'日一二三四五六'[day]}</small></th>`;
+      products.forEach(p => {
+        const value = data.records[date]?.[p.id], change = delta(p,date);
+        html += `<td class="entry ${value===undefined?'muted':color(cents(value))}">${value===undefined?'—':money(cents(value))}</td><td class="delta ${color(change)}">${change===null?'—':money(change)}</td>`;
+      });
+      const total = products.reduce((s,p) => s+lastValue(p,date),0);
+      const tooltip = recorded && recorded < products.length ? '部分产品已记录，未填产品沿用上次累计收益' : '';
+      html += `<td class="total ${recorded?color(total):'muted'}" title="${tooltip}">${recorded?money(total)+(recorded<products.length?' *':''):'—'}</td><td class="total ${recorded?color(daily(date)):'muted'}">${recorded?money(daily(date)):'—'}</td>`;
+      if (i===0 || day===1) {
+        const count = Math.min(day===0?1:8-day,days.length-i), group = days.slice(i,i+count);
+        const sum = group.reduce((s,d) => s+daily(d),0), has = group.some(d => Object.keys(data.records[d] || {}).length);
+        html += `<td class="week ${has?color(sum):'muted'}" rowspan="${count}" title="本月内的周收益；跨月周只计算本月日期">${has?money(sum):'—'}</td>`;
+      }
+      html += '</tr>';
+    });
+    html += `</tbody><tfoot><tr><th>本月收益</th>${products.map((p,i) => `<td colspan="2" class="${color(monthly[i])}">${money(monthly[i])}</td>`).join('')}<td colspan="3" class="${color(monthly.reduce((s,n)=>s+n,0))}">${money(monthly.reduce((s,n)=>s+n,0))}</td></tr><tr><th>月末持仓金额</th>${products.map(p => `<td colspan="2">${money(cents(p.principal)+lastValue(p,end))}</td>`).join('')}<td colspan="3">${money(principal+accumulated)}</td></tr></tfoot>`;
+    $('#ledger').innerHTML = products.length ? html : '<tbody><tr><td class="empty-state"><h3>账本为空，从第一个产品开始</h3><p>点击「管理产品」添加产品，再点击「新增记录」填写最新持仓金额。</p></td></tr></tbody>';
+    renderTrends();
   }
   function renderTrends() {
-    const points = historyPoints(trendPeriod);
-    $("#trend-value").textContent = money(netWorth());
-    drawChart($("#trend-chart"), points, { series: ["net", "assets"] });
-    const products = state.accounts.filter(account => account.type === "investment");
-    $("#product-trends").innerHTML = products.length ? products.map(product => `<div class="product-trend-card"><div><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.category || "理财产品")} · ${escapeHtml(product.institution || "自行记录")}</small></div><canvas data-product-chart="${product.id}" aria-label="${escapeHtml(product.name)}趋势"></canvas></div>`).join("") : emptyState("还没有理财产品", "添加一个理财产品，就可以每日记录金额并查看走势。", "添加理财产品");
-    products.forEach(product => drawChart($(`[data-product-chart="${product.id}"]`), productHistory(product, trendPeriod), { series: ["amount"], product: true }));
-    $$("[data-period]").forEach(button => button.classList.toggle("active", Number(button.dataset.period) === trendPeriod));
+    const all = $('#trend-range').value === 'all';
+    $('#trend-cards').innerHTML = data.products.length ? data.products.map(p => {
+      const points = dates().filter(d => (all || d.startsWith(month)) && Object.hasOwn(data.records[d],p.id))
+        .map(date => ({date,value:cents(data.records[date][p.id])}));
+      if (!points.length) return `<article class="trend-card"><h3>${esc(p.name)}</h3><p class="empty-state">此范围内暂无记录，新增记录后将在这里显示趋势。</p></article>`;
+      const values = points.map(p => p.value), low = Math.min(0,...values), high = Math.max(0,...values);
+      const padding = Math.max((high-low)*.12,100), min = low-padding, max = high+padding;
+      const first = Date.parse(points[0].date), last = Date.parse(points.at(-1).date);
+      const x = d => last===first ? 360 : 100+(Date.parse(d)-first)/(last-first)*520;
+      const y = v => 220-(v-min)/(max-min)*180;
+      const ticks = Array.from({length:5},(_,i) => min+(max-min)*i/4);
+      const latest = points.at(-1), change = latest.value-points[0].value;
+      const labels = [...new Set([points[0].date,points[Math.floor((points.length-1)/2)].date,latest.date])];
+      const gradient = `curve-${p.id}`;
+      return `<article class="trend-card"><div class="trend-card-head"><h3>${esc(p.name)}</h3><div><strong class="${color(latest.value)}">${money(latest.value)}</strong><small>最近累计收益 · ${latest.date}</small></div></div>
+        <div class="chart-scroll"><svg viewBox="0 0 700 270" role="img" aria-label="${esc(p.name)}累计收益趋势，${points.length}条记录，最新${money(latest.value)}元">
+        <defs><linearGradient id="${gradient}" x1="0" x2="0" y1="40" y2="220" gradientUnits="userSpaceOnUse"><stop offset="${(y(0)-40)/180}" stop-color="#b42332"/><stop offset="${(y(0)-40)/180}" stop-color="#16704b"/></linearGradient></defs>
+        ${ticks.map(v => `<line x1="100" x2="620" y1="${y(v)}" y2="${y(v)}" stroke="#e2e7ef"/><text x="90" y="${y(v)+4}" text-anchor="end">${money(Math.round(v))}</text>`).join('')}
+        <line x1="100" x2="620" y1="${y(0)}" y2="${y(0)}" stroke="#8090a3" stroke-dasharray="4 4"/>
+        <polyline fill="none" stroke="url(#${gradient})" stroke-width="3" stroke-linejoin="round" points="${points.map(pt=>`${x(pt.date)},${y(pt.value)}`).join(' ')}"/>
+        ${points.map(pt=>`<circle tabindex="0" cx="${x(pt.date)}" cy="${y(pt.value)}" r="4" fill="${pt.value<0?'#16704b':'#b42332'}"><title>${pt.date}：${money(pt.value)} 元</title></circle>`).join('')}
+        ${labels.map(d=>`<text x="${x(d)}" y="250" text-anchor="middle">${d.slice(5)}</text>`).join('')}</svg></div>
+        <p class="trend-note">${points.length} 条记录 · 区间增减 <span class="${color(change)}">${money(change)} 元</span>${points.length===1?' · 记录两次后显示连线':''}</p>
+        <details><summary>查看曲线数据</summary><ul class="trend-values">${points.map(pt=>`<li><span>${pt.date}</span><strong class="${color(pt.value)}">${money(pt.value)} 元</strong></li>`).join('')}</ul></details></article>`;
+    }).join('') : '<div class="empty-state"><h3>还没有理财产品</h3><p>先在「管理产品」中添加产品，再通过「新增记录」录入金额。</p></div>';
   }
-  function productHistory(product, days) {
-    const dates = []; for (let i = days - 1; i >= 0; i -= 1) dates.push(iso(i));
-    return dates.map(date => { const entries = [...(product.history || []), { date: product.updatedAt || today(), amount: product.amount }].filter(item => item.date <= date).sort((a, b) => a.date.localeCompare(b.date)); return { date, amount: entries.at(-1)?.amount || 0 }; });
+  function switchPage(trends) {
+    $('#ledger-page').hidden=trends; $('#trends-page').hidden=!trends;
+    $('#show-ledger').setAttribute('aria-pressed',String(!trends));
+    $('#show-trends').setAttribute('aria-pressed',String(trends));
   }
-  function renderPrivacy() {
-    $$(".money").forEach(element => element.classList.toggle("hidden-money", state.privacy));
-    $("#privacy-toggle").setAttribute("title", state.privacy ? "显示金额" : "隐藏金额");
-    $("#privacy-toggle").innerHTML = state.privacy ? '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 5.2A9.9 9.9 0 0 1 12 5c6.5 0 10 7 10 7a17.5 17.5 0 0 1-3.1 3.8M6.1 6.2C3.4 8.1 2 12 2 12s3.5 7 10 7c1.3 0 2.5-.3 3.6-.7"></path></svg>' : '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>';
+  $('#show-ledger').onclick=()=>switchPage(false);
+  $('#show-trends').onclick=()=>switchPage(true);
+  $('#trend-range').onchange=renderTrends;
+  function renderRecordFields() {
+    const date = $('#record-date').value;
+    $('#record-fields').innerHTML = data.products.map(p => {
+      const value = data.records[date]?.[p.id];
+      return `<label class="record-field"><span>${esc(p.name)}<small>本金 ${money(cents(p.principal))} 元</small></span><input data-record-product="${p.id}" type="number" min="0" max="2000000000" step="0.01" inputmode="decimal" placeholder="最新持仓金额" value="${value === undefined ? '' : ((cents(p.principal)+cents(value))/100).toFixed(2)}"></label>`;
+    }).join('');
+    $('#record-error').textContent = '';
   }
-  function accountCard(account) {
-    const meta = TYPE_META[account.type] || TYPE_META.other;
-    const isLiability = accountKind(account) === "liability";
-    const details = [meta.label, account.institution].filter(Boolean).join(" · ");
-    const hasBankLogo = Boolean(BANK_LOGOS[account.institution]);
-    const logo = hasBankLogo ? bankLogo(account.institution, "brand-logo") : `<svg viewBox="0 0 24 24" aria-hidden="true">${ACCOUNT_ICONS[account.type] || ACCOUNT_ICONS.other}</svg>`;
-    return `<article class="account-card" data-account-id="${account.id}"><div class="account-icon ${account.type === "credit" ? "credit" : account.type === "investment" ? "investment" : ""} ${hasBankLogo ? "has-brand" : ""}">${logo}</div><div class="account-copy"><strong>${escapeHtml(account.name)}</strong><small>${escapeHtml(details)}${account.note ? ` · ${escapeHtml(account.note)}` : ""}</small></div><div class="account-value"><strong class="${isLiability ? "debt" : ""}">${isLiability ? "-" : ""}${money(account.amount)}</strong><small>${account.updatedAt ? dateLabel(account.updatedAt) : "未记录"}</small>${account.type === "investment" ? `<button class="update-mini" data-update-id="${account.id}">记一笔</button>` : ""}</div></article>`;
+  $('#record-date').onchange = renderRecordFields;
+  $('#close-record').onclick = () => $('#record-dialog').close();
+  $('#cancel-record').onclick = () => $('#record-dialog').close();
+  $('#record-form').onsubmit = event => {
+    event.preventDefault();
+    const date = $('#record-date').value;
+    if (!validDate(date)) { $('#record-error').textContent='请选择有效日期'; return; }
+    const row = {};
+    for (const input of document.querySelectorAll('[data-record-product]')) {
+      if (!input.value.trim()) continue;
+      const p = data.products.find(p => p.id === input.dataset.recordProduct);
+      const holding = Number(input.value), value = (cents(holding)-cents(p.principal))/100;
+      if (!Number.isFinite(holding) || holding < 0 || !validAmount(value)) { $('#record-error').textContent='请输入有效金额，最多两位小数'; return; }
+      row[p.id] = value;
+    }
+    if (!Object.keys(row).length) { $('#record-error').textContent='请至少填写一个产品的持仓金额'; return; }
+    const next=structuredClone(data);
+    next.records[date] = row;
+    if (commit(next)) { month=date.slice(0,7); render(); $('#record-dialog').close(); notify('记录已保存，收益已更新'); }
+  };
+  $('#clear-all').onclick = () => {
+    if (!confirm('清空全部产品、所有日期的收益记录及本浏览器旧版账本？此操作不能撤销。')) return;
+    const wasBroken=storageBroken; storageBroken=false;
+    if (!commit({version:2,products:[],records:{}})) { storageBroken=wasBroken; return; }
+    try { localStorage.removeItem('fangcun-ledger-v1'); $('#legacy-backup').hidden=true; }
+    catch { notify('收益表已清空，但旧版账本清除失败'); render(); return; }
+    render(); notify('全部数据已清空，可重新添加产品');
+  };
+  $('#month').addEventListener('change',event => { if (/^\d{4}-\d{2}$/.test(event.target.value) && event.target.value >= '1900-01' && event.target.value <= '9999-12') {month = event.target.value;render();} else event.target.value = month; });
+  function moveMonth(n) { const d = new Date(`${month}-15T12:00:00Z`); d.setUTCMonth(d.getUTCMonth()+n); const next = d.toISOString().slice(0,7); if (next >= '1900-01' && next <= '9999-12') {month=next;render();} }
+  $('#prev-month').onclick = () => moveMonth(-1); $('#next-month').onclick = () => moveMonth(1);
+  $('#today').onclick = () => {month=localDate().slice(0,7);render();};
+  $('#record-today').onclick = () => {
+    if (!data.products.length) { $('#manage').click(); notify('请先添加理财产品，再新增记录'); return; }
+    $('#record-date').value=localDate(); renderRecordFields(); $('#record-dialog').showModal();
+  };
+  function renderProducts() {
+    $('#product-rows').innerHTML = draft.map(p => `<div class="product-row" data-id="${p.id}"><input aria-label="产品名称" maxlength="60" required value="${esc(p.name)}"><input aria-label="本金" type="number" min="0" max="1000000000" step="0.01" required value="${p.principal}"><input aria-label="期初收益" type="number" min="-1000000000" max="1000000000" step="0.01" required value="${p.baseline}"><button type="button" data-remove="${p.id}" title="删除产品" aria-label="删除${esc(p.name)}">×</button></div>`).join('');
   }
-  function bankLogo(bank, className = "bank-logo") {
-    const source = BANK_LOGOS[bank];
-    return source ? `<img class="${className}" src="${source}" alt="" loading="lazy">` : `<span class="${className} bank-logo-fallback"><svg viewBox="0 0 24 24" aria-hidden="true">${ACCOUNT_ICONS.bank}</svg></span>`;
+  function readDraft() { draft = [...document.querySelectorAll('.product-row')].map(row => { const inputs = row.querySelectorAll('input'); return {id:row.dataset.id,name:inputs[0].value,principal:Number(inputs[1].value),baseline:Number(inputs[2].value)}; }); }
+  $('#manage').onclick = () => {draft=structuredClone(data.products);$('#product-error').textContent='';renderProducts();$('#products-dialog').showModal();};
+  $('#close-dialog').onclick = () => $('#products-dialog').close();
+  $('#add-product').onclick = () => {readDraft();if(draft.length>=100)return;draft.push({id:uid(),name:'',principal:0,baseline:0});renderProducts();$('#product-rows').lastElementChild.querySelector('input').focus();};
+  $('#product-rows').onclick = event => {const id=event.target.dataset.remove;if(!id)return;readDraft();draft=draft.filter(p=>p.id!==id);renderProducts();};
+  $('#product-form').onsubmit = event => {
+    event.preventDefault();readDraft(); const removed=data.products.filter(p=>!draft.some(d=>d.id===p.id));
+    if (removed.some(p=>dates().some(d=>Object.hasOwn(data.records[d],p.id))) && !confirm('保存后将删除已移除产品的全部收益记录。建议先导出备份。确定继续？'))return;
+    const next=structuredClone(data);next.products=draft;for(const row of Object.values(next.records))for(const p of removed)delete row[p.id];
+    try {const clean=validate(next);if(commit(clean)){$('#products-dialog').close();render();notify('产品设置已保存');}}catch(error){$('#product-error').textContent=error.message;}
+  };
+  function download(content,type,name) { const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
+  $('#backup').onclick = () => download(storageBroken ? (localStorage.getItem(KEY) || '{}') : JSON.stringify({...data,exportedAt:new Date().toISOString()},null,2),'application/json',`收益记录备份-${localDate()}.json`);
+  $('#restore').onclick = () => $('#import-file').click();
+  $('#import-file').onchange = async event => {
+    const file=event.target.files?.[0];if(!file)return;
+    try {if(file.size>10*1024*1024)throw Error('备份文件不能超过 10MB');const imported=validate(JSON.parse(await file.text()));
+      if(!confirm('导入将替换当前收益表的全部产品和记录，建议先导出备份。确定导入？'))return;
+      const wasBroken=storageBroken;storageBroken=false;
+      if(commit(imported)){render();notify('备份已恢复');}else storageBroken=wasBroken;
+    }catch(error){notify(`无法导入：${error.message}`);}finally{event.target.value='';}
+  };
+  $('#csv').onclick = () => {
+    const cell = value => {const str=String(value);return '"'+(/^[=+\-@\t\r]/.test(str)&&typeof value==='string'?"'":'')+str.replace(/"/g,'""')+'"';};
+    const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 累计收益`,`${p.name} 涨跌`]),'累计总收益','当日增减']];
+    for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[data.records[date]?.[p.id]??'',delta(p,date)===null?'':delta(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',has?daily(date)/100:'']);}
+    const days=monthDates();rows.push(['本月收益',...data.products.flatMap(p=>[(lastValue(p,days.at(-1))-lastValue(p,days[0],false))/100,'']),'',days.reduce((s,d)=>s+daily(d),0)/100]);
+    download('\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8',`收益记录-${month}.csv`);
+  };
+  try {if(localStorage.getItem('fangcun-ledger-v1')){$('#legacy-backup').hidden=false;$('#legacy-backup').onclick=()=>download(localStorage.getItem('fangcun-ledger-v1'),'application/json',`旧版账本备份-${localDate()}.json`);}}catch{}
+  window.addEventListener('storage',event=>{if(event.key===KEY){data=load();render();notify('已同步此浏览器另一窗口的修改');}});
+  render();
+  if (location.hash === '#trends') switchPage(true);
+  // A reset link is explicit user intent; ordinary visits never clear saved records.
+  if (new URLSearchParams(location.search).get('reset') === '1') {
+    history.replaceState(null,'',location.pathname + location.hash);
+    $('#clear-all').click();
   }
-  function emptyState(title, description, action) { return `<div class="empty-state"><strong>${title}</strong><p>${description}</p><button data-empty-add="${action}">${action}</button></div>`; }
-  function escapeHtml(value) { return String(value || "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])); }
-
-  function drawChart(canvas, points, options = {}) {
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1; const width = Math.max(1, rect.width); const height = Math.max(1, rect.height);
-    canvas.width = width * dpr; canvas.height = height * dpr; const ctx = canvas.getContext("2d"); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, width, height);
-    const keys = options.series || ["net"]; const values = points.flatMap(point => keys.map(key => Number(point[key] || 0))); const max = Math.max(...values, 1); const min = Math.min(...values, 0); const range = max - min || 1;
-    const pad = options.product ? 6 : options.compact ? 4 : 15; const x = index => pad + (width - pad * 2) * (index / Math.max(points.length - 1, 1)); const y = value => height - pad - (height - pad * 2) * ((value - min) / range);
-    if (!options.compact) { ctx.strokeStyle = "#e5eae6"; ctx.lineWidth = 1; for (let i = 1; i < 4; i += 1) { ctx.beginPath(); ctx.moveTo(pad, (height / 4) * i); ctx.lineTo(width - pad, (height / 4) * i); ctx.stroke(); } }
-    const colors = { net: "#704c16", assets: "#c39536", amount: "#9a7430" };
-    keys.forEach(key => { ctx.beginPath(); points.forEach((point, index) => { const px = x(index); const py = y(Number(point[key] || 0)); if (index === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }); ctx.strokeStyle = colors[key] || "#173f35"; ctx.lineWidth = options.product ? 2 : options.compact ? 2.4 : 2; ctx.lineJoin = "round"; ctx.stroke(); if (options.compact && key === "net") { const last = points.at(-1); ctx.fillStyle = colors[key]; ctx.beginPath(); ctx.arc(x(points.length - 1), y(last.net), 3.5, 0, Math.PI * 2); ctx.fill(); } });
-  }
-
-  function wireAccountCards(container) {
-    container.querySelectorAll("[data-account-id]").forEach(card => card.addEventListener("click", event => { if (event.target.closest("[data-update-id]")) return; openEditor(card.dataset.accountId); }));
-    container.querySelectorAll("[data-update-id]").forEach(button => button.addEventListener("click", event => { event.stopPropagation(); openUpdate(button.dataset.updateId); }));
-    container.querySelectorAll("[data-empty-add]").forEach(button => button.addEventListener("click", () => openEditor()));
-  }
-  function openEditor(id = null) {
-    const account = id ? state.accounts.find(item => item.id === id) : null;
-    $("#editor-kicker").textContent = account ? "编辑账户" : "新建记录"; $("#editor-title").textContent = account ? "编辑账户" : "添加账户"; $("#edit-id").value = account?.id || ""; selectedType = account?.type || "bank";
-    $("#account-name").value = account?.name || ""; $("#account-amount").value = account?.amount ?? ""; $("#account-note").value = account?.note || ""; $("#product-category").value = account?.category || "基金"; $("#delete-account").hidden = !account; $("#form-error").textContent = ""; renderTypeOptions(); updateEditorFields(account?.institution || BANKS[0]); showSheet("editor-sheet");
-  }
-  function renderTypeOptions() {
-    $("#type-options").innerHTML = Object.entries(TYPE_META).map(([type, meta]) => `<button type="button" class="type-option ${selectedType === type ? "active" : ""}" data-type="${type}"><svg viewBox="0 0 24 24">${ACCOUNT_ICONS[type]}</svg>${meta.label}</button>`).join("");
-    $$("[data-type]").forEach(button => button.addEventListener("click", () => { selectedType = button.dataset.type; renderTypeOptions(); updateEditorFields(); }));
-  }
-  function updateEditorFields(institution = $("#institution").value || BANKS[0]) {
-    $("#institution-field").hidden = selectedType === "cash" || selectedType === "other";
-    $("#category-field").hidden = selectedType !== "investment";
-    $("#amount-label").textContent = selectedType === "credit" ? "当前待还" : selectedType === "investment" ? "当前净值" : "当前余额";
-    renderBankSelector(BANKS.includes(institution) ? institution : BANKS[0]);
-  }
-  function renderBankSelector(selectedBank) {
-    $("#institution").value = selectedBank;
-    $("#bank-select-trigger").innerHTML = `<span class="bank-choice">${bankLogo(selectedBank)}<strong>${escapeHtml(selectedBank)}</strong></span><svg class="bank-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"></path></svg>`;
-    $("#bank-options").innerHTML = BANKS.map(bank => `<button type="button" class="bank-option" role="option" data-bank="${escapeHtml(bank)}" aria-selected="${bank === selectedBank}">${bankLogo(bank)}<span>${escapeHtml(bank)}</span>${bank === selectedBank ? '<svg class="bank-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>' : ""}</button>`).join("");
-    $$(".bank-option").forEach(option => option.addEventListener("click", () => { renderBankSelector(option.dataset.bank); closeBankSelector(); $("#bank-select-trigger").focus(); }));
-  }
-  function openBankSelector() {
-    $("#bank-options").hidden = false;
-    $("#bank-select-trigger").setAttribute("aria-expanded", "true");
-    $("#bank-select").classList.add("open");
-    $("#bank-options [aria-selected='true']")?.scrollIntoView({ block: "nearest" });
-  }
-  function closeBankSelector() {
-    $("#bank-options").hidden = true;
-    $("#bank-select-trigger").setAttribute("aria-expanded", "false");
-    $("#bank-select").classList.remove("open");
-  }
-  function openUpdate(id) { const account = state.accounts.find(item => item.id === id); if (!account) return; $("#update-id").value = id; $("#update-title").textContent = account.name; $("#update-date").value = today(); $("#update-amount").value = account.amount; showSheet("update-sheet"); }
-  function showSheet(id) { $("#sheet-backdrop").hidden = false; $("#editor-sheet").hidden = id !== "editor-sheet"; $("#update-sheet").hidden = id !== "update-sheet"; document.body.style.overflow = "hidden"; }
-  function closeSheets() { $("#sheet-backdrop").hidden = true; $("#editor-sheet").hidden = true; $("#update-sheet").hidden = true; document.body.style.overflow = ""; }
-  function openConfirm(title, message, callback) { $("#confirm-title").textContent = title; $("#confirm-message").textContent = message; $("#confirm-dialog").hidden = false; $("#confirm-ok").onclick = () => { $("#confirm-dialog").hidden = true; callback(); }; $("#confirm-cancel").onclick = () => { $("#confirm-dialog").hidden = true; }; }
-  function notify(message) { clearTimeout(toastTimer); $("#toast").textContent = message; $("#toast").classList.add("show"); toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 2400); }
-
-  function bindEvents() {
-    $$(".bottom-nav button").forEach(button => button.addEventListener("click", () => navigate(button.dataset.target)));
-    $$('[data-nav="assets"]').forEach(button => button.addEventListener("click", () => navigate("assets")));
-    $("#add-button").addEventListener("click", () => openEditor());
-    $("#bank-select-trigger").addEventListener("click", () => $("#bank-options").hidden ? openBankSelector() : closeBankSelector());
-    document.addEventListener("click", event => { if (!event.target.closest("#bank-select")) closeBankSelector(); });
-    document.addEventListener("keydown", event => { if (event.key === "Escape") closeBankSelector(); });
-    $("#privacy-toggle").addEventListener("click", () => { state.privacy = !state.privacy; saveState(); render(); });
-    $("#sheet-backdrop").addEventListener("click", closeSheets); $$('[data-close-sheet]').forEach(button => button.addEventListener("click", closeSheets));
-    $("#account-form").addEventListener("submit", saveAccount); $("#update-form").addEventListener("submit", saveUpdate);
-    $("#delete-account").addEventListener("click", () => { const id = $("#edit-id").value; openConfirm("删除这笔记录？", "删除后无法恢复，但不会影响其他账户。", () => { state.accounts = state.accounts.filter(account => account.id !== id); saveState(); closeSheets(); render(); notify("记录已删除"); }); });
-    $$("[data-filter]").forEach(button => button.addEventListener("click", () => { activeFilter = button.dataset.filter; renderAssets(); }));
-    $$("[data-period]").forEach(button => button.addEventListener("click", () => { trendPeriod = Number(button.dataset.period); renderTrends(); }));
-    $("#export-data").addEventListener("click", exportData); $("#import-data").addEventListener("change", importData);
-    $("#load-demo").addEventListener("click", () => { state.accounts = clone(demoAccounts); saveState(); render(); notify("示例数据已载入"); });
-    $("#clear-data").addEventListener("click", () => openConfirm("清空全部数据？", "账户、历史金额和趋势记录都会被删除。此操作无法撤销。", () => { state.accounts = []; saveState(); render(); notify("数据已清空"); }));
-    window.addEventListener("resize", () => { if ($("#screen-home").classList.contains("active")) renderHome(); if ($("#screen-trends").classList.contains("active")) renderTrends(); });
-  }
-  function navigate(target) { $$(".screen").forEach(screen => screen.classList.toggle("active", screen.id === `screen-${target}`)); $$(".bottom-nav button").forEach(button => button.classList.toggle("active", button.dataset.target === target)); updateHeader(); if (target === "home") renderHome(); if (target === "assets") renderAssets(); if (target === "trends") renderTrends(); }
-  function saveAccount(event) {
-    event.preventDefault(); const name = $("#account-name").value.trim(); const amount = Number($("#account-amount").value); if (!name || Number.isNaN(amount) || amount < 0) { $("#form-error").textContent = "请填写名称和有效金额。"; return; }
-    const id = $("#edit-id").value; const existing = state.accounts.find(account => account.id === id); const account = existing || { id: uid(), history: [] }; const previous = existing ? Number(existing.amount) : null;
-    Object.assign(account, { type: selectedType, name, institution: $("#institution").value, amount, note: $("#account-note").value.trim(), category: $("#product-category").value, updatedAt: today() });
-    if (!existing || previous !== amount) account.history = [...(account.history || []).filter(item => item.date !== today()), { date: today(), amount }];
-    if (existing) state.accounts = state.accounts.map(item => item.id === id ? account : item); else state.accounts.push(account); saveState(); closeSheets(); render(); notify(existing ? "账户已更新" : "账户已添加");
-  }
-  function saveUpdate(event) {
-    event.preventDefault(); const id = $("#update-id").value; const account = state.accounts.find(item => item.id === id); if (!account) return; const date = $("#update-date").value; const amount = Number($("#update-amount").value); if (!date || Number.isNaN(amount) || amount < 0) return;
-    account.amount = amount; account.updatedAt = date; account.history = [...(account.history || []).filter(item => item.date !== date), { date, amount }].sort((a, b) => a.date.localeCompare(b.date)); saveState(); closeSheets(); render(); notify("每日金额已记录");
-  }
-  function exportData() { const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), accounts: state.accounts }, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `方寸账本备份-${today()}.json`; link.click(); URL.revokeObjectURL(url); notify("备份文件已下载"); }
-  function importData(event) { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const imported = JSON.parse(reader.result); if (!Array.isArray(imported.accounts)) throw new Error("invalid"); state.accounts = imported.accounts; saveState(); render(); notify("备份已恢复"); } catch (error) { notify("文件格式不正确"); } event.target.value = ""; }; reader.readAsText(file); }
-
-  renderTypeOptions(); updateEditorFields(); bindEvents(); render();
-  if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+  if(storageBroken){$('#save-status').textContent='本地数据读取失败';notify('原始数据已保留，请先导出备份再检查存储。');}
+  if('serviceWorker' in navigator && location.protocol !== 'file:')window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 })();
