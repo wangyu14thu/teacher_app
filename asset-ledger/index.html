@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#4269a9"><meta name="description" content="简单的本地理财收益记录表，每天记一笔，自动汇总。">
-<title>收益记录本</title><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="styles.css?v=ledger-13">
+<title>收益记录本</title><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="styles.css?v=ledger-14">
 </head>
 <body>
 <main>
@@ -11,13 +11,14 @@
 <section class="toolbar" aria-label="表格工具"><div class="month-tools"><button id="prev-month" aria-label="上个月">‹</button><input id="month" type="month" min="1900-01" max="9999-12" aria-label="查看月份"><button id="next-month" aria-label="下个月">›</button><button id="today">本月</button></div><div class="actions"><button id="manage">管理产品</button><button id="backup">导出备份</button><button id="restore">导入备份</button><button id="clear-all">清空全部数据</button><button id="csv">导出表格</button><button id="record-today" class="primary">＋ 新增记录</button></div></section>
 <nav class="view-tabs" aria-label="页面切换"><button id="show-ledger" aria-pressed="true">收益明细</button><button id="show-trends" aria-pressed="false">产品趋势</button></nav>
 <section class="summary" aria-label="收益概览"><div><span>理财总本金</span><strong id="principal-total">0.00</strong></div><div><span>本月收益</span><strong id="month-total">0.00</strong></div><div><span>累计收益</span><strong id="return-total">0.00</strong></div><div><span>总持仓金额</span><strong id="holding-total">0.00</strong></div></section>
-<section id="ledger-page"><div class="table-heading"><div><h2 id="table-title">每日收益</h2><span id="save-status" role="status">本机保存</span></div><p>选择日期填写当日收益，支持正数、负数和 0 · 单位：元</p></div>
+<section id="ledger-page"><div class="table-heading"><div><h2 id="table-title">每日收益</h2><span id="save-status" role="status">本机保存</span></div><p>双击当日收益单元格，确认后更新 · 单位：元</p></div>
 <div class="table-wrap" tabindex="0" aria-label="每日收益表，可横向滚动"><table id="ledger"></table></div>
 </section>
 <section id="trends-page" hidden><div class="trend-toolbar"><div><h2>产品收益趋势</h2><p>按实际记录日期连线，空缺日期不代表零收益。</p></div><label>查看范围 <select id="trend-range"><option value="month">当前月份</option><option value="all">全部记录</option></select></label></div><div id="trend-cards"></div></section>
-<footer><p>点击「新增记录」选择日期填写当日收益，保存后更新对应日期的表格。红色为增加，绿色为减少。* 表示当天仅填写了部分产品。</p><p>当日收益按所选日期记录；补记或修改历史日期会重算后续累计收益，不改变其他日期的当日收益。周收益按周一至周日汇总，跨月周仅统计本月部分。</p><p>数据保存在当前浏览器，建议定期「导出备份」。<button id="legacy-backup" hidden>导出旧版账本数据</button></p></footer>
+<footer><p>双击「当日收益」单元格可新增或修改，点击「确认更新」后保存；取消或按 Esc 不保存。也可点击「新增记录」按日期填写。红色为增加，绿色为减少。* 表示当天仅填写了部分产品。</p><p>当日收益按所选日期记录；补记或修改历史日期会重算后续累计收益，不改变其他日期的当日收益。周收益按周一至周日汇总，跨月周仅统计本月部分。</p><p>数据保存在当前浏览器，建议定期「导出备份」。<button id="legacy-backup" hidden>导出旧版账本数据</button></p></footer>
 </main>
 <dialog id="products-dialog"><form id="product-form"><div class="dialog-head"><div><small>账本设置</small><h2>管理理财产品</h2></div><button type="button" id="close-dialog" aria-label="关闭">×</button></div><p class="hint">本金用于计算持仓金额；期初收益是开始记账前已有的累计收益，会与每日收益相加得到累计收益。修改后会重新计算历史汇总。</p><div class="product-labels"><span>产品名称</span><span>本金（元）</span><span>期初收益（元）</span><span></span></div><div id="product-rows"></div><button type="button" id="add-product">＋ 添加产品</button><p id="product-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="primary">保存产品设置</button></div></form></dialog>
+<dialog id="cell-dialog" aria-labelledby="cell-title"><form id="cell-form"><div class="dialog-head"><h2 id="cell-title">修改当日收益</h2><button type="button" id="close-cell" aria-label="关闭">×</button></div><p id="cell-context" class="hint"></p><p class="hint">盈利填正数，亏损填负数，无收益填 0。点击「确认更新」才会保存。</p><label class="record-field"><span>当日收益（元）</span><input id="cell-amount" type="number" min="-2000000000" max="2000000000" step="0.01" inputmode="decimal" required placeholder="可正可负"></label><p id="cell-error" role="alert"></p><div class="dialog-actions"><button type="button" id="cancel-cell">取消</button> <button type="submit" class="primary">确认更新</button></div></form></dialog>
 <dialog id="record-dialog"><form id="record-form"><div class="dialog-head"><h2>新增 / 修改记录</h2><button type="button" id="close-record" aria-label="关闭">×</button></div><p class="hint">选择日期，填写各产品当天的收益金额：盈利填正数，亏损填负数，无收益填 0。保存后更新对应日期的收益和汇总。选择已有日期可修改；留空表示该产品当天未记录，保存会替换当天记录。</p><label class="record-date">记录日期<input id="record-date" type="date" min="1900-01-01" max="9999-12-31" required></label><div id="record-fields"></div><p id="record-error" role="alert"></p><div class="dialog-actions"><button type="button" id="cancel-record">取消</button> <button type="submit" class="primary">保存记录</button></div></form></dialog>
 <input id="import-file" type="file" accept="application/json,.json" hidden><div id="toast" role="status" hidden></div>
 <dialog id="key-dialog"><form id="key-form"><div class="dialog-head"><h2>DeepSeek 设置</h2><button id="key-close" type="button" aria-label="关闭设置">×</button></div><p id="key-help" class="hint">API Key 仅用于本次页面，刷新后清除。发送时经本站服务器转发至 DeepSeek，不写入账本、备份或服务器配置。</p><label for="deepseek-key">DeepSeek API Key</label><input id="deepseek-key" type="password" autocomplete="off" spellcheck="false" maxlength="512" placeholder="粘贴你的 API Key"><p id="key-state" role="status"></p><p class="hint">测试连接会发送一条简短消息，可能产生少量 API 费用。GitHub Pages 版清除后需重新填写；服务器版可使用默认配置。</p><div class="dialog-actions"><button id="key-clear" type="button">清除密钥</button> <button id="key-test" type="button">测试连接</button> <button type="submit" class="primary">应用到本次页面</button></div></form></dialog>
@@ -28,6 +29,6 @@
 <div id="chat-status" role="status"></div><form id="chat-form"><label for="chat-input" class="sr-only">想对芽芽说的话</label><textarea id="chat-input" rows="2" maxlength="4000" placeholder="和芽芽说说话…" required></textarea><div class="chat-actions"><button type="button" id="chat-clear">清除对话</button><button type="submit" id="chat-send" class="primary">发送 ✨</button></div></form>
 </aside>
 <button id="sprite-toggle" aria-label="与小精灵芽芽聊天" aria-expanded="false" aria-controls="sprite-chat"><span class="sprite-caption">找芽芽聊聊</span><span class="sprite-body" aria-hidden="true"><span class="sprite-leaf"></span><span class="sprite-eyes">• •</span><span class="sprite-smile">ᴗ</span></span></button>
-<script src="chat.js?v=ledger-13"></script>
-<script src="app.js?v=ledger-13"></script>
+<script src="chat.js?v=ledger-14"></script>
+<script src="app.js?v=ledger-14"></script>
 </body></html>
