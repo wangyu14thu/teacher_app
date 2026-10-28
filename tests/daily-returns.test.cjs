@@ -51,7 +51,7 @@ test('legacy cumulative data converts chronologically, including gaps and nonzer
   assert.equal(backup.records['2026-10-01'].p_a,20);
   a.save('2026-10-02',{p_a:18});
   assert.equal(a.node('#return-total').textContent,'10.00');
-  assert.equal(a.node('#month-total').textContent,'-5.00');
+  assert.equal(a.node('#month-total').textContent,'-3.00');
   assert.equal(a.read().version,4);
 });
 test('blank products remove only that date; invalid precision is rejected', () => {
@@ -79,7 +79,7 @@ test('double click edits only the selected cell after confirmation; cancel and E
   open('2026-10-01','p_a'); a.node('#cell-amount').value='-2.50'; submit();
   assert.equal(a.node('#cell-dialog').open,false);
   assert.deepEqual(a.read().records,{'2026-10-01':{p_a:-2.5,p_b:7},'2026-10-02':{p_a:4}});
-  assert.equal(a.node('#month-total').textContent,'1.00');
+  assert.equal(a.node('#month-total').textContent,'6.50');
   open('2026-10-03','p_b'); assert.equal(a.node('#cell-amount').value,'');
   submit(); assert.match(a.node('#cell-error').textContent,/有效/);
   a.node('#cell-amount').value='1.001';submit();
@@ -114,4 +114,11 @@ test('version 3 daily return records migrate to cumulative values once', async (
   assert.match(a.fields('2026-10-04'),/value="13.00"/);
   assert.equal(a.read().version,3);
   assert.equal((await a.backup()).version,4);
+});
+
+test('monthly income sums visible daily rises and excludes dates without a computable rise', async () => {
+  const a=app({version:4,products:[products[0]],records:{'2026-09-30':{p_a:10},'2026-10-01':{p_a:20},'2026-10-02':{p_a:25},'2026-10-04':{p_a:100}}});
+  assert.equal(a.node('#month-total').textContent,'15.00');
+  const csv=await a.csv();
+  assert.match(csv,/"本月收益","15","","","15"/);
 });
