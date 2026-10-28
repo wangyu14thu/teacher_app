@@ -28,7 +28,7 @@ const server = http.createServer(async (req,res) => {
       try {
         const upstream=await fetch('https://api.deepseek.com/chat/completions',{
           method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${apiKey}`},
-          body:JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:'你是收益记录本里的小精灵「芽芽」，用温柔、简洁的中文帮助用户理解记账和收益。你无法直接读取或修改用户账本，只能根据用户主动提供的内容回答。不要编造账户数据或承诺投资收益。'},...messages],max_tokens:1200}),signal:AbortSignal.timeout(45000)
+          body:JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:'你是收益记录本里的小精灵「发财芽」，用温柔、简洁的中文帮助用户理解记账和收益。你无法直接读取或修改用户账本，只能根据用户主动提供的内容回答。不要编造账户数据或承诺投资收益。'},...messages],max_tokens:1200}),signal:AbortSignal.timeout(45000)
         });
         if(!upstream.ok) return json(502,{error:upstream.status===401?'DeepSeek 密钥无效，请在设置中更新 API Key。':upstream.status===402?'DeepSeek 账户余额不足，请检查账户。':'DeepSeek 暂时无法响应，请稍后重试。'});
         const result=await upstream.json(),reply=result.choices?.[0]?.message?.content;
