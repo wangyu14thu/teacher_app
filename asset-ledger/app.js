@@ -8,11 +8,11 @@
   const money = n => (n / 100).toLocaleString('zh-CN', {minimumFractionDigits:2,maximumFractionDigits:2});
   const color = n => n > 0 ? 'gain' : n < 0 ? 'loss' : 'muted';
   const uid = () => `p_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
-  const validAmount = n => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= 1e9 && Math.abs(n * 100 - Math.round(n * 100)) < .0001;
+  const validAmount = (n, limit = 1e9) => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= limit && Math.abs(n * 100 - Math.round(n * 100)) < .0001;
   const validDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= '1900-01-01' && d <= '9999-12-31' && new Date(`${d}T12:00:00Z`).toISOString().slice(0,10) === d;
   let month = localDate().slice(0,7), timer, draft, storageBroken = false;
   function validate(data) {
-    if (!data || data.version !== 2 || !Array.isArray(data.products) || data.products.length > 100 || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw Error('备份格式不正确');
+    if (!data || ![2,3].includes(data.version) || !Array.isArray(data.products) || data.products.length > 100 || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw Error('备份格式不正确');
     const ids = new Set();
     const products = data.products.map(p => {
       if (!p || typeof p.id !== 'string' || !/^p_[\w-]{1,100}$/.test(p.id) || ids.has(p.id) || typeof p.name !== 'string' || !p.name.trim() || p.name.length > 60 || !validAmount(p.principal) || p.principal < 0 || !validAmount(p.baseline)) throw Error('产品信息不正确');
@@ -22,16 +22,28 @@
     for (const [date, row] of Object.entries(data.records)) {
       if (!validDate(date) || !row || typeof row !== 'object' || Array.isArray(row)) throw Error('记录日期不正确');
       const clean = {};
-      for (const [id, value] of Object.entries(row)) { if (!ids.has(id) || !validAmount(value)) throw Error('收益记录不正确'); clean[id] = value; }
+      for (const [id, value] of Object.entries(row)) { if (!ids.has(id) || !validAmount(value, data.version === 3 ? 2e9 : 1e9)) throw Error('收益记录不正确'); clean[id] = value; }
       if (Object.keys(clean).length) records[date] = clean;
     }
-    return {version:2,products,records};
+    // Version 2 stored cumulative returns; version 3 stores each day's return.
+    if (data.version === 2) {
+      for (const product of products) {
+        let previous = cents(product.baseline);
+        for (const date of Object.keys(records).sort()) {
+          if (!Object.hasOwn(records[date], product.id)) continue;
+          const current = cents(records[date][product.id]);
+          records[date][product.id] = (current - previous) / 100;
+          previous = current;
+        }
+      }
+    }
+    return {version:3,products,records};
   }
   function load() {
     storageBroken = false;
     try { const raw = localStorage.getItem(KEY); if (raw !== null) return validate(JSON.parse(raw)); }
     catch { storageBroken = true; }
-    return {version:2,products:[],records:{}};
+    return {version:3,products:[],records:{}};
   }
   let data = load();
   function notify(text) { $('#toast').textContent = text; $('#toast').hidden = false; clearTimeout(timer); timer = setTimeout(() => { $('#toast').hidden = true; },4500); }
@@ -42,10 +54,10 @@
   }
   const dates = () => Object.keys(data.records).sort();
   function lastValue(product,date,inclusive = true) {
-    const prev = dates().filter(d => (inclusive ? d <= date : d < date) && Object.hasOwn(data.records[d],product.id)).at(-1);
-    return prev ? cents(data.records[prev][product.id]) : cents(product.baseline);
+    return dates().filter(d => inclusive ? d <= date : d < date)
+      .reduce((sum,d) => sum + cents(data.records[d][product.id] ?? 0), cents(product.baseline));
   }
-  function delta(product,date) { return Object.hasOwn(data.records[date] || {},product.id) ? cents(data.records[date][product.id]) - lastValue(product,date,false) : null; }
+  function delta(product,date) { return Object.hasOwn(data.records[date] || {},product.id) ? cents(data.records[date][product.id]) : null; }
   function daily(date) { return data.products.reduce((sum,p) => sum + (delta(p,date) ?? 0),0); }
   function monthDates() {
     const [year,m] = month.split('-').map(Number);
@@ -65,13 +77,13 @@
     $('#return-total').textContent = money(accumulated);
     $('#return-total').className = color(accumulated);
     $('#holding-total').textContent = money(principal+accumulated);
-    let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>理财本金</th>${products.map(p => `<th colspan="2">${money(cents(p.principal))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>累计收益</th><th class="change-head">涨跌</th>').join('')}<th>累计总收益</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
+    let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>理财本金</th>${products.map(p => `<th colspan="2">${money(cents(p.principal))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>累计收益</th><th class="change-head">当日收益</th>').join('')}<th>累计总收益</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
     days.forEach((date,i) => {
       const day = weekday(date), recorded = Object.keys(data.records[date] || {}).length;
       html += `<tr class="${day===0||day===6?'weekend ':''}${date===localDate()?'today':''}"><th>${Number(date.slice(5,7))}.${Number(date.slice(8))} <small>周${'日一二三四五六'[day]}</small></th>`;
       products.forEach(p => {
         const value = data.records[date]?.[p.id], change = delta(p,date);
-        html += `<td class="entry ${value===undefined?'muted':color(cents(value))}">${value===undefined?'—':money(cents(value))}</td><td class="delta ${color(change)}">${change===null?'—':money(change)}</td>`;
+        html += `<td class="entry ${value===undefined?'muted':color(lastValue(p,date))}">${value===undefined?'—':money(lastValue(p,date))}</td><td class="delta ${color(change)}">${change===null?'—':money(change)}</td>`;
       });
       const total = products.reduce((s,p) => s+lastValue(p,date),0);
       const tooltip = recorded && recorded < products.length ? '部分产品已记录，未填产品沿用上次累计收益' : '';
@@ -84,14 +96,14 @@
       html += '</tr>';
     });
     html += `</tbody><tfoot><tr><th>本月收益</th>${products.map((p,i) => `<td colspan="2" class="${color(monthly[i])}">${money(monthly[i])}</td>`).join('')}<td colspan="3" class="${color(monthly.reduce((s,n)=>s+n,0))}">${money(monthly.reduce((s,n)=>s+n,0))}</td></tr><tr><th>月末持仓金额</th>${products.map(p => `<td colspan="2">${money(cents(p.principal)+lastValue(p,end))}</td>`).join('')}<td colspan="3">${money(principal+accumulated)}</td></tr></tfoot>`;
-    $('#ledger').innerHTML = products.length ? html : '<tbody><tr><td class="empty-state"><h3>账本为空，从第一个产品开始</h3><p>点击「管理产品」添加产品，再点击「新增记录」填写最新持仓金额。</p></td></tr></tbody>';
+    $('#ledger').innerHTML = products.length ? html : '<tbody><tr><td class="empty-state"><h3>账本为空，从第一个产品开始</h3><p>点击「管理产品」添加产品，再点击「新增记录」填写当日收益金额。</p></td></tr></tbody>';
     renderTrends();
   }
   function renderTrends() {
     const all = $('#trend-range').value === 'all';
     $('#trend-cards').innerHTML = data.products.length ? data.products.map(p => {
       const points = dates().filter(d => (all || d.startsWith(month)) && Object.hasOwn(data.records[d],p.id))
-        .map(date => ({date,value:cents(data.records[date][p.id])}));
+        .map(date => ({date,value:lastValue(p,date)}));
       if (!points.length) return `<article class="trend-card"><h3>${esc(p.name)}</h3><p class="empty-state">此范围内暂无记录，新增记录后将在这里显示趋势。</p></article>`;
       const values = points.map(p => p.value), low = Math.min(0,...values), high = Math.max(0,...values);
       const padding = Math.max((high-low)*.12,100), min = low-padding, max = high+padding;
@@ -126,7 +138,7 @@
     const date = $('#record-date').value;
     $('#record-fields').innerHTML = data.products.map(p => {
       const value = data.records[date]?.[p.id];
-      return `<label class="record-field"><span>${esc(p.name)}<small>本金 ${money(cents(p.principal))} 元</small></span><input data-record-product="${p.id}" type="number" min="0" max="2000000000" step="0.01" inputmode="decimal" placeholder="最新持仓金额" value="${value === undefined ? '' : ((cents(p.principal)+cents(value))/100).toFixed(2)}"></label>`;
+      return `<label class="record-field"><span>${esc(p.name)}<small>本金 ${money(cents(p.principal))} 元</small></span><input data-record-product="${p.id}" type="number" min="-2000000000" max="2000000000" step="0.01" inputmode="decimal" placeholder="当日收益（可正可负）" value="${value === undefined ? '' : Number(value).toFixed(2)}"></label>`;
     }).join('');
     $('#record-error').textContent = '';
   }
@@ -141,11 +153,11 @@
     for (const input of document.querySelectorAll('[data-record-product]')) {
       if (!input.value.trim()) continue;
       const p = data.products.find(p => p.id === input.dataset.recordProduct);
-      const holding = Number(input.value), value = (cents(holding)-cents(p.principal))/100;
-      if (!Number.isFinite(holding) || holding < 0 || !validAmount(value)) { $('#record-error').textContent='请输入有效金额，最多两位小数'; return; }
+      const value = Number(input.value);
+      if (!validAmount(value, 2e9)) { $('#record-error').textContent='请输入有效金额，最多两位小数'; return; }
       row[p.id] = value;
     }
-    if (!Object.keys(row).length) { $('#record-error').textContent='请至少填写一个产品的持仓金额'; return; }
+    if (!Object.keys(row).length) { $('#record-error').textContent='请至少填写一个产品的当日收益（可填 0）'; return; }
     const next=structuredClone(data);
     next.records[date] = row;
     if (commit(next)) { month=date.slice(0,7); render(); $('#record-dialog').close(); notify('记录已保存，收益已更新'); }
@@ -153,7 +165,7 @@
   $('#clear-all').onclick = () => {
     if (!confirm('清空全部产品、所有日期的收益记录及本浏览器旧版账本？此操作不能撤销。')) return;
     const wasBroken=storageBroken; storageBroken=false;
-    if (!commit({version:2,products:[],records:{}})) { storageBroken=wasBroken; return; }
+    if (!commit({version:3,products:[],records:{}})) { storageBroken=wasBroken; return; }
     try { localStorage.removeItem('fangcun-ledger-v1'); $('#legacy-backup').hidden=true; }
     catch { notify('收益表已清空，但旧版账本清除失败'); render(); return; }
     render(); notify('全部数据已清空，可重新添加产品');
@@ -193,8 +205,8 @@
   };
   $('#csv').onclick = () => {
     const cell = value => {const str=String(value);return '"'+(/^[=+\-@\t\r]/.test(str)&&typeof value==='string'?"'":'')+str.replace(/"/g,'""')+'"';};
-    const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 累计收益`,`${p.name} 涨跌`]),'累计总收益','当日增减']];
-    for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[data.records[date]?.[p.id]??'',delta(p,date)===null?'':delta(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',has?daily(date)/100:'']);}
+    const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 累计收益`,`${p.name} 当日收益`]),'累计总收益','当日增减']];
+    for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[Object.hasOwn(data.records[date] || {},p.id)?lastValue(p,date)/100:'',delta(p,date)===null?'':delta(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',has?daily(date)/100:'']);}
     const days=monthDates();rows.push(['本月收益',...data.products.flatMap(p=>[(lastValue(p,days.at(-1))-lastValue(p,days[0],false))/100,'']),'',days.reduce((s,d)=>s+daily(d),0)/100]);
     download('\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8',`收益记录-${month}.csv`);
   };
