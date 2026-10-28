@@ -10,7 +10,7 @@ function app(initial) {
   let inputs = [], exported;
   const node = selector => {
     if (!nodes.has(selector)) nodes.set(selector, {value:'',textContent:'',innerHTML:'',hidden:false,
-      addEventListener(){},setAttribute(){},close(){},showModal(){},click(){}});
+      addEventListener(){},setAttribute(){},close(){this.open=false;},showModal(){this.open=true;},focus(){},select(){},click(){}});
     return nodes.get(selector);
   };
   vm.runInNewContext(source, {document:{querySelector:node,querySelectorAll:()=>inputs,createElement:()=>node('download')},
@@ -37,7 +37,7 @@ test('positive, negative and zero daily returns; backdated edits preserve later 
   assert.equal(a.node('#holding-total').textContent,'1,518.75');
   assert.match(a.fields('2026-10-03'),/value="-3.25"/);
   assert.match(a.fields('2026-10-03'),/value="0.00"/);
-  assert.match(a.node('#ledger').innerHTML,/>23.75<\/td><td class="delta loss">-3.25/);
+  assert.match(a.node('#ledger').innerHTML,/>23.75<\/td><td class="delta editable loss"[^>]*>-3.25/);
   assert.match(a.node('#trend-cards').innerHTML,/2026-10-03：23.75 元/);
   assert.match(await a.csv(),/"2026-10-03","23.75","-3.25","-5","0","18.75","-3.25"/);
   const restored=app(await a.backup());
@@ -63,4 +63,32 @@ test('blank products remove only that date; invalid precision is rejected', () =
   a.save('2026-10-02',{p_a:1.001});
   assert.match(a.node('#record-error').textContent,/最多两位小数/);
   assert.equal(a.read().records['2026-10-02'].p_a,4);
+});
+
+test('double click edits only the selected cell after confirmation; cancel and Escape do not save', () => {
+  const a=app({version:3,products,records:{'2026-10-01':{p_a:5,p_b:7},'2026-10-02':{p_a:4}}});
+  const open=(date,id)=>a.node('#ledger').ondblclick({target:{closest:()=>({dataset:{editDate:date,editProduct:id}})}});
+  const submit=()=>a.node('#cell-form').onsubmit({preventDefault(){}});
+  open('2026-10-01','p_a');
+  assert.equal(a.node('#cell-dialog').open,true);
+  assert.equal(a.node('#cell-amount').value,'5.00');
+  assert.equal(a.node('#cell-context').textContent,'2026-10-01 · 产品 A');
+  a.node('#cell-amount').value='-2.50';
+  assert.equal(a.read().records['2026-10-01'].p_a,5);
+  a.node('#cancel-cell').onclick(); submit();
+  assert.equal(a.read().records['2026-10-01'].p_a,5);
+  open('2026-10-01','p_a'); a.node('#cell-amount').value='-2.50'; submit();
+  assert.equal(a.node('#cell-dialog').open,false);
+  assert.deepEqual(a.read().records,{'2026-10-01':{p_a:-2.5,p_b:7},'2026-10-02':{p_a:4}});
+  assert.equal(a.node('#month-total').textContent,'8.50');
+  open('2026-10-03','p_b'); assert.equal(a.node('#cell-amount').value,'');
+  submit(); assert.match(a.node('#cell-error').textContent,/有效/);
+  a.node('#cell-amount').value='1.001';submit();
+  assert.equal(a.read().records['2026-10-03'],undefined);
+  a.node('#cell-amount').value='0';submit();
+  assert.equal(a.read().records['2026-10-03'].p_b,0);
+  open('2026-10-01','p_a'); a.node('#cell-amount').value='999';
+  a.node('#cell-dialog').oncancel();submit();
+  assert.equal(a.read().records['2026-10-01'].p_a,-2.5);
+  a.node('#ledger').ondblclick({target:{closest:()=>null}});
 });

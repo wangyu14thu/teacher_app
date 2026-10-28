@@ -83,7 +83,7 @@
       html += `<tr class="${day===0||day===6?'weekend ':''}${date===localDate()?'today':''}"><th>${Number(date.slice(5,7))}.${Number(date.slice(8))} <small>周${'日一二三四五六'[day]}</small></th>`;
       products.forEach(p => {
         const value = data.records[date]?.[p.id], change = delta(p,date);
-        html += `<td class="entry ${value===undefined?'muted':color(lastValue(p,date))}">${value===undefined?'—':money(lastValue(p,date))}</td><td class="delta ${color(change)}">${change===null?'—':money(change)}</td>`;
+        html += `<td class="entry ${value===undefined?'muted':color(lastValue(p,date))}">${value===undefined?'—':money(lastValue(p,date))}</td><td class="delta editable ${color(change)}" data-edit-date="${date}" data-edit-product="${p.id}" tabindex="0" aria-haspopup="dialog" aria-label="${esc(p.name)} ${date} 当日收益 ${change===null?'未记录':money(change)} 元，双击或按 Enter 修改" title="双击修改当日收益">${change===null?'—':money(change)}</td>`;
       });
       const total = products.reduce((s,p) => s+lastValue(p,date),0);
       const tooltip = recorded && recorded < products.length ? '部分产品已记录，未填产品沿用上次累计收益' : '';
@@ -161,6 +161,49 @@
     const next=structuredClone(data);
     next.records[date] = row;
     if (commit(next)) { month=date.slice(0,7); render(); $('#record-dialog').close(); notify('记录已保存，收益已更新'); }
+  };
+  let editingCell = null;
+  function openCellEditor(event) {
+    const cell = event.target.closest('[data-edit-date]');
+    if (!cell) return;
+    const date = cell.dataset.editDate, id = cell.dataset.editProduct;
+    const product = data.products.find(p => p.id === id);
+    if (!product || !validDate(date)) return;
+    editingCell = {date,id};
+    $('#cell-context').textContent = `${date} · ${product.name}`;
+    const value = data.records[date]?.[id];
+    $('#cell-amount').value = value === undefined ? '' : value.toFixed(2);
+    $('#cell-error').textContent = '';
+    $('#cell-dialog').showModal();
+    $('#cell-amount').focus();
+    $('#cell-amount').select();
+  }
+  $('#ledger').ondblclick = openCellEditor;
+  $('#ledger').onkeydown = event => {
+    if (event.key === 'Enter' && event.target.closest('[data-edit-date]')) {
+      event.preventDefault(); openCellEditor(event);
+    }
+  };
+  const closeCellEditor = () => { editingCell = null; $('#cell-dialog').close(); };
+  $('#cancel-cell').onclick = closeCellEditor;
+  $('#close-cell').onclick = closeCellEditor;
+  $('#cell-dialog').oncancel = () => { editingCell = null; };
+  $('#cell-form').onsubmit = event => {
+    event.preventDefault();
+    if (!editingCell) return;
+    const {date,id} = editingCell;
+    if (!data.products.some(p => p.id === id)) {
+      $('#cell-error').textContent = '该产品已删除，请关闭后重新选择'; return;
+    }
+    const input = $('#cell-amount'), value = Number(input.value);
+    if (!input.value.trim() || !validAmount(value, 2e9)) {
+      $('#cell-error').textContent = '请输入有效的当日收益，最多两位小数，无收益填 0'; return;
+    }
+    const next = structuredClone(data);
+    next.records[date] = {...next.records[date], [id]:value};
+    if (commit(next)) {
+      month = date.slice(0,7); render(); closeCellEditor(); notify('当日收益已更新');
+    }
   };
   $('#clear-all').onclick = () => {
     if (!confirm('清空全部产品、所有日期的收益记录及本浏览器旧版账本？此操作不能撤销。')) return;
