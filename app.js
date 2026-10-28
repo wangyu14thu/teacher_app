@@ -58,6 +58,13 @@
       .reduce((sum,d) => sum + cents(data.records[d][product.id] ?? 0), cents(product.baseline));
   }
   function delta(product,date) { return Object.hasOwn(data.records[date] || {},product.id) ? cents(data.records[date][product.id]) : null; }
+  function changeFromYesterday(product,date) {
+    const previous = new Date(`${date}T12:00:00Z`);
+    previous.setUTCDate(previous.getUTCDate()-1);
+    const current = delta(product,date), before = delta(product,previous.toISOString().slice(0,10));
+    return current === null || before === null ? null : current-before;
+  }
+  const signedMoney = value => (value > 0 ? '+' : '') + money(value);
   function daily(date) { return data.products.reduce((sum,p) => sum + (delta(p,date) ?? 0),0); }
   function monthDates() {
     const [year,m] = month.split('-').map(Number);
@@ -77,13 +84,13 @@
     $('#return-total').textContent = money(accumulated);
     $('#return-total').className = color(accumulated);
     $('#holding-total').textContent = money(principal+accumulated);
-    let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>理财本金</th>${products.map(p => `<th colspan="2">${money(cents(p.principal))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>累计收益</th><th class="change-head">当日收益</th>').join('')}<th>累计总收益</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
+    let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>理财本金</th>${products.map(p => `<th colspan="2">${money(cents(p.principal))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>收益</th><th class="change-head">涨幅</th>').join('')}<th>累计总收益</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
     days.forEach((date,i) => {
       const day = weekday(date), recorded = Object.keys(data.records[date] || {}).length;
       html += `<tr class="${day===0||day===6?'weekend ':''}${date===localDate()?'today':''}"><th>${Number(date.slice(5,7))}.${Number(date.slice(8))} <small>周${'日一二三四五六'[day]}</small></th>`;
       products.forEach(p => {
-        const value = data.records[date]?.[p.id], change = delta(p,date);
-        html += `<td class="entry ${value===undefined?'muted':color(lastValue(p,date))}">${value===undefined?'—':money(lastValue(p,date))}</td><td class="delta editable ${color(change)}" data-edit-date="${date}" data-edit-product="${p.id}" tabindex="0" aria-haspopup="dialog" aria-label="${esc(p.name)} ${date} 当日收益 ${change===null?'未记录':money(change)} 元，双击或按 Enter 修改" title="双击修改当日收益">${change===null?'—':money(change)}</td>`;
+        const value = delta(p,date), change = changeFromYesterday(p,date);
+        html += `<td class="entry editable ${color(value)}" data-edit-date="${date}" data-edit-product="${p.id}" tabindex="0" aria-haspopup="dialog" aria-label="${esc(p.name)} ${date} 收益 ${value===null?'未记录':money(value)} 元，双击或按 Enter 修改" title="双击修改收益">${value===null?'—':money(value)}</td><td class="delta ${color(change)}" title="涨幅 = 当天收益 − 上一日收益；任一天未记录时不计算">${change===null?'—':signedMoney(change)}</td>`;
       });
       const total = products.reduce((s,p) => s+lastValue(p,date),0);
       const tooltip = recorded && recorded < products.length ? '部分产品已记录，未填产品沿用上次累计收益' : '';
@@ -248,8 +255,8 @@
   };
   $('#csv').onclick = () => {
     const cell = value => {const str=String(value);return '"'+(/^[=+\-@\t\r]/.test(str)&&typeof value==='string'?"'":'')+str.replace(/"/g,'""')+'"';};
-    const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 累计收益`,`${p.name} 当日收益`]),'累计总收益','当日增减']];
-    for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[Object.hasOwn(data.records[date] || {},p.id)?lastValue(p,date)/100:'',delta(p,date)===null?'':delta(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',has?daily(date)/100:'']);}
+    const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 收益`,`${p.name} 涨幅（元）`]),'累计总收益','当日增减']];
+    for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[delta(p,date)===null?'':delta(p,date)/100,changeFromYesterday(p,date)===null?'':changeFromYesterday(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',has?daily(date)/100:'']);}
     const days=monthDates();rows.push(['本月收益',...data.products.flatMap(p=>[(lastValue(p,days.at(-1))-lastValue(p,days[0],false))/100,'']),'',days.reduce((s,d)=>s+daily(d),0)/100]);
     download('\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8',`收益记录-${month}.csv`);
   };
