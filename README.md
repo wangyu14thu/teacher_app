@@ -41,7 +41,7 @@ python3 -m http.server 4173
 
 访问 `?reset=1` 会弹出清空确认，确认后删除当前浏览器新旧账本数据；取消不会删除。普通访问不会自动清空。
 
-## 芽芽与 DeepSeek 对话
+## 发财芽与 DeepSeek 对话
 
 右下角小精灵可打开聊天窗口。消息只保留在当前页面内存，清除对话或刷新即清除；账本数据不会自动发送。只有主动输入的聊天内容和最近对话发送给 DeepSeek。
 
@@ -51,7 +51,7 @@ GitHub Pages 只能展示静态页面，不能运行此接口。线上 AI 对话
 
 ### 网页配置 API Key
 
-打开芽芽 →「设置」，输入 DeepSeek API Key，可测试连接并应用到本次页面。网页 Key 优先于服务器的 `DEEPSEEK_API_KEY`，仅在页面内存中保留，刷新即清除；清除后回退服务器默认配置。请求经本站 `/api/chat` 转发到 DeepSeek，不写入服务器配置、不进入备份。线上必须使用 HTTPS；测试连接会产生少量 API 用量。纯 GitHub Pages 仍需部署同源后端接口，填写 Key 本身不能代替后端部署。
+打开发财芽 →「设置」，输入 DeepSeek API Key，可测试连接并应用到本次页面。网页 Key 优先于服务器的 `DEEPSEEK_API_KEY`，仅在页面内存中保留，刷新即清除；清除后回退服务器默认配置。请求经本站 `/api/chat` 转发到 DeepSeek，不写入服务器配置、不进入备份。线上必须使用 HTTPS；测试连接会产生少量 API 用量。纯 GitHub Pages 仍需部署同源后端接口，填写 Key 本身不能代替后端部署。
 
 ## GitHub Pages 在线版
 

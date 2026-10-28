@@ -13,7 +13,7 @@
     if(direct && !key)throw Error('请先打开设置，填写 DeepSeek API Key。');
     const response=await fetch(direct?'https://api.deepseek.com/chat/completions':'/api/chat',{
       method:'POST',headers:{'Content-Type':'application/json',...(direct?{Authorization:`Bearer ${key}`}:{})},
-      body:JSON.stringify(direct?{model:'deepseek-chat',messages:[{role:'system',content:'你是记账小精灵芽芽。用简洁温柔的中文回复。你不能读取或修改账本，不编造用户数据，不承诺投资收益。'},...messages],max_tokens:1200}:{messages,...(key?{apiKey:key}:{})}),signal:AbortSignal.timeout(50000)
+      body:JSON.stringify(direct?{model:'deepseek-chat',messages:[{role:'system',content:'你是记账小精灵发财芽。用简洁温柔的中文回复。你不能读取或修改账本，不编造用户数据，不承诺投资收益。'},...messages],max_tokens:1200}:{messages,...(key?{apiKey:key}:{})}),signal:AbortSignal.timeout(50000)
     });
     let result;try{result=await response.json();}catch{throw Error('AI 服务暂时不可用，请稍后重试。');}
     if(!response.ok)throw Error(direct?(response.status===401?'API Key 无效，请在设置中更新。':response.status===402?'DeepSeek 余额不足，请检查账户。':'DeepSeek 暂时无法响应，请稍后重试。'):(result.error||'暂时连接不上，请稍后再试'));
@@ -40,12 +40,12 @@
   function open(show){panel.hidden=!show;toggle.setAttribute('aria-expanded',String(show));if(show)input.focus();else toggle.focus();}
   toggle.onclick=()=>open(panel.hidden);$('#chat-close').onclick=()=>open(false);
   panel.addEventListener('keydown',e=>{if(e.key==='Escape')open(false);});
-  $('#chat-clear').onclick=()=>{if(busy)return;messages=[];log.replaceChildren();bubble('assistant','你好呀，我是芽芽 🌱 今天也一起把小日子记清楚吧！');};
+  $('#chat-clear').onclick=()=>{if(busy)return;messages=[];log.replaceChildren();bubble('assistant','你好呀，我是发财芽 🌱 今天也一起把小日子记清楚吧！');};
   $('#chat-form').onsubmit=async e=>{
     e.preventDefault();const text=input.value.trim();if(!text||busy)return;
     if(text.length>4000){$('#chat-status').textContent='每条消息最多 4000 字';return;}
     busy=true;$('#chat-send').disabled=true;$('#chat-clear').disabled=true;
-    bubble('user',text);input.value='';$('#chat-status').textContent='芽芽正在想一想…';
+    bubble('user',text);input.value='';$('#chat-status').textContent='发财芽正在想一想…';
     const next=[...messages.slice(-18),{role:'user',content:text}];
     try{
       const result=await request(next,apiKey);
