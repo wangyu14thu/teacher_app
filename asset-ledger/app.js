@@ -78,7 +78,7 @@
     $('#table-title').textContent = `${Number(month.slice(0,4))} 年 ${Number(month.slice(5))} 月 · 每日收益`;
     const principal = products.reduce((s,p) => s + cents(p.principal),0);
     const accumulated = products.reduce((s,p) => s + lastValue(p,end),0);
-    const monthly = products.map(p => lastValue(p,end) - lastValue(p,start,false));
+    const monthly = products.map(p => days.reduce((sum,date) => sum + (changeFromYesterday(p,date) ?? 0),0));
     $('#principal-total').textContent = money(principal);
     $('#month-total').textContent = money(monthly.reduce((s,n) => s+n,0));
     $('#month-total').className = color(monthly.reduce((s,n) => s+n,0));
@@ -258,7 +258,7 @@
     const cell = value => {const str=String(value);return '"'+(/^[=+\-@\t\r]/.test(str)&&typeof value==='string'?"'":'')+str.replace(/"/g,'""')+'"';};
     const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 收益`,`${p.name} 涨幅（元）`]),'累计总收益','当日增减']];
     for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[delta(p,date)===null?'':delta(p,date)/100,changeFromYesterday(p,date)===null?'':changeFromYesterday(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',daily(date)===null?'':daily(date)/100]);}
-    const days=monthDates();rows.push(['本月收益',...data.products.flatMap(p=>[(lastValue(p,days.at(-1))-lastValue(p,days[0],false))/100,'']),'',days.map(d=>daily(d)).filter(v=>v!==null).reduce((s,v)=>s+v,0)/100]);
+    const days=monthDates();rows.push(['本月收益',...data.products.flatMap(p=>[days.reduce((sum,date)=>sum+(changeFromYesterday(p,date)??0),0)/100,'']),'',days.map(d=>daily(d)).filter(v=>v!==null).reduce((s,v)=>s+v,0)/100]);
     download('\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8',`收益记录-${month}.csv`);
   };
   try {if(localStorage.getItem('fangcun-ledger-v1')){$('#legacy-backup').hidden=false;$('#legacy-backup').onclick=()=>download(localStorage.getItem('fangcun-ledger-v1'),'application/json',`旧版账本备份-${localDate()}.json`);}}catch{}
