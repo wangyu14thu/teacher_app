@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#4269a9"><meta name="description" content="简单的本地理财收益记录表，每天记一笔，自动汇总。">
-<title>收益记录本</title><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="styles.css?v=ledger-17">
+<title>发财芽</title><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="styles.css?v=ledger-18">
 </head>
 <body>
 <main>
-<header><div><div class="eyebrow">MY DAILY LEDGER · 本地账本</div><h1>收益记录本<span>每天记一笔，收益看得清。</span></h1></div><span class="local-badge"><i></i> 数据仅保存在本机</span></header>
+<header><div><div class="eyebrow">MY DAILY LEDGER · 本地账本</div><h1>发财芽<span>每天记一笔，收益看得清。</span></h1></div><span class="local-badge"><i></i> 数据仅保存在本机</span></header>
 <section class="toolbar" aria-label="表格工具"><div class="month-tools"><button id="prev-month" aria-label="上个月">‹</button><input id="month" type="month" min="1900-01" max="9999-12" aria-label="查看月份"><button id="next-month" aria-label="下个月">›</button><button id="today">本月</button></div><div class="actions"><button id="manage">管理产品</button><button id="backup">导出备份</button><button id="restore">导入备份</button><button id="clear-all">清空全部数据</button><button id="csv">导出表格</button><button id="record-today" class="primary">＋ 新增记录</button></div></section>
 <nav class="view-tabs" aria-label="页面切换"><button id="show-ledger" aria-pressed="true">收益明细</button><button id="show-trends" aria-pressed="false">产品趋势</button></nav>
 <section class="summary" aria-label="收益概览"><div><span>理财总本金</span><strong id="principal-total">0.00</strong></div><div><span>本月收益</span><strong id="month-total">0.00</strong></div><div><span>累计收益</span><strong id="return-total">0.00</strong></div><div><span>总持仓金额</span><strong id="holding-total">0.00</strong></div></section>
