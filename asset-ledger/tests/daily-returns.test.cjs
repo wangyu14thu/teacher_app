@@ -37,9 +37,9 @@ test('positive, negative and zero daily returns; backdated edits preserve later 
   assert.equal(a.node('#holding-total').textContent,'1,518.75');
   assert.match(a.fields('2026-10-03'),/value="-3.25"/);
   assert.match(a.fields('2026-10-03'),/value="0.00"/);
-  assert.match(a.node('#ledger').innerHTML,/>23.75<\/td><td class="delta editable loss"[^>]*>-3.25/);
+  assert.match(a.node('#ledger').innerHTML,/>-3.25<\/td><td class="delta loss"[^>]*>-8.25/);
   assert.match(a.node('#trend-cards').innerHTML,/2026-10-03：23.75 元/);
-  assert.match(await a.csv(),/"2026-10-03","23.75","-3.25","-5","0","18.75","-3.25"/);
+  assert.match(await a.csv(),/"2026-10-03","-3.25","-8.25","0","5","18.75","-3.25"/);
   const restored=app(await a.backup());
   assert.match(restored.fields('2026-10-03'),/value="-3.25"/);
 });
@@ -91,4 +91,19 @@ test('double click edits only the selected cell after confirmation; cancel and E
   a.node('#cell-dialog').oncancel();submit();
   assert.equal(a.read().records['2026-10-01'].p_a,-2.5);
   a.node('#ledger').ondblclick({target:{closest:()=>null}});
+});
+
+test('income changes compare calendar days across months and recalculate the next day', async () => {
+  const a=app({version:3,products,records:{'2026-09-30':{p_a:100},'2026-10-01':{p_a:120},'2026-10-02':{p_a:110},'2026-10-04':{p_a:0}}});
+  a.save('2026-10-01',{p_a:120});
+  let csv=await a.csv();
+  assert.match(csv,/"2026-10-01","120","20"/);
+  assert.match(csv,/"2026-10-02","110","-10"/);
+  assert.match(csv,/"2026-10-04","0",""/);
+  a.save('2026-10-01',{p_a:90});
+  csv=await a.csv();
+  assert.match(csv,/"2026-10-01","90","-10"/);
+  assert.match(csv,/"2026-10-02","110","20"/);
+  assert.match(a.node('#ledger').innerHTML,/class="entry editable[^>]*data-edit-date="2026-10-01"/);
+  assert.doesNotMatch(a.node('#ledger').innerHTML,/class="delta[^>]*data-edit-date/);
 });
