@@ -1,5 +1,5 @@
-const CACHE = 'fangcun-returns-v20';
-const FILES = ['./', './index.html', './styles.css?v=ledger-20', './app.js?v=ledger-20', './chat.js?v=ledger-17', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'fangcun-returns-v22';
+const FILES = ['./', './index.html', './styles.css?v=ledger-22', './app.js?v=ledger-22', './chat.js?v=ledger-17', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png', ...['abc','bocom','icbc','boc','ccb','cmb','psbc'].map(bank => `./assets/banks/${bank}.svg`)];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting())));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('fangcun-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', event => {
