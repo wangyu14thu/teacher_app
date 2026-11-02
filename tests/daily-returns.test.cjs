@@ -40,7 +40,7 @@ test('records are cumulative income; daily rise is the difference from yesterday
   assert.match(a.node('#ledger').innerHTML,/>25.00<\/td><td class="delta loss"[^>]*>-5.00/);
   assert.match(await a.csv(),/"2026-10-03","","25","-5","","0","5","25","0"/);
   const restored=app(await a.backup());
-  assert.equal(restored.read().version,6);
+  assert.equal(restored.read().version,7);
   assert.match(restored.fields('2026-10-03'),/value="25.00"/);
 });
 test('legacy cumulative data converts chronologically, including gaps and nonzero baseline', async () => {
@@ -48,12 +48,12 @@ test('legacy cumulative data converts chronologically, including gaps and nonzer
   assert.match(a.fields('2026-09-30'),/value="15.00"/);
   assert.match(a.fields('2026-10-03'),/value="12.00"/);
   const backup=await a.backup();
-  assert.equal(backup.version,6);
+  assert.equal(backup.version,7);
   assert.equal(backup.records['2026-10-01'].p_a,20);
   a.save('2026-10-02',{p_a:18});
   assert.equal(a.node('#return-total').textContent,'10.00');
   assert.equal(a.node('#month-total').textContent,'-3.00');
-  assert.equal(a.read().version,6);
+  assert.equal(a.read().version,7);
 });
 test('blank products remove only that date; invalid precision is rejected', () => {
   const a=app({version:4,products,records:{'2026-10-01':{p_a:5,p_b:7},'2026-10-02':{p_a:4,p_b:3}}});
@@ -114,7 +114,7 @@ test('version 3 daily return records migrate to cumulative values once', async (
   assert.match(a.fields('2026-10-02'),/value="13.00"/);
   assert.match(a.fields('2026-10-04'),/value="13.00"/);
   assert.equal(a.read().version,3);
-  assert.equal((await a.backup()).version,6);
+  assert.equal((await a.backup()).version,7);
 });
 
 test('monthly income sums visible daily rises and excludes dates without a computable rise', async () => {
@@ -155,8 +155,10 @@ test('maturity ladder groups purchase batches, excludes received, overdue and un
   assert.match(a.node('#asset-summary').innerHTML,/370,000.00/);
   assert.match(a.node('#asset-alert').textContent,/1 笔已到期未确认/);
   assert.match(a.node('#asset-alert').textContent,/1 笔活期/);
+  a.node('#maturity-year').value='2027';a.node('#maturity-year').onchange();
   assert.match(a.node('#maturity-chart').innerHTML,/2027-01 到期本金 350,000.00 元/);
   assert.match(a.node('#maturity-chart').innerHTML,/2027-04 到期本金 0.00 元/);
+  a.node('#maturity-year').value='2028';a.node('#maturity-year').onchange();
   assert.match(a.node('#maturity-chart').innerHTML,/2028-02 到期本金 20,000.00 元/);
   assert.deepEqual((await a.backup()).lots,assets([lot('p_1','2027-01-06',250000),lot('p_2','2027-01-08',100000),lot('p_3','2026-10-01'),lot('p_4',''),lot('p_5','2027-04-01',10000,{status:'received'}),lot('p_6','2028-02-18',20000),lot('p_7','2027-04-01',10000,{buyDate:'2027-01-01'})]).lots);
 });
@@ -192,4 +194,39 @@ test('invalid imported maturity data is rejected without replacing the ledger',a
   await a.node('#import-file').onchange({target:{files:[{size:200,text:async()=>JSON.stringify(assets([bad]))}],value:'file'}});
   assert.match(a.node('#toast').textContent,/无法导入/);assert.equal(a.read().lots.length,0);
  }
+});
+
+test('vault snapshots migrate, save independently, round-trip and reject invalid backups',async()=>{
+  const a=app(assets([]));
+  const edit=(m,id,amount)=>{
+    a.node('#vault-table').onclick({target:{closest:()=>({dataset:{vaultMonth:m,vaultId:id}})}});
+    a.node('#vault-amount').value=amount;submit(a,'#vault-cell-form');
+  };
+  edit('2026-10','p_abc','123.45');edit('2026-10','p_cash','0');edit('2026-11','p_abc','200');
+  assert.equal(a.read().vault.balances['2026-10'].p_abc,123.45);
+  assert.equal(a.read().vault.balances['2026-10'].p_cash,0);
+  assert.deepEqual(a.read().records,{});
+  edit('2026-10','p_abc','-1');assert.equal(a.read().vault.balances['2026-10'].p_abc,123.45);
+  const backup=await a.backup(),restored=app(backup);
+  assert.deepEqual((await restored.backup()).vault,backup.vault);
+  edit('2026-10','p_abc','');assert.equal(Object.hasOwn(a.read().vault.balances['2026-10'],'p_abc'),false);
+  a.node('#add-institution').onclick();a.node('#institution-name').value='我的银行';a.node('#institution-icon').value='ccb';submit(a,'#institution-form');
+  assert.equal(a.read().vault.institutions.at(-1).name,'我的银行');
+  const before=a.read();backup.vault.balances['2026-13']={p_cash:5};
+  await a.node('#import-file').onchange({target:{files:[{size:100,text:async()=>JSON.stringify(backup)}],value:'file'}});
+  assert.deepEqual(a.read(),before);
+});
+
+test('maturity calendar selects one year and keeps detail in the selected year',()=>{
+ const a=app(assets([]));
+ assert.match(a.node('#maturity-year').innerHTML,/2028 年/);
+ assert.equal((a.node('#maturity-chart').innerHTML.match(/data-maturity=/g)||[]).length,3);
+ a.node('#maturity-year').value='2027';a.node('#maturity-year').onchange();
+ assert.equal((a.node('#maturity-chart').innerHTML.match(/data-maturity=/g)||[]).length,12);
+ assert.doesNotMatch(a.node('#maturity-chart').innerHTML,/data-maturity="2026/);
+ assert.match(a.node('#maturity-detail').innerHTML,/2027-01/);
+ a.node('#plan-target-month').value='2028-01';a.node('#plan-target-month').onchange();
+ assert.equal(a.node('#maturity-year').value,'2028');
+ a.node('#asset-horizon').value='12';a.node('#asset-horizon').onchange();
+ assert.equal(a.node('#maturity-year').value,'2026');
 });

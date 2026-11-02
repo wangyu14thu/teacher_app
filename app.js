@@ -11,8 +11,28 @@
   const validAmount = (n, limit = 1e9) => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= limit && Math.abs(n * 100 - Math.round(n * 100)) < .0001;
   const validDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= '1900-01-01' && d <= '9999-12-31' && new Date(`${d}T12:00:00Z`).toISOString().slice(0,10) === d;
   let month = localDate().slice(0,7), timer, draft, storageBroken = false;
+  const vaultIcons = {abc:'农业银行',bocom:'交通银行',icbc:'工商银行',alipay:'支付宝',wechat:'微信',fund:'公积金',cash:'现金',other:'其他机构',boc:'中国银行',ccb:'建设银行',cmb:'招商银行',psbc:'邮储银行'};
+  const emptyVault = () => ({institutions:['abc','bocom','icbc','alipay','wechat','fund','cash'].map(icon=>({id:'p_'+icon,name:vaultIcons[icon],icon})),balances:{}});
+  function validateVault(vault) {
+    if (!vault || !Array.isArray(vault.institutions) || vault.institutions.length > 100 || !vault.balances || typeof vault.balances !== 'object' || Array.isArray(vault.balances)) throw Error('大金库格式不正确');
+    const ids = new Set();
+    const institutions = vault.institutions.map(i=>{
+      if (!i || !/^p_[\w-]{1,100}$/.test(i.id) || ids.has(i.id) || typeof i.name !== 'string' || !i.name.trim() || i.name.length>60 || !Object.hasOwn(vaultIcons,i.icon)) throw Error('资产机构信息不正确');
+      ids.add(i.id); return {id:i.id,name:i.name.trim(),icon:i.icon};
+    });
+    const balances = {};
+    for (const [m,row] of Object.entries(vault.balances)) {
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(m) || m<'1900-01' || m>'9999-12' || !row || typeof row!=='object' || Array.isArray(row)) throw Error('资产月份不正确');
+      balances[m]={};
+      for(const [id,value] of Object.entries(row)) {
+        if(!ids.has(id) || !validAmount(value) || value<0) throw Error('资产余额不正确');
+        balances[m][id]=value;
+      }
+    }
+    return {institutions,balances};
+  }
   function validate(data) {
-    if (!data || ![2,3,4,5,6].includes(data.version) || !Array.isArray(data.products) || data.products.length > 100 || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw Error('备份格式不正确');
+    if (!data || ![2,3,4,5,6,7].includes(data.version) || !Array.isArray(data.products) || data.products.length > 100 || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw Error('备份格式不正确');
     const ids = new Set();
     const products = data.products.map(p => {
       if (!p || typeof p.id !== 'string' || !/^p_[\w-]{1,100}$/.test(p.id) || ids.has(p.id) || typeof p.name !== 'string' || !p.name.trim() || p.name.length > 60 || !validAmount(p.principal) || p.principal < 0 || !validAmount(p.baseline)) throw Error('产品信息不正确');
@@ -65,13 +85,13 @@
     });
     const planning = data.version >= 6 ? data.planning : {salary:0,expenses:0,reserve:0,cash:0,target:0};
     if (!planning || !['salary','expenses','reserve','cash','target'].every(k => validAmount(planning[k]) && planning[k] >= 0)) throw Error('工资规划金额不正确');
-    return {version:6,products,records,principalChanges,lots:cleanLots,planning:Object.fromEntries(['salary','expenses','reserve','cash','target'].map(k=>[k,planning[k]]))};
+    return {version:7,vault:validateVault(data.version>=7?data.vault:emptyVault()),products,records,principalChanges,lots:cleanLots,planning:Object.fromEntries(['salary','expenses','reserve','cash','target'].map(k=>[k,planning[k]]))};
   }
   function load() {
     storageBroken = false;
     try { const raw = localStorage.getItem(KEY); if (raw !== null) return validate(JSON.parse(raw)); }
     catch { storageBroken = true; }
-    return {version:6,products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}};
+    return {version:7,vault:emptyVault(),products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}};
   }
   let data = load();
   function notify(text) { $('#toast').textContent = text; $('#toast').hidden = false; clearTimeout(timer); timer = setTimeout(() => { $('#toast').hidden = true; },4500); }
@@ -137,6 +157,7 @@
     });
     html += `</tbody><tfoot><tr><th>本月收益</th>${products.map((p,i) => `<td colspan="2" class="${color(monthly[i])}">${money(monthly[i])}</td>`).join('')}<td colspan="3" class="${color(monthly.reduce((s,n)=>s+n,0))}">${money(monthly.reduce((s,n)=>s+n,0))}</td></tr><tr><th>月末持仓金额</th>${products.map(p => `<td colspan="2">${money(principalAt(p,end)+lastValue(p,end))}</td>`).join('')}<td colspan="3">${money(principal+accumulated)}</td></tr></tfoot>`;
     $('#ledger').innerHTML = products.length ? html : '<tbody><tr><td class="empty-state"><h3>账本为空，从第一个产品开始</h3><p>点击「管理产品」添加产品，再点击「新增记录」填写当日累计收益。</p></td></tr></tbody>';
+    renderVault();
     renderTrends();
     renderAssets();
   }
@@ -168,14 +189,16 @@
     }).join('') : '<div class="empty-state"><h3>还没有理财产品</h3><p>先在「管理产品」中添加产品，再通过「新增记录」录入金额。</p></div>';
   }
   function switchPage(page) {
-    for (const name of ['ledger','trends','assets']) {
+    for (const name of ['ledger','trends','assets','vault']) {
       $(`#${name}-page`).hidden = name !== page;
       $(`#show-${name}`).setAttribute('aria-pressed',String(name === page));
     }
-    $('.summary').hidden = page === 'assets';
+    $('.summary').hidden = ['assets','vault'].includes(page);
+    $('.toolbar').hidden = page === 'vault';
   }
   $('#show-ledger').onclick=()=>switchPage('ledger');
   $('#show-trends').onclick=()=>switchPage('trends');
+  $('#show-vault').onclick=()=>switchPage('vault');
   $('#show-assets').onclick=()=>switchPage('assets');
   $('#trend-range').onchange=renderTrends;
   function renderRecordFields() {
@@ -250,9 +273,9 @@
     }
   };
   $('#clear-all').onclick = () => {
-    if (!confirm('清空全部产品、所有收益记录、本金变动、持仓明细和规划设置及本浏览器旧版账本？此操作不能撤销。')) return;
+    if (!confirm('清空全部产品、所有收益记录、本金变动、持仓明细、大金库和规划设置及本浏览器旧版账本？此操作不能撤销。')) return;
     const wasBroken=storageBroken; storageBroken=false;
-    if (!commit({version:6,products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}})) { storageBroken=wasBroken; return; }
+    if (!commit({version:7,vault:emptyVault(),products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}})) { storageBroken=wasBroken; return; }
     try { localStorage.removeItem('fangcun-ledger-v1'); $('#legacy-backup').hidden=true; }
     catch { notify('收益表已清空，但旧版账本清除失败'); render(); return; }
     render(); notify('全部数据已清空，可重新添加产品');
@@ -325,7 +348,7 @@
   $('#import-file').onchange = async event => {
     const file=event.target.files?.[0];if(!file)return;
     try {if(file.size>10*1024*1024)throw Error('备份文件不能超过 10MB');const imported=validate(JSON.parse(await file.text()));
-      if(!confirm('导入将替换当前收益表的全部产品和记录，建议先导出备份。确定导入？'))return;
+      if(!confirm('导入将替换当前账本的全部产品、记录和大金库数据，建议先导出备份。确定导入？'))return;
       const wasBroken=storageBroken;storageBroken=false;
       if(commit(imported)){render();notify('备份已恢复');}else storageBroken=wasBroken;
     }catch(error){notify(`无法导入：${error.message}`);}finally{event.target.value='';}
@@ -336,6 +359,56 @@
     for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[principalChange(p,date)===null?'':principalChange(p,date)/100,delta(p,date)===null?'':delta(p,date)/100,changeFromYesterday(p,date)===null?'':changeFromYesterday(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',daily(date)===null?'':daily(date)/100]);}
     const days=monthDates();rows.push(['本月收益',...data.products.flatMap(p=>['',days.reduce((sum,date)=>sum+(changeFromYesterday(p,date)??0),0)/100,'']),'',days.map(d=>daily(d)).filter(v=>v!==null).reduce((s,v)=>s+v,0)/100]);
     download('\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8',`收益记录-${month}.csv`);
+  };
+  function vaultIcon(i) {
+    if(i.icon==='wechat') return '<svg class="vault-icon" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#07b75b"/><path fill="white" d="M14 6c-6 0-10 3.5-10 8 0 2.4 1.3 4.5 3.5 6L6.5 23l4-1.8 2 .5c-.5-1-.7-2-.7-3 0-4.6 4.2-8.2 9.7-8.2h.6C20.5 7.8 17.5 6 14 6Z"/><path fill="white" d="M22 12c-4.8 0-8 2.9-8 6.5s3.2 6.5 8 6.5l2.5-.4 3 1.4-.7-2.5c1.8-1.2 2.7-3 2.7-5 0-3.6-3-6.5-7.5-6.5Z"/><g fill="#07b75b"><circle cx="10" cy="12" r="1.2"/><circle cx="17" cy="12" r="1.2"/><circle cx="19" cy="17" r="1"/><circle cx="25" cy="17" r="1"/></g></svg>';
+    const symbols = {alipay:'支',wechat:'●●',fund:'⌂',cash:'¥',other:'▦'};
+    return symbols[i.icon] ? `<span class="vault-icon vault-icon-${i.icon}" aria-hidden="true">${symbols[i.icon]}</span>` : `<img class="vault-icon" src="assets/banks/${i.icon}.svg" alt="">`;
+  }
+  function renderVault() {
+    const year = month.slice(0,4), {institutions,balances} = data.vault;
+    $('#vault-year').value=year;
+    $('#vault-table').innerHTML=`<thead><tr><th scope="col">${year} 年 / 月份</th>${institutions.map(i=>`<th scope="col"><span class="vault-bank">${vaultIcon(i)}${esc(i.name)}</span></th>`).join('')}<th scope="col" class="vault-total">总计（元）</th></tr></thead><tbody>${Array.from({length:12},(_,n)=>{
+      const m=year+'-'+String(n+1).padStart(2,'0'), row=balances[m]||{}, values=Object.values(row), total=values.reduce((sum,v)=>sum+cents(v),0);
+      return `<tr><th scope="row">${n+1} 月</th>${institutions.map(i=>`<td><button class="vault-cell" data-vault-month="${m}" data-vault-id="${i.id}" aria-label="${m} ${esc(i.name)} 余额，点击编辑">${Object.hasOwn(row,i.id)?money(cents(row[i.id])):'—'}</button></td>`).join('')}<td class="vault-total">${values.length?money(total):'—'}${values.length && values.length<institutions.length?'<small>部分已录入</small>':''}</td></tr>`;
+    }).join('')}</tbody>`;
+  }
+  $('#vault-year').onchange=()=>{const y=Number($('#vault-year').value);if(Number.isInteger(y)&&y>=1900&&y<=9999){month=y+'-'+month.slice(5);render();}else $('#vault-year').value=month.slice(0,4);};
+  $('#vault-prev').onclick=()=>{if(Number(month.slice(0,4))>1900){month=(Number(month.slice(0,4))-1)+'-'+month.slice(5);render();}};
+  $('#vault-next').onclick=()=>{if(Number(month.slice(0,4))<9999){month=(Number(month.slice(0,4))+1)+'-'+month.slice(5);render();}};
+  $('#vault-backup').onclick=()=>$('#backup').onclick();
+  $('#vault-restore').onclick=()=>$('#restore').onclick();
+  let vaultCell=null;
+  $('#vault-table').onclick=event=>{
+    const button=event.target.closest('[data-vault-id]');if(!button)return;
+    vaultCell={month:button.dataset.vaultMonth,id:button.dataset.vaultId};
+    const institution=data.vault.institutions.find(i=>i.id===vaultCell.id);
+    $('#vault-cell-title').textContent=`${vaultCell.month} · ${institution.name}`;
+    $('#vault-amount').value=data.vault.balances[vaultCell.month]?.[vaultCell.id]??'';
+    $('#vault-error').textContent='';$('#vault-cell-dialog').showModal();$('#vault-amount').focus();
+  };
+  $('#vault-cell-cancel').onclick=()=>$('#vault-cell-dialog').close();
+  $('#vault-cell-form').onsubmit=event=>{
+    event.preventDefault();if(!vaultCell)return;
+    const raw=$('#vault-amount').value.trim(),value=Number(raw),next=structuredClone(data);
+    if(raw && (!validAmount(value)||value<0)){$('#vault-error').textContent='请输入非负金额，最多两位小数';return;}
+    if(!next.vault.institutions.some(i=>i.id===vaultCell.id)){$('#vault-error').textContent='该机构已不存在，请关闭后重试';return;}
+    const row=next.vault.balances[vaultCell.month]||{};
+    if(raw)row[vaultCell.id]=value;else delete row[vaultCell.id];
+    next.vault.balances[vaultCell.month]=row;
+    if(commit(next)){render();$('#vault-cell-dialog').close();notify('资产余额已保存');}
+  };
+  $('#add-institution').onclick=()=>{
+    $('#institution-name').value='';$('#institution-error').textContent='';
+    $('#institution-icon').innerHTML=Object.entries(vaultIcons).map(([key,name])=>`<option value="${key}">${name}</option>`).join('');
+    $('#institution-icon').value='other';$('#institution-dialog').showModal();
+  };
+  $('#institution-cancel').onclick=()=>$('#institution-dialog').close();
+  $('#institution-form').onsubmit=event=>{
+    event.preventDefault();const name=$('#institution-name').value.trim(),next=structuredClone(data);
+    if(next.vault.institutions.some(i=>i.name===name)){$('#institution-error').textContent='已存在同名机构';return;}
+    next.vault.institutions.push({id:uid(),name,icon:$('#institution-icon').value});
+    try{const clean=validate(next);if(commit(clean)){render();$('#institution-dialog').close();notify('资产机构已添加');}}catch(error){$('#institution-error').textContent=error.message;}
   };
   // Lots describe existing positions; recording them never books a second purchase.
   let editingLot = null, selectedMaturity = '', simulation = null;
@@ -359,9 +432,15 @@
     const overdue=active.filter(l=>l.maturityDate && l.maturityDate<today), undated=active.filter(l=>!l.maturityDate);
     $('#asset-summary').innerHTML=[['已登记持仓本金',money(total)+' 元'],['窗口内待到期本金',money(fixed)+' 元'],['无到期月份',months.filter(m=>!m.principal).length+' 个月'],['最大单月集中度',fixed?Math.round(Math.max(...months.map(m=>m.principal))/fixed*100)+'%':'—']].map(([label,value])=>`<div><span>${label}</span><strong>${value}</strong></div>`).join('');
     $('#asset-alert').textContent = `${today} 更新 · 当前月仅统计今天及之后的到期。${overdue.length?` ${overdue.length} 笔已到期未确认到账，请核实后编辑状态。`:''}${undated.length?` ${undated.length} 笔活期 / 未定到期日，未计入月份分布。`:''}${data.lots.some(l=>l.status==='holding' && l.buyDate>today)?' 未来买入记录不计入当前持仓。':''}`;
+    const years=[...new Set(months.map(m=>m.key.slice(0,4)))];
+    const year=years.includes($('#maturity-year').value)?$('#maturity-year').value:years[0];
+    $('#maturity-year').innerHTML=years.map(y=>`<option value="${y}">${y} 年</option>`).join('');
+    $('#maturity-year').value=year;
+    const visibleMonths=months.filter(m=>m.key.startsWith(year));
     const max=Math.max(cents(data.planning.target),...months.map(m=>m.principal),1);
-    if (!months.some(m=>m.key===selectedMaturity)) selectedMaturity=(months.find(m=>m.gap>0 || !m.principal)||months[0]).key;
-    $('#maturity-chart').innerHTML=months.map(m=>`<button class="maturity-column ${!m.principal?'empty-month':''} ${selectedMaturity===m.key?'selected':''}" data-maturity="${m.key}" aria-pressed="${selectedMaturity===m.key}" aria-label="${m.key} 到期本金 ${money(m.principal)} 元，缺口 ${money(m.gap)} 元"><span class="maturity-value">${m.principal?money(m.principal/10000)+' 万':'无到期'}</span><span class="maturity-track"><span class="maturity-bar" style="height:${m.principal/max*100}%"></span>${data.planning.target>0?`<span class="maturity-target" style="bottom:${cents(data.planning.target)/max*100}%"></span>`:''}</span><strong>${m.key.slice(2).replace('-',' / ')}</strong><small>${m.gap?'缺 '+money(m.gap/10000)+' 万':m.principal?'已覆盖':'待安排'}</small></button>`).join('');
+    if (!visibleMonths.some(m=>m.key===selectedMaturity)) selectedMaturity=(visibleMonths.find(m=>m.gap>0 || !m.principal)||visibleMonths[0]).key;
+    const column = m=>`<button class="maturity-column ${!m.principal?'empty-month':''} ${selectedMaturity===m.key?'selected':''}" data-maturity="${m.key}" aria-pressed="${selectedMaturity===m.key}" aria-label="${m.key} 到期本金 ${money(m.principal)} 元，缺口 ${money(m.gap)} 元"><span class="maturity-value">${m.principal?money(m.principal/10000)+' 万':'无到期'}</span><span class="maturity-track"><span class="maturity-bar" style="height:${m.principal/max*100}%"></span>${data.planning.target>0?`<span class="maturity-target" style="bottom:${cents(data.planning.target)/max*100}%"></span>`:''}</span><strong>${m.key.slice(2).replace('-',' / ')}</strong><small>${m.gap?'缺 '+money(m.gap/10000)+' 万':m.principal?'已覆盖':'待安排'}</small></button>`;
+    $('#maturity-chart').innerHTML=`<section class="maturity-year"><div class="maturity-year-months">${visibleMonths.map(column).join('')}</div></section>`;
     const selected=months.find(m=>m.key===selectedMaturity);
     $('#maturity-detail').innerHTML=`<h3>${selected.key} · 到期明细</h3><p>本金 ${money(selected.principal)} 元${data.planning.target>0?` · 距月目标还差 ${money(selected.gap)} 元`:' · 设置月目标后计算缺口'}</p>${selected.lots.length?`<ul>${selected.lots.map(l=>`<li>${esc(data.products.find(p=>p.id===l.productId).name)} · ${l.maturityDate} · 本金 ${money(cents(l.amount))} 元${l.expected!==null?` · 预计本息 ${money(cents(l.expected))} 元`:''}</li>`).join('')}</ul>`:'<p>本月尚无已登记产品到期，可在下方试算适合的投资期限。</p>'}`;
     $('#asset-lots').innerHTML=data.lots.length?`<table><thead><tr><th>产品 / 批次</th><th>买入日</th><th>本金（元）</th><th>到期日</th><th>预计本息（元）</th><th>状态</th><th>操作</th></tr></thead><tbody>${[...data.lots].sort((a,b)=>(a.maturityDate||'9999').localeCompare(b.maturityDate||'9999')).map(l=>`<tr><th>${esc(data.products.find(p=>p.id===l.productId).name)}</th><td>${l.buyDate}</td><td>${money(cents(l.amount))}</td><td>${l.maturityDate||'活期 / 未定'}</td><td>${l.expected===null?'未填写':money(cents(l.expected))}</td><td>${l.status==='received'?'已到账':l.buyDate>today?'未来买入':l.maturityDate && l.maturityDate<today?'到期待核实':'持有中'}</td><td><button data-edit-lot="${l.id}">编辑</button> <button data-delete-lot="${l.id}">删除</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty-state"><h3>把每一笔钱的到期日排清楚</h3><p>先添加产品，再登记买入批次；同一产品可有多笔持仓。现有本金和收益不会被重复记账。</p></div>';
@@ -383,9 +462,10 @@
     simulation={budget,month:m,buy,last};
     $('#plan-result').textContent='填写候选产品的实际到期日和计划金额，查看投放前后变化。';
   }
+  $('#maturity-year').onchange=renderAssets;
   $('#asset-horizon').onchange=renderAssets;
   $('#maturity-chart').onclick=event=>{const button=event.target.closest('[data-maturity]');if(button){selectedMaturity=button.dataset.maturity;renderAssets();}};
-  $('#plan-target-month').onchange=()=>{selectedMaturity=$('#plan-target-month').value;renderAssets();};
+  $('#plan-target-month').onchange=()=>{selectedMaturity=$('#plan-target-month').value;$('#maturity-year').value=selectedMaturity.slice(0,4);renderAssets();};
   $('#plan-buy-date').onchange=renderPlan;
   $('#planning-form').onsubmit=event=>{
     event.preventDefault(); const next=structuredClone(data);
@@ -428,6 +508,7 @@
   window.addEventListener('storage',event=>{if(event.key===KEY){data=load();render();notify('已同步此浏览器另一窗口的修改');}});
   render();
   if (location.hash === '#trends') switchPage('trends');
+  if (location.hash === '#vault') switchPage('vault');
   if (location.hash === '#assets') switchPage('assets');
   // A reset link is explicit user intent; ordinary visits never clear saved records.
   if (new URLSearchParams(location.search).get('reset') === '1') {
