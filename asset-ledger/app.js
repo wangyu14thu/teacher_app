@@ -10,10 +10,11 @@
   const uid = () => `p_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
   const validAmount = (n, limit = 1e9) => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= limit && Math.abs(n * 100 - Math.round(n * 100)) < .0001;
   const validDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= '1900-01-01' && d <= '9999-12-31' && new Date(`${d}T12:00:00Z`).toISOString().slice(0,10) === d;
+  const monthEnd = m => `${m}-${String(new Date(Date.UTC(Number(m.slice(0,4)),Number(m.slice(5,7)),0)).getUTCDate()).padStart(2,'0')}`;
   let month = localDate().slice(0,7), timer, draft, storageBroken = false;
   const vaultIcons = {abc:'农业银行',bocom:'交通银行',icbc:'工商银行',alipay:'支付宝',wechat:'微信',fund:'公积金',cash:'现金',other:'其他机构',boc:'中国银行',ccb:'建设银行',cmb:'招商银行',psbc:'邮储银行'};
   const emptyVault = () => ({institutions:['abc','bocom','icbc','alipay','wechat','fund','cash'].map(icon=>({id:'p_'+icon,name:vaultIcons[icon],icon})),balances:{}});
-  function validateVault(vault) {
+  function validateVault(vault, version) {
     if (!vault || !Array.isArray(vault.institutions) || vault.institutions.length > 100 || !vault.balances || typeof vault.balances !== 'object' || Array.isArray(vault.balances)) throw Error('大金库格式不正确');
     const ids = new Set();
     const institutions = vault.institutions.map(i=>{
@@ -21,18 +22,21 @@
       ids.add(i.id); return {id:i.id,name:i.name.trim(),icon:i.icon};
     });
     const balances = {};
-    for (const [m,row] of Object.entries(vault.balances)) {
-      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(m) || m<'1900-01' || m>'9999-12' || !row || typeof row!=='object' || Array.isArray(row)) throw Error('资产月份不正确');
-      balances[m]={};
+    for (const [key,row] of Object.entries(vault.balances)) {
+      const legacy = version === 7;
+      if (legacy ? !/^\d{4}-(0[1-9]|1[0-2])$/.test(key) || key<'1900-01' || key>'9999-12' : !validDate(key) || (key.slice(8) !== '01' && key !== monthEnd(key.slice(0,7)))) throw Error('资产日期不正确');
+      if (!row || typeof row!=='object' || Array.isArray(row)) throw Error('资产余额不正确');
+      const date = legacy ? monthEnd(key) : key;
+      balances[date]={};
       for(const [id,value] of Object.entries(row)) {
         if(!ids.has(id) || !validAmount(value) || value<0) throw Error('资产余额不正确');
-        balances[m][id]=value;
+        balances[date][id]=value;
       }
     }
     return {institutions,balances};
   }
   function validate(data) {
-    if (!data || ![2,3,4,5,6,7].includes(data.version) || !Array.isArray(data.products) || data.products.length > 100 || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw Error('备份格式不正确');
+    if (!data || ![2,3,4,5,6,7,8].includes(data.version) || !Array.isArray(data.products) || data.products.length > 100 || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw Error('备份格式不正确');
     const ids = new Set();
     const products = data.products.map(p => {
       if (!p || typeof p.id !== 'string' || !/^p_[\w-]{1,100}$/.test(p.id) || ids.has(p.id) || typeof p.name !== 'string' || !p.name.trim() || p.name.length > 60 || !validAmount(p.principal) || p.principal < 0 || !validAmount(p.baseline)) throw Error('产品信息不正确');
@@ -85,13 +89,13 @@
     });
     const planning = data.version >= 6 ? data.planning : {salary:0,expenses:0,reserve:0,cash:0,target:0};
     if (!planning || !['salary','expenses','reserve','cash','target'].every(k => validAmount(planning[k]) && planning[k] >= 0)) throw Error('工资规划金额不正确');
-    return {version:7,vault:validateVault(data.version>=7?data.vault:emptyVault()),products,records,principalChanges,lots:cleanLots,planning:Object.fromEntries(['salary','expenses','reserve','cash','target'].map(k=>[k,planning[k]]))};
+    return {version:8,vault:validateVault(data.version>=7?data.vault:emptyVault(),data.version),products,records,principalChanges,lots:cleanLots,planning:Object.fromEntries(['salary','expenses','reserve','cash','target'].map(k=>[k,planning[k]]))};
   }
   function load() {
     storageBroken = false;
     try { const raw = localStorage.getItem(KEY); if (raw !== null) return validate(JSON.parse(raw)); }
     catch { storageBroken = true; }
-    return {version:7,vault:emptyVault(),products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}};
+    return {version:8,vault:emptyVault(),products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}};
   }
   let data = load();
   function notify(text) { $('#toast').textContent = text; $('#toast').hidden = false; clearTimeout(timer); timer = setTimeout(() => { $('#toast').hidden = true; },4500); }
@@ -275,7 +279,7 @@
   $('#clear-all').onclick = () => {
     if (!confirm('清空全部产品、所有收益记录、本金变动、持仓明细、大金库和规划设置及本浏览器旧版账本？此操作不能撤销。')) return;
     const wasBroken=storageBroken; storageBroken=false;
-    if (!commit({version:7,vault:emptyVault(),products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}})) { storageBroken=wasBroken; return; }
+    if (!commit({version:8,vault:emptyVault(),products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}})) { storageBroken=wasBroken; return; }
     try { localStorage.removeItem('fangcun-ledger-v1'); $('#legacy-backup').hidden=true; }
     catch { notify('收益表已清空，但旧版账本清除失败'); render(); return; }
     render(); notify('全部数据已清空，可重新添加产品');
@@ -368,9 +372,12 @@
   function renderVault() {
     const year = month.slice(0,4), {institutions,balances} = data.vault;
     $('#vault-year').value=year;
-    $('#vault-table').innerHTML=`<thead><tr><th scope="col">${year} 年 / 月份</th>${institutions.map(i=>`<th scope="col"><span class="vault-bank">${vaultIcon(i)}${esc(i.name)}</span></th>`).join('')}<th scope="col" class="vault-total">总计（元）</th></tr></thead><tbody>${Array.from({length:12},(_,n)=>{
-      const m=year+'-'+String(n+1).padStart(2,'0'), row=balances[m]||{}, values=Object.values(row), total=values.reduce((sum,v)=>sum+cents(v),0);
-      return `<tr><th scope="row">${n+1} 月</th>${institutions.map(i=>`<td><button class="vault-cell" data-vault-month="${m}" data-vault-id="${i.id}" aria-label="${m} ${esc(i.name)} 余额，点击编辑">${Object.hasOwn(row,i.id)?money(cents(row[i.id])):'—'}</button></td>`).join('')}<td class="vault-total">${values.length?money(total):'—'}${values.length && values.length<institutions.length?'<small>部分已录入</small>':''}</td></tr>`;
+    $('#vault-table').innerHTML=`<thead><tr><th scope="col">日期</th>${institutions.map(i=>`<th scope="col"><span class="vault-bank">${vaultIcon(i)}${esc(i.name)}</span></th>`).join('')}<th scope="col" class="vault-total">总计（元）</th></tr></thead><tbody>${Array.from({length:12},(_,n)=>{
+      const m=year+'-'+String(n+1).padStart(2,'0');
+      return [m+'-01',monthEnd(m)].map((date,index)=>{
+        const row=balances[date]||{}, values=Object.values(row), total=values.reduce((sum,v)=>sum+cents(v),0);
+        return `<tr class="vault-${index?'month-end':'month-start'}"><th scope="row">${n+1} 月 ${index?'月末':'月初'} · ${Number(date.slice(8))} 日</th>${institutions.map(i=>`<td><button class="vault-cell" data-vault-date="${date}" data-vault-id="${i.id}" aria-label="${date} ${esc(i.name)} 余额，点击编辑">${Object.hasOwn(row,i.id)?money(cents(row[i.id])):'—'}</button></td>`).join('')}<td class="vault-total">${values.length?money(total):'—'}${values.length && values.length<institutions.length?'<small>部分已录入</small>':''}</td></tr>`;
+      }).join('');
     }).join('')}</tbody>`;
   }
   $('#vault-year').onchange=()=>{const y=Number($('#vault-year').value);if(Number.isInteger(y)&&y>=1900&&y<=9999){month=y+'-'+month.slice(5);render();}else $('#vault-year').value=month.slice(0,4);};
@@ -381,10 +388,10 @@
   let vaultCell=null;
   $('#vault-table').onclick=event=>{
     const button=event.target.closest('[data-vault-id]');if(!button)return;
-    vaultCell={month:button.dataset.vaultMonth,id:button.dataset.vaultId};
+    vaultCell={date:button.dataset.vaultDate,id:button.dataset.vaultId};
     const institution=data.vault.institutions.find(i=>i.id===vaultCell.id);
-    $('#vault-cell-title').textContent=`${vaultCell.month} · ${institution.name}`;
-    $('#vault-amount').value=data.vault.balances[vaultCell.month]?.[vaultCell.id]??'';
+    $('#vault-cell-title').textContent=`${vaultCell.date} · ${institution.name}`;
+    $('#vault-amount').value=data.vault.balances[vaultCell.date]?.[vaultCell.id]??'';
     $('#vault-error').textContent='';$('#vault-cell-dialog').showModal();$('#vault-amount').focus();
   };
   $('#vault-cell-cancel').onclick=()=>$('#vault-cell-dialog').close();
@@ -393,9 +400,9 @@
     const raw=$('#vault-amount').value.trim(),value=Number(raw),next=structuredClone(data);
     if(raw && (!validAmount(value)||value<0)){$('#vault-error').textContent='请输入非负金额，最多两位小数';return;}
     if(!next.vault.institutions.some(i=>i.id===vaultCell.id)){$('#vault-error').textContent='该机构已不存在，请关闭后重试';return;}
-    const row=next.vault.balances[vaultCell.month]||{};
+    const row=next.vault.balances[vaultCell.date]||{};
     if(raw)row[vaultCell.id]=value;else delete row[vaultCell.id];
-    next.vault.balances[vaultCell.month]=row;
+    if(Object.keys(row).length)next.vault.balances[vaultCell.date]=row;else delete next.vault.balances[vaultCell.date];
     if(commit(next)){render();$('#vault-cell-dialog').close();notify('资产余额已保存');}
   };
   $('#add-institution').onclick=()=>{
@@ -416,7 +423,6 @@
     const date = new Date(`${start}-01T12:00:00Z`); date.setUTCMonth(date.getUTCMonth()+n);
     return date.toISOString().slice(0,7);
   };
-  const monthEnd = m => { const d=new Date(`${m}-01T12:00:00Z`);d.setUTCMonth(d.getUTCMonth()+1);d.setUTCDate(0);return d.toISOString().slice(0,10); };
   const daysBetween = (a,b) => Math.round((Date.parse(b)-Date.parse(a))/86400000);
   function assetMonths() {
     const today=localDate(), start=today.slice(0,7), count=Number($('#asset-horizon').value)||18;
