@@ -40,7 +40,7 @@ test('records are cumulative income; daily rise is the difference from yesterday
   assert.match(a.node('#ledger').innerHTML,/>25.00<\/td><td class="delta loss"[^>]*>-5.00/);
   assert.match(await a.csv(),/"2026-10-03","","25","-5","","0","5","25","0"/);
   const restored=app(await a.backup());
-  assert.equal(restored.read().version,7);
+  assert.equal(restored.read().version,8);
   assert.match(restored.fields('2026-10-03'),/value="25.00"/);
 });
 test('legacy cumulative data converts chronologically, including gaps and nonzero baseline', async () => {
@@ -48,12 +48,12 @@ test('legacy cumulative data converts chronologically, including gaps and nonzer
   assert.match(a.fields('2026-09-30'),/value="15.00"/);
   assert.match(a.fields('2026-10-03'),/value="12.00"/);
   const backup=await a.backup();
-  assert.equal(backup.version,7);
+  assert.equal(backup.version,8);
   assert.equal(backup.records['2026-10-01'].p_a,20);
   a.save('2026-10-02',{p_a:18});
   assert.equal(a.node('#return-total').textContent,'10.00');
   assert.equal(a.node('#month-total').textContent,'-3.00');
-  assert.equal(a.read().version,7);
+  assert.equal(a.read().version,8);
 });
 test('blank products remove only that date; invalid precision is rejected', () => {
   const a=app({version:4,products,records:{'2026-10-01':{p_a:5,p_b:7},'2026-10-02':{p_a:4,p_b:3}}});
@@ -114,7 +114,7 @@ test('version 3 daily return records migrate to cumulative values once', async (
   assert.match(a.fields('2026-10-02'),/value="13.00"/);
   assert.match(a.fields('2026-10-04'),/value="13.00"/);
   assert.equal(a.read().version,3);
-  assert.equal((await a.backup()).version,7);
+  assert.equal((await a.backup()).version,8);
 });
 
 test('monthly income sums visible daily rises and excludes dates without a computable rise', async () => {
@@ -198,23 +198,41 @@ test('invalid imported maturity data is rejected without replacing the ledger',a
 
 test('vault snapshots migrate, save independently, round-trip and reject invalid backups',async()=>{
   const a=app(assets([]));
-  const edit=(m,id,amount)=>{
-    a.node('#vault-table').onclick({target:{closest:()=>({dataset:{vaultMonth:m,vaultId:id}})}});
+  const edit=(date,id,amount)=>{
+    a.node('#vault-table').onclick({target:{closest:()=>({dataset:{vaultDate:date,vaultId:id}})}});
     a.node('#vault-amount').value=amount;submit(a,'#vault-cell-form');
   };
-  edit('2026-10','p_abc','123.45');edit('2026-10','p_cash','0');edit('2026-11','p_abc','200');
-  assert.equal(a.read().vault.balances['2026-10'].p_abc,123.45);
-  assert.equal(a.read().vault.balances['2026-10'].p_cash,0);
+  assert.match(a.node('#vault-table').innerHTML,/<th scope="col">日期<\/th>/);
+  assert.match(a.node('#vault-table').innerHTML,/2 月 月末 · 28 日/);
+  edit('2026-10-01','p_abc','123.45');edit('2026-10-31','p_cash','0');edit('2026-11-30','p_abc','200');
+  assert.equal(a.read().vault.balances['2026-10-01'].p_abc,123.45);
+  assert.equal(a.read().vault.balances['2026-10-31'].p_cash,0);
   assert.deepEqual(a.read().records,{});
-  edit('2026-10','p_abc','-1');assert.equal(a.read().vault.balances['2026-10'].p_abc,123.45);
+  edit('2026-10-01','p_abc','-1');assert.equal(a.read().vault.balances['2026-10-01'].p_abc,123.45);
   const backup=await a.backup(),restored=app(backup);
   assert.deepEqual((await restored.backup()).vault,backup.vault);
-  edit('2026-10','p_abc','');assert.equal(Object.hasOwn(a.read().vault.balances['2026-10'],'p_abc'),false);
+  edit('2026-10-01','p_abc','');assert.equal(Object.hasOwn(a.read().vault.balances,'2026-10-01'),false);
   a.node('#add-institution').onclick();a.node('#institution-name').value='我的银行';a.node('#institution-icon').value='ccb';submit(a,'#institution-form');
   assert.equal(a.read().vault.institutions.at(-1).name,'我的银行');
-  const before=a.read();backup.vault.balances['2026-13']={p_cash:5};
+  const before=a.read();backup.vault.balances['2026-10-15']={p_cash:5};
   await a.node('#import-file').onchange({target:{files:[{size:100,text:async()=>JSON.stringify(backup)}],value:'file'}});
   assert.deepEqual(a.read(),before);
+});
+
+test('version 7 monthly vault values migrate to month end, including leap February',async()=>{
+  const old=assets([]);
+  old.version=7;
+  old.vault={institutions:[{id:'p_cash',name:'现金',icon:'cash'}],balances:{'2024-02':{p_cash:25},'2026-04':{p_cash:40}}};
+  const a=app(old);
+  a.node('#vault-table').onclick({target:{closest:()=>({dataset:{vaultDate:'2024-02-01',vaultId:'p_cash'}})}});
+  a.node('#vault-amount').value='0';submit(a,'#vault-cell-form');
+  const backup=await a.backup();
+  assert.equal(backup.version,8);
+  assert.equal(backup.vault.balances['2024-02-29'].p_cash,25);
+  assert.equal(backup.vault.balances['2026-04-30'].p_cash,40);
+  assert.equal(backup.vault.balances['2024-02'],undefined);
+  assert.equal(backup.vault.balances['2024-02-01'].p_cash,0);
+  assert.deepEqual((await app(backup).backup()).vault,backup.vault);
 });
 
 test('maturity calendar selects one year and keeps detail in the selected year',()=>{

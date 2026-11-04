@@ -39,5 +39,6 @@ h1{color:#c44343!important}
 @media(max-width:1100px){.maturity-year-months{grid-template-columns:repeat(6,minmax(0,1fr))}}@media(max-width:520px){.maturity-year-months{grid-template-columns:repeat(3,minmax(0,1fr))}.view-tabs{flex-wrap:wrap}.vault-tools{align-items:center}}
 
 img.vault-icon{background:#fff;border-radius:50%;padding:3px}
+.vault-month-start th,.vault-month-start td{border-top:2px solid #cbd8e8}.vault-month-start th{font-weight:600;color:#344f73}.vault-month-end th{color:#65758a}#vault-table th:first-child{min-width:145px}
 
 .maturity-year-picker{display:flex;align-items:center;gap:10px;margin-top:24px;color:#4269a9;font-weight:600}.maturity-year-picker select{min-width:110px}
