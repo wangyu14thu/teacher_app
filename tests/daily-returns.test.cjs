@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const source = readFileSync(`${__dirname}/../app.js`, 'utf8');
 const KEY = 'fangcun-returns-v2';
 const products = [{id:'p_a',name:'产品 A',principal:1000,baseline:10}, {id:'p_b',name:'产品 B',principal:500,baseline:0}];
-function app(initial) {
+function app(initial, options = {}) {
   const nodes = new Map(), storage = new Map([[KEY, JSON.stringify(initial)]]);
   let inputs = [], exported;
   const node = selector => {
@@ -17,7 +17,7 @@ function app(initial) {
     localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     window:{addEventListener(){}},location:{hash:'',search:'',protocol:'file:'},navigator:{},
     URL:{createObjectURL:blob=>(exported=blob,'blob:test'),revokeObjectURL(){}},Blob,URLSearchParams,
-    structuredClone,Intl,Date:class extends Date {constructor(...args){super(...(args.length?args:['2026-10-30T08:00:00Z']));}},setTimeout:()=>0,clearTimeout(){},confirm:()=>true});
+    structuredClone,Intl,Date:class extends Date {constructor(...args){super(...(args.length?args:['2026-10-30T08:00:00Z']));}},setTimeout:()=>0,clearTimeout(){},confirm:options.confirm||(()=>true)});
   return {node,read:()=>JSON.parse(storage.get(KEY)),
     save(date, values){node('#record-date').value=date;inputs=Object.entries(values).map(([id,value])=>({dataset:{recordProduct:id},value:String(value)}));node('#record-form').onsubmit({preventDefault(){}});},
     changePrincipal(date, values){node('#principal-change-date').value=date;node('#principal-change-date').onchange();inputs=Object.entries(values).map(([id,value])=>({dataset:{principalProduct:id},value:String(value)}));node('#principal-change-form').onsubmit({preventDefault(){}});},
@@ -247,4 +247,29 @@ test('maturity calendar selects one year and keeps detail in the selected year',
  assert.equal(a.node('#maturity-year').value,'2028');
  a.node('#asset-horizon').value='12';a.node('#asset-horizon').onchange();
  assert.equal(a.node('#maturity-year').value,'2026');
+});
+
+
+test('clearing a vault row removes all its balances but preserves other dates and ledger data',async()=>{
+  const initial=assets([]);
+  initial.version=8;
+  initial.vault={institutions:[{id:'p_cash',name:'现金',icon:'cash'},{id:'p_abc',name:'农业银行',icon:'abc'}],balances:{
+    '2026-10-01':{p_cash:0,p_abc:123},'2026-10-31':{p_cash:456},'2025-10-01':{p_cash:789}
+  }};
+  const click=a=>a.node('#vault-table').onclick({target:{closest:selector=>selector==='[data-vault-clear]'?{dataset:{vaultClear:'2026-10-01'}}:null}});
+  const cancelled=app(initial,{confirm:()=>false});
+  click(cancelled);assert.deepEqual(cancelled.read(),initial);
+  const a=app(initial);click(a);
+  const expected=structuredClone(initial);delete expected.vault.balances['2026-10-01'];
+  assert.deepEqual(a.read(),expected);
+  assert.match(a.node('#vault-table').innerHTML,/data-vault-clear="2026-10-01"[^>]*disabled/);
+  assert.deepEqual((await app(await a.backup()).backup()).vault,expected.vault);
+});
+
+test('vault and trends hide footer notes and switching back restores them',()=>{
+  const a=app(assets([]));
+  for(const page of ['vault','trends']){
+    a.node(`#show-${page}`).onclick();assert.equal(a.node('footer').hidden,true);
+    a.node('#show-ledger').onclick();assert.equal(a.node('footer').hidden,false);
+  }
 });
