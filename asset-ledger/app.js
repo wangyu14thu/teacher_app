@@ -199,6 +199,8 @@
     }
     $('.summary').hidden = ['assets','vault'].includes(page);
     $('.toolbar').hidden = page === 'vault';
+    $('#vault-toolbar').hidden = page !== 'vault';
+    $('footer').hidden = ['trends','vault'].includes(page);
   }
   $('#show-ledger').onclick=()=>switchPage('ledger');
   $('#show-trends').onclick=()=>switchPage('trends');
@@ -376,7 +378,7 @@
       const m=year+'-'+String(n+1).padStart(2,'0');
       return [m+'-01',monthEnd(m)].map((date,index)=>{
         const row=balances[date]||{}, values=Object.values(row), total=values.reduce((sum,v)=>sum+cents(v),0);
-        return `<tr class="vault-${index?'month-end':'month-start'}"><th scope="row">${n+1} 月 ${index?'月末':'月初'} · ${Number(date.slice(8))} 日</th>${institutions.map(i=>`<td><button class="vault-cell" data-vault-date="${date}" data-vault-id="${i.id}" aria-label="${date} ${esc(i.name)} 余额，点击编辑">${Object.hasOwn(row,i.id)?money(cents(row[i.id])):'—'}</button></td>`).join('')}<td class="vault-total">${values.length?money(total):'—'}${values.length && values.length<institutions.length?'<small>部分已录入</small>':''}</td></tr>`;
+        return `<tr class="vault-${index?'month-end':'month-start'}"><th scope="row">${n+1} 月 ${index?'月末':'月初'} · ${Number(date.slice(8))} 日<button type="button" class="vault-clear-row" data-vault-clear="${date}" aria-label="清除 ${date} 所有机构余额" ${values.length?'':'disabled'}>清除整行</button></th>${institutions.map(i=>`<td><button class="vault-cell" data-vault-date="${date}" data-vault-id="${i.id}" aria-label="${date} ${esc(i.name)} 余额，点击编辑">${Object.hasOwn(row,i.id)?money(cents(row[i.id])):'—'}</button></td>`).join('')}<td class="vault-total">${values.length?money(total):'—'}${values.length && values.length<institutions.length?'<small>部分已录入</small>':''}</td></tr>`;
       }).join('');
     }).join('')}</tbody>`;
   }
@@ -387,6 +389,16 @@
   $('#vault-restore').onclick=()=>$('#restore').onclick();
   let vaultCell=null;
   $('#vault-table').onclick=event=>{
+    const clear=event.target.closest('[data-vault-clear]');
+    if(clear?.dataset.vaultClear){
+      const date=clear.dataset.vaultClear;
+      if(!Object.keys(data.vault.balances[date]||{}).length)return;
+      if(!confirm(`清除 ${date} 这一行所有机构的资产余额？其他日期不受影响，此操作不能撤销。`))return;
+      const next=structuredClone(data);
+      delete next.vault.balances[date];
+      if(commit(next)){render();notify(`${date} 整行余额已清除`);}
+      return;
+    }
     const button=event.target.closest('[data-vault-id]');if(!button)return;
     vaultCell={date:button.dataset.vaultDate,id:button.dataset.vaultId};
     const institution=data.vault.institutions.find(i=>i.id===vaultCell.id);
