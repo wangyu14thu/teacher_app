@@ -13,14 +13,14 @@ function app(initial, options = {}) {
       addEventListener(){},setAttribute(){},close(){this.open=false;},showModal(){this.open=true;},focus(){},select(){},click(){}});
     return nodes.get(selector);
   };
-  vm.runInNewContext(source, {document:{querySelector:node,querySelectorAll:()=>inputs,createElement:()=>node('download')},
+  vm.runInNewContext(source, {document:{querySelector:node,querySelectorAll:selector=>selector==='[data-income-withdrawal]'?inputs.filter(i=>i.dataset.incomeWithdrawal):selector==='[data-principal-product]'?inputs.filter(i=>i.dataset.principalProduct):inputs,createElement:()=>node('download')},
     localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     window:{addEventListener(){}},location:{hash:'',search:'',protocol:'file:'},navigator:{},
     URL:{createObjectURL:blob=>(exported=blob,'blob:test'),revokeObjectURL(){}},Blob,URLSearchParams,
     structuredClone,Intl,Date:class extends Date {constructor(...args){super(...(args.length?args:['2026-10-30T08:00:00Z']));}},setTimeout:()=>0,clearTimeout(){},confirm:options.confirm||(()=>true)});
   return {node,read:()=>JSON.parse(storage.get(KEY)),
     save(date, values){node('#record-date').value=date;inputs=Object.entries(values).map(([id,value])=>({dataset:{recordProduct:id},value:String(value)}));node('#record-form').onsubmit({preventDefault(){}});},
-    changePrincipal(date, values){node('#principal-change-date').value=date;node('#principal-change-date').onchange();inputs=Object.entries(values).map(([id,value])=>({dataset:{principalProduct:id},value:String(value)}));node('#principal-change-form').onsubmit({preventDefault(){}});},
+    changePrincipal(date, values, withdrawals={}){node('#principal-change-date').value=date;node('#principal-change-date').onchange();inputs=Object.entries(values).map(([id,value])=>({dataset:{principalProduct:id},value:String(value)})).concat(Object.entries(withdrawals).map(([id,value])=>({dataset:{incomeWithdrawal:id},value:String(value)})));node('#principal-change-form').onsubmit({preventDefault(){}});},
     fields(date){node('#record-date').value=date;node('#record-date').onchange();return node('#record-fields').innerHTML;},
     async csv(){node('#csv').onclick();return exported.text();},
     async backup(){node('#backup').onclick();return JSON.parse(await exported.text());}};
@@ -40,7 +40,7 @@ test('records are cumulative income; daily rise is the difference from yesterday
   assert.match(a.node('#ledger').innerHTML,/>25.00<\/td><td class="delta loss"[^>]*>-5.00/);
   assert.match(await a.csv(),/"2026-10-03","","25","-5","","0","5","25","0"/);
   const restored=app(await a.backup());
-  assert.equal(restored.read().version,8);
+  assert.equal(restored.read().version,9);
   assert.match(restored.fields('2026-10-03'),/value="25.00"/);
 });
 test('legacy cumulative data converts chronologically, including gaps and nonzero baseline', async () => {
@@ -48,12 +48,12 @@ test('legacy cumulative data converts chronologically, including gaps and nonzer
   assert.match(a.fields('2026-09-30'),/value="15.00"/);
   assert.match(a.fields('2026-10-03'),/value="12.00"/);
   const backup=await a.backup();
-  assert.equal(backup.version,8);
+  assert.equal(backup.version,9);
   assert.equal(backup.records['2026-10-01'].p_a,20);
   a.save('2026-10-02',{p_a:18});
   assert.equal(a.node('#return-total').textContent,'10.00');
   assert.equal(a.node('#month-total').textContent,'-3.00');
-  assert.equal(a.read().version,8);
+  assert.equal(a.read().version,9);
 });
 test('blank products remove only that date; invalid precision is rejected', () => {
   const a=app({version:4,products,records:{'2026-10-01':{p_a:5,p_b:7},'2026-10-02':{p_a:4,p_b:3}}});
@@ -114,7 +114,7 @@ test('version 3 daily return records migrate to cumulative values once', async (
   assert.match(a.fields('2026-10-02'),/value="13.00"/);
   assert.match(a.fields('2026-10-04'),/value="13.00"/);
   assert.equal(a.read().version,3);
-  assert.equal((await a.backup()).version,8);
+  assert.equal((await a.backup()).version,9);
 });
 
 test('monthly income sums visible daily rises and excludes dates without a computable rise', async () => {
@@ -227,7 +227,7 @@ test('version 7 monthly vault values migrate to month end, including leap Februa
   a.node('#vault-table').onclick({target:{closest:()=>({dataset:{vaultDate:'2024-02-01',vaultId:'p_cash'}})}});
   a.node('#vault-amount').value='0';submit(a,'#vault-cell-form');
   const backup=await a.backup();
-  assert.equal(backup.version,8);
+  assert.equal(backup.version,9);
   assert.equal(backup.vault.balances['2024-02-29'].p_cash,25);
   assert.equal(backup.vault.balances['2026-04-30'].p_cash,40);
   assert.equal(backup.vault.balances['2024-02'],undefined);
@@ -260,7 +260,7 @@ test('clearing a vault row removes all its balances but preserves other dates an
   const cancelled=app(initial,{confirm:()=>false});
   click(cancelled);assert.deepEqual(cancelled.read(),initial);
   const a=app(initial);click(a);
-  const expected=structuredClone(initial);delete expected.vault.balances['2026-10-01'];
+  const expected={...structuredClone(initial),version:9,incomeWithdrawals:{}};delete expected.vault.balances['2026-10-01'];
   assert.deepEqual(a.read(),expected);
   assert.match(a.node('#vault-table').innerHTML,/data-vault-clear="2026-10-01"[^>]*disabled/);
   assert.deepEqual((await app(await a.backup()).backup()).vault,expected.vault);
@@ -271,5 +271,87 @@ test('vault and trends hide footer notes and switching back restores them',()=>{
   for(const page of ['vault','trends']){
     a.node(`#show-${page}`).onclick();assert.equal(a.node('footer').hidden,true);
     a.node('#show-ledger').onclick();assert.equal(a.node('footer').hidden,false);
+  }
+});
+
+test('vault changes compare adjacent row totals, preserving zero and missing values',()=>{
+  const initial=assets([]);initial.version=8;
+  initial.vault={institutions:[{id:'p_cash',name:'现金',icon:'cash'}],balances:{
+    '2026-01-01':{p_cash:100.10},'2026-01-31':{p_cash:120.30},
+    '2026-02-01':{p_cash:0},'2026-02-28':{p_cash:0},'2026-03-31':{p_cash:50}
+  }};
+  const a=app(initial);
+  const changes=()=>[...a.node('#vault-table').innerHTML.matchAll(/<td class="vault-change [^"]*">([^<]*)<\/td>/g)].map(m=>m[1]);
+  assert.deepEqual(changes().slice(0,7),['—','+20.20','-120.30','0.00','—','—','—']);
+  a.node('#vault-table').onclick({target:{closest:selector=>selector==='[data-vault-id]'?{dataset:{vaultDate:'2026-01-31',vaultId:'p_cash'}}:null}});
+  a.node('#vault-amount').value='110.10';submit(a,'#vault-cell-form');
+  assert.deepEqual(changes().slice(0,3),['—','+10.00','-110.10']);
+  a.node('#vault-table').onclick({target:{closest:selector=>selector==='[data-vault-clear]'?{dataset:{vaultClear:'2026-01-31'}}:null}});
+  assert.deepEqual(changes().slice(0,3),['—','—','—']);
+});
+
+test('principal and income withdrawals reduce holdings independently without changing earned returns',async()=>{
+  const a=app({version:4,products:[products[0]],records:{'2026-09-30':{p_a:100},'2026-10-01':{p_a:120},'2026-10-02':{p_a:130}}});
+  a.changePrincipal('2026-10-01',{p_a:-200},{p_a:30});
+  assert.equal(a.node('#principal-total').textContent,'800.00');
+  assert.equal(a.node('#holding-total').textContent,'900.00');
+  assert.equal(a.node('#return-total').textContent,'130.00');
+  assert.equal(a.node('#month-total').textContent,'30.00');
+  assert.match(a.fields('2026-10-01'),/value="90.00"/);
+  assert.match(a.fields('2026-10-02'),/value="100.00"/);
+  assert.match(await a.csv(),/"2026-10-01","-200","90","20","120","20","30"/);
+  assert.match(a.node('#trend-cards').innerHTML,/130.00/);
+  a.save('2026-10-02',{p_a:105});
+  assert.equal(a.read().records['2026-10-02'].p_a,135);
+  assert.equal(a.node('#month-total').textContent,'35.00');
+  a.node('#ledger').ondblclick({target:{closest:()=>({dataset:{editDate:'2026-10-02',editProduct:'p_a'}})}});
+  assert.equal(a.node('#cell-amount').value,'105.00');
+  a.node('#cell-amount').value='110';submit(a,'#cell-form');
+  assert.equal(a.read().records['2026-10-02'].p_a,140);
+  assert.equal(a.node('#holding-total').textContent,'910.00');
+  const backup=await a.backup(),restored=app(backup);
+  assert.deepEqual((await restored.backup()).incomeWithdrawals,{'2026-10-01':{p_a:30}});
+  assert.equal(restored.node('#holding-total').textContent,'910.00');
+  a.changePrincipal('2026-10-01',{}, {p_a:40});
+  assert.equal(a.node('#principal-total').textContent,'1,000.00');
+  assert.equal(a.node('#holding-total').textContent,'1,100.00');
+  assert.equal(a.node('#month-total').textContent,'40.00');
+  a.changePrincipal('2026-10-01',{},{});
+  assert.deepEqual(a.read().incomeWithdrawals,{});
+  assert.equal(a.node('#holding-total').textContent,'1,140.00');
+  a.changePrincipal('2026-10-01',{}, {p_a:30});
+  a.node('#clear-all').onclick();assert.deepEqual(a.read().incomeWithdrawals,{});
+});
+
+test('withdrawal-only dates carry balances across months, with no fabricated daily income',async()=>{
+  const a=app({version:4,products:[products[0]],records:{'2026-09-30':{p_a:100}}});
+  a.changePrincipal('2026-10-01',{}, {p_a:100});
+  assert.equal(a.node('#holding-total').textContent,'1,000.00');
+  assert.equal(a.node('#return-total').textContent,'100.00');
+  assert.match(a.node('#ledger').innerHTML,/data-principal-date="2026-10-01"/);
+  a.save('2026-10-02',{p_a:5});
+  assert.equal(a.read().records['2026-10-02'].p_a,105);
+  assert.equal(a.node('#month-total').textContent,'0.00');
+  a.save('2026-10-03',{p_a:8});
+  assert.equal(a.node('#month-total').textContent,'3.00');
+});
+
+test('invalid income withdrawals and historical edits cannot corrupt balances',async()=>{
+  const a=app({version:4,products:[products[0]],records:{'2026-10-01':{p_a:100},'2026-10-03':{p_a:110}}});
+  a.changePrincipal('2026-10-01',{}, {p_a:60});
+  a.changePrincipal('2026-10-03',{}, {p_a:50});
+  const before=a.read();
+  for(const amount of [-1,1.001,101]){
+    a.changePrincipal('2026-10-01',{p_a:-100},{p_a:amount});
+    assert.deepEqual(a.read(),before);assert.ok(a.node('#principal-change-error').textContent);
+  }
+  a.changePrincipal('2026-10-01',{}, {p_a:70}); // makes the later withdrawal invalid
+  assert.deepEqual(a.read(),before);
+  a.save('2026-10-01',{p_a:-1});
+  assert.deepEqual(a.read(),before);assert.match(a.node('#record-error').textContent,/超过可用收益/);
+  for(const withdrawals of [null,[],{'2026-02-30':{p_a:1}},{'2026-10-01':{p_missing:1}},{'2026-10-01':{p_a:101}}]){
+    const invalid={...before,incomeWithdrawals:withdrawals};
+    await a.node('#import-file').onchange({target:{files:[{size:100,text:async()=>JSON.stringify(invalid)}],value:'file'}});
+    assert.deepEqual(a.read(),before);assert.match(a.node('#toast').textContent,/无法导入/);
   }
 });

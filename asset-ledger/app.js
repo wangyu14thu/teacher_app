@@ -36,7 +36,7 @@
     return {institutions,balances};
   }
   function validate(data) {
-    if (!data || ![2,3,4,5,6,7,8].includes(data.version) || !Array.isArray(data.products) || data.products.length > 100 || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw Error('备份格式不正确');
+    if (!data || ![2,3,4,5,6,7,8,9].includes(data.version) || !Array.isArray(data.products) || data.products.length > 100 || !data.records || typeof data.records !== 'object' || Array.isArray(data.records)) throw Error('备份格式不正确');
     const ids = new Set();
     const products = data.products.map(p => {
       if (!p || typeof p.id !== 'string' || !/^p_[\w-]{1,100}$/.test(p.id) || ids.has(p.id) || typeof p.name !== 'string' || !p.name.trim() || p.name.length > 60 || !validAmount(p.principal) || p.principal < 0 || !validAmount(p.baseline)) throw Error('产品信息不正确');
@@ -79,6 +79,29 @@
         if (balance < 0) throw Error(`${product.name} 在 ${date} 的本金不能低于 0`);
       }
     }
+    const incomeWithdrawals = {};
+    if (data.version >= 9) {
+      if (!data.incomeWithdrawals || typeof data.incomeWithdrawals !== 'object' || Array.isArray(data.incomeWithdrawals)) throw Error('收益取出格式不正确');
+      for (const [date,row] of Object.entries(data.incomeWithdrawals)) {
+        if (!validDate(date) || !row || typeof row !== 'object' || Array.isArray(row)) throw Error('收益取出日期不正确');
+        const clean = {};
+        for (const [id,value] of Object.entries(row)) {
+          if (!ids.has(id) || !validAmount(value) || value < 0) throw Error('取出收益请输入非负金额，最多两位小数');
+          if (value > 0) clean[id] = value;
+        }
+        if (Object.keys(clean).length) incomeWithdrawals[date] = clean;
+      }
+    }
+    for (const product of products) {
+      let withdrawn = 0;
+      for (const date of Object.keys(incomeWithdrawals).sort()) {
+        if (!Object.hasOwn(incomeWithdrawals[date],product.id)) continue;
+        withdrawn += cents(incomeWithdrawals[date][product.id]);
+        const latest = Object.keys(records).sort().filter(d=>d<=date && Object.hasOwn(records[d],product.id)).at(-1);
+        const earned = cents(latest ? records[latest][product.id] : product.baseline);
+        if (withdrawn > earned) throw Error(`${product.name} 在 ${date} 的取出收益超过可用收益，请先补录该日收益`);
+      }
+    }
     const lots = data.version >= 6 ? data.lots : [];
     if (!Array.isArray(lots) || lots.length > 10000) throw Error('持仓明细格式不正确');
     const lotIds = new Set();
@@ -89,13 +112,13 @@
     });
     const planning = data.version >= 6 ? data.planning : {salary:0,expenses:0,reserve:0,cash:0,target:0};
     if (!planning || !['salary','expenses','reserve','cash','target'].every(k => validAmount(planning[k]) && planning[k] >= 0)) throw Error('工资规划金额不正确');
-    return {version:8,vault:validateVault(data.version>=7?data.vault:emptyVault(),data.version),products,records,principalChanges,lots:cleanLots,planning:Object.fromEntries(['salary','expenses','reserve','cash','target'].map(k=>[k,planning[k]]))};
+    return {version:9,vault:validateVault(data.version>=7?data.vault:emptyVault(),data.version),products,records,principalChanges,incomeWithdrawals,lots:cleanLots,planning:Object.fromEntries(['salary','expenses','reserve','cash','target'].map(k=>[k,planning[k]]))};
   }
   function load() {
     storageBroken = false;
     try { const raw = localStorage.getItem(KEY); if (raw !== null) return validate(JSON.parse(raw)); }
     catch { storageBroken = true; }
-    return {version:8,vault:emptyVault(),products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}};
+    return {version:9,vault:emptyVault(),products:[],records:{},principalChanges:{},incomeWithdrawals:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}};
   }
   let data = load();
   function notify(text) { $('#toast').textContent = text; $('#toast').hidden = false; clearTimeout(timer); timer = setTimeout(() => { $('#toast').hidden = true; },4500); }
@@ -111,12 +134,14 @@
     const previous = dates().filter(d => (inclusive ? d <= date : d < date) && Object.hasOwn(data.records[d],product.id)).at(-1);
     return previous ? cents(data.records[previous][product.id]) : cents(product.baseline);
   }
-  function delta(product,date) { return Object.hasOwn(data.records[date] || {},product.id) ? cents(data.records[date][product.id]) : null; }
+  const withdrawnAt = (product,date) => Object.entries(data.incomeWithdrawals).filter(([d])=>d<=date).reduce((sum,[,row])=>sum+cents(row[product.id]||0),0);
+  const remainingAt = (product,date) => lastValue(product,date)-withdrawnAt(product,date);
+  function delta(product,date) { return Object.hasOwn(data.records[date] || {},product.id) ? cents(data.records[date][product.id])-withdrawnAt(product,date) : null; }
   function changeFromYesterday(product,date) {
     const previous = new Date(`${date}T12:00:00Z`);
     previous.setUTCDate(previous.getUTCDate()-1);
     const current = delta(product,date), before = delta(product,previous.toISOString().slice(0,10));
-    return current === null || before === null ? null : current-before;
+    return current === null || before === null ? null : current-before+withdrawnAt(product,date)-withdrawnAt(product,previous.toISOString().slice(0,10));
   }
   const signedMoney = value => (value > 0 ? '+' : '') + money(value);
   function daily(date) { const changes = data.products.map(p => changeFromYesterday(p,date)).filter(value => value !== null); return changes.length ? changes.reduce((sum,value) => sum+value,0) : null; }
@@ -131,23 +156,25 @@
     $('#table-title').textContent = `${Number(month.slice(0,4))} 年 ${Number(month.slice(5))} 月 · 每日收益`;
     const principal = products.reduce((s,p) => s + principalAt(p,end),0);
     const accumulated = products.reduce((s,p) => s + lastValue(p,end),0);
+    const remaining = products.reduce((s,p)=>s+remainingAt(p,end),0);
     const monthly = products.map(p => days.reduce((sum,date) => sum + (changeFromYesterday(p,date) ?? 0),0));
     $('#principal-total').textContent = money(principal);
     $('#month-total').textContent = money(monthly.reduce((s,n) => s+n,0));
     $('#month-total').className = color(monthly.reduce((s,n) => s+n,0));
     $('#return-total').textContent = money(accumulated);
     $('#return-total').className = color(accumulated);
-    $('#holding-total').textContent = money(principal+accumulated);
-    let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>截至月底本金</th>${products.map(p => `<th colspan="2">${money(principalAt(p,end))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>收益</th><th class="change-head">涨幅</th>').join('')}<th>累计总收益</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
+    $('#holding-total').textContent = money(principal+remaining);
+    let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>截至月底本金</th>${products.map(p => `<th colspan="2">${money(principalAt(p,end))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>剩余收益</th><th class="change-head">涨幅</th>').join('')}<th title="累计赚取的收益，包含已取出部分">累计总收益</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
     days.forEach((date,i) => {
       const day = weekday(date), recorded = Object.keys(data.records[date] || {}).length;
       const principalRows = products.map(p => ({product:p,amount:principalChange(p,date)})).filter(item => item.amount !== null);
       const netChange = principalRows.reduce((sum,item) => sum+item.amount,0);
-      const detail = principalRows.map(item => `${item.product.name} ${signedMoney(item.amount)}`).join('；');
-      html += `<tr class="${day===0||day===6?'weekend ':''}${date===localDate()?'today':''}"><th>${Number(date.slice(5,7))}.${Number(date.slice(8))} <small>周${'日一二三四五六'[day]}</small>${principalRows.length ? `<button type="button" class="principal-change" data-principal-date="${date}" title="${esc(detail)}" aria-label="${date} 本金变动：${esc(detail)}">本金 ${netChange===0?'变动':signedMoney(netChange)}</button>` : ''}</th>`;
+      const withdrawalRows = products.filter(p=>data.incomeWithdrawals[date]?.[p.id]);
+      const detail = [...principalRows.map(item => `${item.product.name} 本金 ${signedMoney(item.amount)}`),...withdrawalRows.map(p=>`${p.name} 取出收益 ${money(cents(data.incomeWithdrawals[date][p.id]))}`)].join('；');
+      html += `<tr class="${day===0||day===6?'weekend ':''}${date===localDate()?'today':''}"><th>${Number(date.slice(5,7))}.${Number(date.slice(8))} <small>周${'日一二三四五六'[day]}</small>${principalRows.length || withdrawalRows.length ? `<button type="button" class="principal-change" data-principal-date="${date}" title="${esc(detail)}" aria-label="${date} 本息变动：${esc(detail)}">本息 ${withdrawalRows.length?'变动':netChange===0?'变动':signedMoney(netChange)}</button>` : ''}</th>`;
       products.forEach(p => {
         const value = delta(p,date), change = changeFromYesterday(p,date);
-        html += `<td class="entry editable ${color(value)}" data-edit-date="${date}" data-edit-product="${p.id}" tabindex="0" aria-haspopup="dialog" aria-label="${esc(p.name)} ${date} 累计收益 ${value===null?'未记录':money(value)} 元，双击或按 Enter 修改" title="双击修改截至当天的累计收益">${value===null?'—':money(value)}</td><td class="delta ${color(change)}" title="涨幅 = 当天累计收益 − 上一日累计收益；任一天未记录时不计算">${change===null?'—':signedMoney(change)}</td>`;
+        html += `<td class="entry editable ${color(value)}" data-edit-date="${date}" data-edit-product="${p.id}" tabindex="0" aria-haspopup="dialog" aria-label="${esc(p.name)} ${date} 剩余收益 ${value===null?'未记录':money(value)} 元，双击或按 Enter 修改" title="双击修改截至当天的剩余收益">${value===null?'—':money(value)}</td><td class="delta ${color(change)}" title="涨幅 = 当天剩余收益 − 上一日剩余收益 + 当天取出收益；任一天未记录时不计算">${change===null?'—':signedMoney(change)}</td>`;
       });
       const total = products.reduce((s,p) => s+lastValue(p,date),0);
       const tooltip = recorded && recorded < products.length ? '部分产品已记录，未填产品沿用上次累计收益' : '';
@@ -159,8 +186,8 @@
       }
       html += '</tr>';
     });
-    html += `</tbody><tfoot><tr><th>本月收益</th>${products.map((p,i) => `<td colspan="2" class="${color(monthly[i])}">${money(monthly[i])}</td>`).join('')}<td colspan="3" class="${color(monthly.reduce((s,n)=>s+n,0))}">${money(monthly.reduce((s,n)=>s+n,0))}</td></tr><tr><th>月末持仓金额</th>${products.map(p => `<td colspan="2">${money(principalAt(p,end)+lastValue(p,end))}</td>`).join('')}<td colspan="3">${money(principal+accumulated)}</td></tr></tfoot>`;
-    $('#ledger').innerHTML = products.length ? html : '<tbody><tr><td class="empty-state"><h3>账本为空，从第一个产品开始</h3><p>点击「管理产品」添加产品，再点击「新增记录」填写当日累计收益。</p></td></tr></tbody>';
+    html += `</tbody><tfoot><tr><th>本月收益</th>${products.map((p,i) => `<td colspan="2" class="${color(monthly[i])}">${money(monthly[i])}</td>`).join('')}<td colspan="3" class="${color(monthly.reduce((s,n)=>s+n,0))}">${money(monthly.reduce((s,n)=>s+n,0))}</td></tr><tr><th>月末持仓金额</th>${products.map(p => `<td colspan="2">${money(principalAt(p,end)+remainingAt(p,end))}</td>`).join('')}<td colspan="3">${money(principal+remaining)}</td></tr></tfoot>`;
+    $('#ledger').innerHTML = products.length ? html : '<tbody><tr><td class="empty-state"><h3>账本为空，从第一个产品开始</h3><p>点击「管理产品」添加产品，再点击「新增记录」填写当日剩余收益。</p></td></tr></tbody>';
     renderVault();
     renderTrends();
     renderAssets();
@@ -210,8 +237,8 @@
   function renderRecordFields() {
     const date = $('#record-date').value;
     $('#record-fields').innerHTML = data.products.map(p => {
-      const value = data.records[date]?.[p.id];
-      return `<label class="record-field"><span>${esc(p.name)}<small>本金 ${money(principalAt(p,date))} 元</small></span><input data-record-product="${p.id}" type="number" min="-2000000000" max="2000000000" step="0.01" inputmode="decimal" placeholder="截至当日累计收益" value="${value === undefined ? '' : Number(value).toFixed(2)}"></label>`;
+      const value = delta(p,date);
+      return `<label class="record-field"><span>${esc(p.name)}<small>本金 ${money(principalAt(p,date))} 元</small></span><input data-record-product="${p.id}" type="number" min="-2000000000" max="2000000000" step="0.01" inputmode="decimal" placeholder="截至当日剩余收益" value="${value === null ? '' : (value/100).toFixed(2)}"></label>`;
     }).join('');
     $('#record-error').textContent = '';
   }
@@ -228,12 +255,12 @@
       const p = data.products.find(p => p.id === input.dataset.recordProduct);
       const value = Number(input.value);
       if (!validAmount(value, 2e9)) { $('#record-error').textContent='请输入有效金额，最多两位小数'; return; }
-      row[p.id] = value;
+      row[p.id] = (cents(value)+withdrawnAt(p,date))/100;
     }
-    if (!Object.keys(row).length) { $('#record-error').textContent='请至少填写一个产品的累计收益（可填 0）'; return; }
+    if (!Object.keys(row).length) { $('#record-error').textContent='请至少填写一个产品的剩余收益（可填 0）'; return; }
     const next=structuredClone(data);
     next.records[date] = row;
-    if (commit(next)) { month=date.slice(0,7); render(); $('#record-dialog').close(); notify('记录已保存，收益已更新'); }
+    try { if (commit(validate(next))) { month=date.slice(0,7); render(); $('#record-dialog').close(); notify('记录已保存，收益已更新'); } } catch(error) { $('#record-error').textContent=error.message; }
   };
   let editingCell = null;
   function openCellEditor(event) {
@@ -244,8 +271,8 @@
     if (!product || !validDate(date)) return;
     editingCell = {date,id};
     $('#cell-context').textContent = `${date} · ${product.name}`;
-    const value = data.records[date]?.[id];
-    $('#cell-amount').value = value === undefined ? '' : value.toFixed(2);
+    const value = delta(product,date);
+    $('#cell-amount').value = value === null ? '' : (value/100).toFixed(2);
     $('#cell-error').textContent = '';
     $('#cell-dialog').showModal();
     $('#cell-amount').focus();
@@ -270,18 +297,18 @@
     }
     const input = $('#cell-amount'), value = Number(input.value);
     if (!input.value.trim() || !validAmount(value, 2e9)) {
-      $('#cell-error').textContent = '请输入有效的累计收益，最多两位小数'; return;
+      $('#cell-error').textContent = '请输入有效的剩余收益，最多两位小数'; return;
     }
     const next = structuredClone(data);
-    next.records[date] = {...next.records[date], [id]:value};
-    if (commit(next)) {
-      month = date.slice(0,7); render(); closeCellEditor(); notify('累计收益已更新');
-    }
+    next.records[date] = {...next.records[date], [id]:(cents(value)+withdrawnAt(data.products.find(p=>p.id===id),date))/100};
+    try { if (commit(validate(next))) {
+      month = date.slice(0,7); render(); closeCellEditor(); notify('剩余收益已更新');
+    } } catch(error) { $('#cell-error').textContent=error.message; }
   };
   $('#clear-all').onclick = () => {
-    if (!confirm('清空全部产品、所有收益记录、本金变动、持仓明细、大金库和规划设置及本浏览器旧版账本？此操作不能撤销。')) return;
+    if (!confirm('清空全部产品、所有收益记录、本息变动、持仓明细、大金库和规划设置及本浏览器旧版账本？此操作不能撤销。')) return;
     const wasBroken=storageBroken; storageBroken=false;
-    if (!commit({version:8,vault:emptyVault(),products:[],records:{},principalChanges:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}})) { storageBroken=wasBroken; return; }
+    if (!commit({version:9,vault:emptyVault(),products:[],records:{},principalChanges:{},incomeWithdrawals:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}})) { storageBroken=wasBroken; return; }
     try { localStorage.removeItem('fangcun-ledger-v1'); $('#legacy-backup').hidden=true; }
     catch { notify('收益表已清空，但旧版账本清除失败'); render(); return; }
     render(); notify('全部数据已清空，可重新添加产品');
@@ -295,7 +322,7 @@
     $('#record-date').value=localDate(); renderRecordFields(); $('#record-dialog').showModal();
   };
   function openPrincipalChanges(date) {
-    if (!data.products.length) { $('#manage').click(); notify('请先添加理财产品，再记录本金变动'); return; }
+    if (!data.products.length) { $('#manage').click(); notify('请先添加理财产品，再记录本息变动'); return; }
     $('#principal-change-date').value = date; renderPrincipalChangeFields(); $('#principal-change-dialog').showModal();
   }
   $('#principal-changes').onclick = () => openPrincipalChanges(localDate());
@@ -307,7 +334,8 @@
     const date = $('#principal-change-date').value;
     $('#principal-change-fields').innerHTML = data.products.map(p => {
       const value = data.principalChanges && data.principalChanges[date] ? data.principalChanges[date][p.id] : undefined;
-      return `<label class="record-field"><span>${esc(p.name)}<small>变动前本金 ${money(principalAt(p,date)-(principalChange(p,date) ?? 0))} 元</small></span><input aria-label="${esc(p.name)} 本金变动（元，追加为正，取出为负）" data-principal-product="${p.id}" type="number" min="-1000000000" max="1000000000" step="0.01" inputmode="decimal" placeholder="追加 + / 取出 −" value="${value === undefined ? '' : Number(value).toFixed(2)}"></label>`;
+      const withdrawal = data.incomeWithdrawals[date]?.[p.id];
+      return `<fieldset class="capital-change-product"><legend>${esc(p.name)}</legend><p class="hint">变动前本金 ${money(principalAt(p,date)-(principalChange(p,date) ?? 0))} 元 · 可取收益 ${money(Math.max(0,remainingAt(p,date)+cents(withdrawal||0)))} 元</p><div class="capital-change-inputs"><label>本金变动（元）<input aria-label="${esc(p.name)} 本金变动" data-principal-product="${p.id}" type="number" min="-1000000000" max="1000000000" step="0.01" inputmode="decimal" placeholder="追加 + / 取出 −" value="${value === undefined ? '' : Number(value).toFixed(2)}"></label><label>取出收益（元）<input aria-label="${esc(p.name)} 取出收益" data-income-withdrawal="${p.id}" type="number" min="0" max="1000000000" step="0.01" inputmode="decimal" placeholder="填正数，留空不取出" value="${withdrawal === undefined ? '' : withdrawal.toFixed(2)}"></label></div></fieldset>`;
     }).join('');
     $('#principal-change-error').textContent = '';
   }
@@ -325,12 +353,21 @@
       if (!validAmount(value, 1e9)) { $('#principal-change-error').textContent = '请输入有效金额，最多两位小数'; return; }
       if (value !== 0) row[input.dataset.principalProduct] = value;
     }
+    const withdrawals = {};
+    for (const input of document.querySelectorAll('[data-income-withdrawal]')) {
+      if (!input.value.trim()) continue;
+      const value = Number(input.value);
+      if (!validAmount(value) || value < 0) { $('#principal-change-error').textContent = '取出收益请输入非负金额，最多两位小数'; return; }
+      if (value !== 0) withdrawals[input.dataset.incomeWithdrawal] = value;
+    }
     const next = structuredClone(data);
+    if (Object.keys(withdrawals).length) next.incomeWithdrawals[date] = withdrawals;
+    else delete next.incomeWithdrawals[date];
     if (Object.keys(row).length) next.principalChanges[date] = row;
     else delete next.principalChanges[date];
     try {
       const checked = validate(next);
-      if (commit(checked)) { month = date.slice(0,7); render(); $('#principal-change-dialog').close(); notify('本金变动已保存'); }
+      if (commit(checked)) { month = date.slice(0,7); render(); $('#principal-change-dialog').close(); notify('本息变动已保存'); }
     } catch (error) { $('#principal-change-error').textContent = error.message; }
   };
   function renderProducts() {
@@ -343,9 +380,9 @@
   $('#product-rows').onclick = event => {const id=event.target.dataset.remove;if(!id)return;readDraft();draft=draft.filter(p=>p.id!==id);renderProducts();};
   $('#product-form').onsubmit = event => {
     event.preventDefault();readDraft(); const removed=data.products.filter(p=>!draft.some(d=>d.id===p.id));
-    if (removed.some(p=>data.lots.some(l=>l.productId===p.id) || [...Object.values(data.records),...Object.values(data.principalChanges)].some(row=>Object.hasOwn(row,p.id))) && !confirm('保存后将删除已移除产品的全部收益记录、本金变动和持仓明细。建议先导出备份。确定继续？'))return;
+    if (removed.some(p=>data.lots.some(l=>l.productId===p.id) || [...Object.values(data.records),...Object.values(data.principalChanges),...Object.values(data.incomeWithdrawals)].some(row=>Object.hasOwn(row,p.id))) && !confirm('保存后将删除已移除产品的全部收益记录、本息变动和持仓明细。建议先导出备份。确定继续？'))return;
     const next=structuredClone(data);next.products=draft;next.lots=next.lots.filter(l=>draft.some(p=>p.id===l.productId));for(const row of Object.values(next.records))for(const p of removed)delete row[p.id];
-    for(const row of Object.values(next.principalChanges))for(const p of removed)delete row[p.id];
+    for(const row of [...Object.values(next.principalChanges),...Object.values(next.incomeWithdrawals)])for(const p of removed)delete row[p.id];
     try {const clean=validate(next);if(commit(clean)){$('#products-dialog').close();render();notify('产品设置已保存');}}catch(error){$('#product-error').textContent=error.message;}
   };
   function download(content,type,name) { const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
@@ -361,9 +398,9 @@
   };
   $('#csv').onclick = () => {
     const cell = value => {const str=String(value);return '"'+(/^[=+\-@\t\r]/.test(str)&&typeof value==='string'?"'":'')+str.replace(/"/g,'""')+'"';};
-    const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 本金变动`,`${p.name} 收益`,`${p.name} 涨幅（元）`]),'累计总收益','当日增减']];
-    for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[principalChange(p,date)===null?'':principalChange(p,date)/100,delta(p,date)===null?'':delta(p,date)/100,changeFromYesterday(p,date)===null?'':changeFromYesterday(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',daily(date)===null?'':daily(date)/100]);}
-    const days=monthDates();rows.push(['本月收益',...data.products.flatMap(p=>['',days.reduce((sum,date)=>sum+(changeFromYesterday(p,date)??0),0)/100,'']),'',days.map(d=>daily(d)).filter(v=>v!==null).reduce((s,v)=>s+v,0)/100]);
+    const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 本金变动`,`${p.name} 剩余收益`,`${p.name} 涨幅（元）`]),'累计总收益','当日增减',...data.products.map(p=>`${p.name} 取出收益`)]];
+    for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[principalChange(p,date)===null?'':principalChange(p,date)/100,delta(p,date)===null?'':delta(p,date)/100,changeFromYesterday(p,date)===null?'':changeFromYesterday(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',daily(date)===null?'':daily(date)/100,...data.products.map(p=>data.incomeWithdrawals[date]?.[p.id]??'')]);}
+    const days=monthDates();rows.push(['本月收益',...data.products.flatMap(p=>['',days.reduce((sum,date)=>sum+(changeFromYesterday(p,date)??0),0)/100,'']),'',days.map(d=>daily(d)).filter(v=>v!==null).reduce((s,v)=>s+v,0)/100,...data.products.map(()=>'')]);
     download('\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8',`收益记录-${month}.csv`);
   };
   function vaultIcon(i) {
@@ -374,11 +411,14 @@
   function renderVault() {
     const year = month.slice(0,4), {institutions,balances} = data.vault;
     $('#vault-year').value=year;
-    $('#vault-table').innerHTML=`<thead><tr><th scope="col">日期</th>${institutions.map(i=>`<th scope="col"><span class="vault-bank">${vaultIcon(i)}${esc(i.name)}</span></th>`).join('')}<th scope="col" class="vault-total">总计（元）</th></tr></thead><tbody>${Array.from({length:12},(_,n)=>{
+    let previousTotal=null;
+    $('#vault-table').innerHTML=`<thead><tr><th scope="col">日期</th>${institutions.map(i=>`<th scope="col"><span class="vault-bank">${vaultIcon(i)}${esc(i.name)}</span></th>`).join('')}<th scope="col" class="vault-total">总计（元）</th><th scope="col" class="vault-change">涨幅（元）</th></tr></thead><tbody>${Array.from({length:12},(_,n)=>{
       const m=year+'-'+String(n+1).padStart(2,'0');
       return [m+'-01',monthEnd(m)].map((date,index)=>{
         const row=balances[date]||{}, values=Object.values(row), total=values.reduce((sum,v)=>sum+cents(v),0);
-        return `<tr class="vault-${index?'month-end':'month-start'}"><th scope="row">${n+1} 月 ${index?'月末':'月初'} · ${Number(date.slice(8))} 日<button type="button" class="vault-clear-row" data-vault-clear="${date}" aria-label="清除 ${date} 所有机构余额" ${values.length?'':'disabled'}>清除整行</button></th>${institutions.map(i=>`<td><button class="vault-cell" data-vault-date="${date}" data-vault-id="${i.id}" aria-label="${date} ${esc(i.name)} 余额，点击编辑">${Object.hasOwn(row,i.id)?money(cents(row[i.id])):'—'}</button></td>`).join('')}<td class="vault-total">${values.length?money(total):'—'}${values.length && values.length<institutions.length?'<small>部分已录入</small>':''}</td></tr>`;
+        const change=values.length && previousTotal!==null ? total-previousTotal : null;
+        previousTotal=values.length ? total : null;
+        return `<tr class="vault-${index?'month-end':'month-start'}"><th scope="row">${n+1} 月 ${index?'月末':'月初'} · ${Number(date.slice(8))} 日<button type="button" class="vault-clear-row" data-vault-clear="${date}" aria-label="清除 ${date} 所有机构余额" ${values.length?'':'disabled'}>清除整行</button></th>${institutions.map(i=>`<td><button class="vault-cell" data-vault-date="${date}" data-vault-id="${i.id}" aria-label="${date} ${esc(i.name)} 余额，点击编辑">${Object.hasOwn(row,i.id)?money(cents(row[i.id])):'—'}</button></td>`).join('')}<td class="vault-total">${values.length?money(total):'—'}${values.length && values.length<institutions.length?'<small>部分已录入</small>':''}</td><td class="vault-change ${change===null?'':color(change)}">${change===null?'—':(change>0?'+':'')+money(change)}</td></tr>`;
       }).join('');
     }).join('')}</tbody>`;
   }
