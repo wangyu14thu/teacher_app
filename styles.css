@@ -46,3 +46,7 @@ img.vault-icon{background:#fff;border-radius:50%;padding:3px}
 .vault-clear-row{display:block;margin-top:7px;padding:3px 7px;font-size:11px;font-weight:400;color:var(--red)}.vault-clear-row:disabled{color:#8490a0;opacity:.6;cursor:default}
 
 #ledger-page>.table-wrap,#vault-page>.table-wrap{max-height:none;overflow-x:auto}
+
+#vault-table .vault-total{right:auto}#vault-table td.vault-total{position:static}#vault-table .vault-change{min-width:140px;padding:15px;background:#f6f8fc;font-weight:600;position:sticky;right:0}#vault-table thead .vault-change{background:var(--blue)}
+
+.capital-change-product{border:1px solid var(--border);border-radius:8px;margin:16px 0;padding:12px}.capital-change-product legend{padding:0 6px}.capital-change-product .hint{margin:0 0 12px}.capital-change-inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px}.capital-change-inputs label{display:flex;flex-direction:column;gap:6px;font-size:12px}.capital-change-inputs input{width:100%;min-width:0;padding:9px;border:1px solid var(--border);border-radius:6px}@media(max-width:480px){.capital-change-inputs{grid-template-columns:1fr}}
