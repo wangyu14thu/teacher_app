@@ -3,7 +3,7 @@ name: Deploy Asset Ledger
 on:
   push:
     branches:
-      - asset-ledger-pages
+      - honhong/entrance
     paths:
       - "asset-ledger/**"
       - ".github/workflows/deploy-asset-ledger.yml"
