@@ -161,6 +161,8 @@
   const withdrawnAt = (product,date) => Object.entries(data.incomeWithdrawals).filter(([d])=>d<=date).reduce((sum,[,row])=>sum+cents(row[product.id]||0),0);
   const remainingAt = (product,date) => lastValue(product,date)-withdrawnAt(product,date);
   function delta(product,date) { return Object.hasOwn(data.records[date] || {},product.id) ? cents(data.records[date][product.id])-withdrawnAt(product,date) : null; }
+  // Sum exactly the remaining-income cells shown on this date; missing is not zero input.
+  const recordedTotal = date => data.products.reduce((sum,p) => sum + (delta(p,date) ?? 0),0);
   function changeFromYesterday(product,date) {
     const previous = new Date(`${date}T12:00:00Z`);
     previous.setUTCDate(previous.getUTCDate()-1);
@@ -188,7 +190,7 @@
     $('#return-total').textContent = money(accumulated);
     $('#return-total').className = color(accumulated);
     $('#holding-total').textContent = money(principal+remaining);
-    let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>截至月底本金</th>${products.map(p => `<th colspan="2">${money(principalAt(p,end))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>剩余收益</th><th class="change-head">涨幅</th>').join('')}<th title="累计赚取的收益，包含已取出部分">累计总收益</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
+    let html = `<thead><tr><th>理财产品</th>${products.map(p => `<th colspan="2">${esc(p.name)}</th>`).join('')}<th colspan="3">收益汇总</th></tr><tr><th>截至月底本金</th>${products.map(p => `<th colspan="2">${money(principalAt(p,end))}</th>`).join('')}<th colspan="3">总本金 ${money(principal)}</th></tr><tr><th>日期</th>${products.map(() => '<th>剩余收益</th><th class="change-head">涨幅</th>').join('')}<th title="仅合计当天已填写的剩余收益；空白不计入，不额外加入期初或已取出收益">已填收益合计</th><th class="change-head">当日增减</th><th>本周增减</th></tr></thead><tbody>`;
     days.forEach((date,i) => {
       const day = weekday(date), recorded = Object.keys(data.records[date] || {}).length;
       const principalRows = products.map(p => ({product:p,amount:principalChange(p,date)})).filter(item => item.amount !== null);
@@ -200,10 +202,10 @@
         const value = delta(p,date), change = changeFromYesterday(p,date);
         html += `<td class="entry editable ${color(value)}" data-edit-date="${date}" data-edit-product="${p.id}" tabindex="0" aria-haspopup="dialog" aria-label="${esc(p.name)} ${date} 剩余收益 ${value===null?'未记录':money(value)} 元，双击或按 Enter 修改" title="双击修改截至当天的剩余收益">${value===null?'—':money(value)}</td><td class="delta ${color(change)}" title="涨幅 = 当天剩余收益 − 上一日剩余收益 + 当天取出收益；任一天未记录时不计算">${change===null?'—':signedMoney(change)}</td>`;
       });
-      const total = products.reduce((s,p) => s+lastValue(p,date),0);
-      const tooltip = '累计总收益包含已取出收益；空白不等于零。\n' + products.map(p => {
-        const source = dates().filter(d=>d<=date && Object.hasOwn(data.records[d],p.id)).at(-1);
-        return `${p.name}：${money(lastValue(p,date))}（${source === date ? '当天记录' : source ? '沿用 '+source : '期初收益'}；截至当天已取出 ${money(withdrawnAt(p,date))}）`;
+      const total = recordedTotal(date);
+      const tooltip = '仅合计当天已填写的剩余收益；空白不计入。\n' + products.map(p => {
+        const value = delta(p,date);
+        return `${p.name}：${value === null ? '未填写，不计入' : money(value)}`;
       }).join('\n');
       html += `<td class="total ${recorded?color(total):'muted'}" title="${esc(tooltip)}">${recorded?money(total)+(recorded<products.length?' *':''):'—'}</td><td class="total ${recorded?color(daily(date)):'muted'}">${daily(date)!==null?money(daily(date)):'—'}</td>`;
       if (i===0 || day===1) {
@@ -420,7 +422,7 @@
     data = latest;
     autoBackup();
     render();
-    notify('已按最新保存记录重新计算涨幅及汇总。空白沿用历史值，累计总收益含已取出收益。');
+    notify('已按最新保存记录重新计算涨幅及汇总。每行合计仅包含当天已填写的剩余收益，空白不计入。');
   };
   let displayedHistory = [];
   $('#history').onclick = () => {
@@ -460,8 +462,8 @@
   };
   $('#csv').onclick = () => {
     const cell = value => {const str=String(value);return '"'+(/^[=+\-@\t\r]/.test(str)&&typeof value==='string'?"'":'')+str.replace(/"/g,'""')+'"';};
-    const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 本金变动`,`${p.name} 剩余收益`,`${p.name} 涨幅（元）`]),'累计总收益','当日增减',...data.products.map(p=>`${p.name} 取出收益`)]];
-    for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[principalChange(p,date)===null?'':principalChange(p,date)/100,delta(p,date)===null?'':delta(p,date)/100,changeFromYesterday(p,date)===null?'':changeFromYesterday(p,date)/100]),has?data.products.reduce((s,p)=>s+lastValue(p,date),0)/100:'',daily(date)===null?'':daily(date)/100,...data.products.map(p=>data.incomeWithdrawals[date]?.[p.id]??'')]);}
+    const rows=[['日期',...data.products.flatMap(p=>[`${p.name} 本金变动`,`${p.name} 剩余收益`,`${p.name} 涨幅（元）`]),'已填收益合计','当日增减',...data.products.map(p=>`${p.name} 取出收益`)]];
+    for(const date of monthDates()){const has=Object.keys(data.records[date]||{}).length;rows.push([date,...data.products.flatMap(p=>[principalChange(p,date)===null?'':principalChange(p,date)/100,delta(p,date)===null?'':delta(p,date)/100,changeFromYesterday(p,date)===null?'':changeFromYesterday(p,date)/100]),has?recordedTotal(date)/100:'',daily(date)===null?'':daily(date)/100,...data.products.map(p=>data.incomeWithdrawals[date]?.[p.id]??'')]);}
     const days=monthDates();rows.push(['本月收益',...data.products.flatMap(p=>['',days.reduce((sum,date)=>sum+(changeFromYesterday(p,date)??0),0)/100,'']),'',days.map(d=>daily(d)).filter(v=>v!==null).reduce((s,v)=>s+v,0)/100,...data.products.map(()=>'')]);
     download('\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8',`收益记录-${month}.csv`);
   };

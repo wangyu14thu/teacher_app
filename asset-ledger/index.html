@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#4269a9"><meta name="description" content="简单的本地理财收益记录表，每天记一笔，自动汇总。">
-<title>发财芽</title><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="styles.css?v=ledger-28">
+<title>发财芽</title><link rel="icon" href="icon.svg"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="styles.css?v=ledger-29">
 </head>
 <body>
 <main>
@@ -31,7 +31,7 @@
 <p class="hint">点击金额填写或修改 · 单位：元 · 留空表示未录入，0 表示余额为零。月初和月末分别记录，总计仅汇总该日已录入余额。此处由你盘点总资产，不自动叠加理财持仓。</p>
 <div class="table-wrap" tabindex="0" aria-label="大金库月初月末资产表，可横向滚动"><table id="vault-table"></table></div>
 </section>
-<footer><p>双击「收益」单元格可新增或修改截至当天的剩余收益，点击「确认更新」后保存；取消或按 Esc 不保存。也可点击「新增记录」按日期填写。点击「本息变动」分别登记本金追加（正数）或取出（负数），以及取出收益（填正数），从变动日起扣减持仓；当天日期下方可点击标记修改。红色为增加，绿色为减少。* 表示当天仅填写了部分产品。</p><p>收益是截至所选日期的剩余收益（不含已取出部分）；涨幅 = 当天剩余收益 − 上一日剩余收益 + 当天取出收益（元）。修改某日收益后，后续已记录日期的累计赚取金额保持不变，对应涨幅自动重算。取出收益不减少累计赚取收益，不计作亏损。周收益按周一至周日汇总，跨月周仅统计本月部分。</p><p>数据保存在当前浏览器，每日使用及修改前自动备份，可点「自动备份 / 恢复」找回。清理浏览器会丢失这些备份，建议定期「导出备份」。<button id="legacy-backup" hidden>导出旧版账本数据</button></p></footer>
+<footer><p>双击「收益」单元格可新增或修改截至当天的剩余收益，点击「确认更新」后保存；取消或按 Esc 不保存。也可点击「新增记录」按日期填写。点击「本息变动」分别登记本金追加（正数）或取出（负数），以及取出收益（填正数），从变动日起扣减持仓；当天日期下方可点击标记修改。红色为增加，绿色为减少。* 表示当天仅填写了部分产品；「已填收益合计」只加当天已填写的剩余收益，空白不计入，不额外加入期初或已取出收益。顶部「累计收益」仍表示截至月底的全部已赚取收益，包含已取出部分。</p><p>收益是截至所选日期的剩余收益（不含已取出部分）；涨幅 = 当天剩余收益 − 上一日剩余收益 + 当天取出收益（元）。修改某日收益后，后续已记录日期的累计赚取金额保持不变，对应涨幅自动重算。取出收益不减少累计赚取收益，不计作亏损。周收益按周一至周日汇总，跨月周仅统计本月部分。</p><p>数据保存在当前浏览器，每日使用及修改前自动备份，可点「自动备份 / 恢复」找回。清理浏览器会丢失这些备份，建议定期「导出备份」。<button id="legacy-backup" hidden>导出旧版账本数据</button></p></footer>
 </main>
 <dialog id="history-dialog" aria-labelledby="history-title"><div class="dialog-head"><h2 id="history-title">自动备份与恢复</h2><button type="button" id="close-history" aria-label="关闭">×</button></div><p class="hint">保留最近 30 个使用日的首次快照和最近 20 次修改前快照（整个账本）。按北京时间分日；页面打开时自动检查，关闭期间不运行。恢复前也会备份当前版本。备份仅在本浏览器，清理浏览器数据会同时丢失，请定期导出到文件。</p><label>选择备份 <select id="history-select" aria-label="选择备份"></select></label><div class="dialog-actions"><button type="button" id="history-export">导出所选备份</button> <button type="button" id="history-restore" class="primary">恢复整个账本</button></div></dialog>
 <dialog id="products-dialog"><form id="product-form"><div class="dialog-head"><div><small>账本设置</small><h2>管理理财产品</h2></div><button type="button" id="close-dialog" aria-label="关闭">×</button></div><p class="hint">期初本金用于确定记账开始时的金额。之后的追加或取出请通过「本息变动」按日期记录；收益单独记录；取出收益后填写剩余收益，累计赚取金额保留。</p><div class="product-labels"><span>产品名称</span><span>期初本金（元）</span><span>期初收益（元）</span><span></span></div><div id="product-rows"></div><button type="button" id="add-product">＋ 添加产品</button><p id="product-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="primary">保存产品设置</button></div></form></dialog>
@@ -51,5 +51,5 @@
 </aside>
 <button id="sprite-toggle" aria-label="与小精灵发财芽聊天" aria-expanded="false" aria-controls="sprite-chat"><span class="sprite-caption">找发财芽聊聊</span><span class="sprite-body" aria-hidden="true"><span class="sprite-leaf"></span><span class="sprite-eyes">• •</span><span class="sprite-smile">ᴗ</span></span></button>
 <script src="chat.js?v=ledger-17"></script>
-<script src="app.js?v=ledger-28"></script>
+<script src="app.js?v=ledger-29"></script>
 </body></html>

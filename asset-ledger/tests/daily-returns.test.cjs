@@ -302,7 +302,7 @@ test('principal and income withdrawals reduce holdings independently without cha
   assert.equal(a.node('#month-total').textContent,'30.00');
   assert.match(a.fields('2026-10-01'),/value="90.00"/);
   assert.match(a.fields('2026-10-02'),/value="100.00"/);
-  assert.match(await a.csv(),/"2026-10-01","-200","90","20","120","20","30"/);
+  assert.match(await a.csv(),/"2026-10-01","-200","90","20","90","20","30"/);
   assert.match(a.node('#trend-cards').innerHTML,/130.00/);
   a.save('2026-10-02',{p_a:105});
   assert.equal(a.read().records['2026-10-02'].p_a,135);
@@ -413,7 +413,7 @@ test('recalculate reads latest saved data, retains missing entries and accounts 
   a.storage.set(KEY,JSON.stringify(updated));
   a.node('#recalculate').onclick();
   assert.equal(a.node('#return-total').textContent,'110.00');
-  assert.match(a.node('#ledger').innerHTML,/期初收益/);
+  assert.match(a.node('#ledger').innerHTML,/未填写，不计入/);
 });
 
 test('clear and import preserve recoverable snapshots; cancelling restore is read-only', async () => {
@@ -430,4 +430,42 @@ test('clear and import preserve recoverable snapshots; cancelling restore is rea
   const b=app(initial,{confirm:()=>false});b.save('2026-10-01',{p_a:99});
   const before=b.read();b.node('#history').onclick();b.node('#history-restore').onclick();
   assert.deepEqual(b.read(),before);
+});
+
+function displayedRowTotal(a, day) {
+  const row=a.node('#ledger').innerHTML.split('<tr ').find(r=>r.includes(`<th>10.${day} <small>`));
+  return row.match(/<td class="total [^"]*" title="[^"]*">([^<]*)<\/td>/)[1];
+}
+test('screenshot totals sum only entered remaining income despite baselines and previous records', async () => {
+  const ps=['a','b','c','d','e','f'].map(id=>({id:'p_'+id,name:id,principal:1000,baseline:100}));
+  ps[2].baseline=273.45;
+  const a=app({version:4,products:ps,records:{
+    '2026-09-30':{p_d:900,p_e:2000,p_f:500},
+    '2026-10-07':{p_a:115.07},
+    '2026-10-08':{p_a:115.07,p_b:0,p_e:1039.45,p_f:446.71},
+    '2026-10-09':{p_a:125.31,p_b:-25.90,p_e:1006.90,p_f:440.28},
+    '2026-10-10':{p_a:129.85,p_b:28.11,p_e:1006.90,p_f:440.28}
+  }});
+  const before=a.read();
+  const expected=['115.07','1,601.23','1,546.59','1,605.14'];
+  for(let i=0;i<4;i++)assert.equal(displayedRowTotal(a,i+7),expected[i]+' *');
+  const csv=await a.csv();
+  for(let i=0;i<4;i++) {
+    const line=csv.split('\r\n').find(r=>r.startsWith(`"2026-10-${String(i+7).padStart(2,'0')}"`));
+    assert.equal(line.split(',')[19],`"${Number(expected[i].replace(',',''))}"`);
+  }
+  a.node('#recalculate').onclick();
+  assert.deepEqual(a.read(),before);
+  assert.equal(displayedRowTotal(a,8),'1,601.23 *');
+  a.save('2026-10-08',{p_a:0});
+  assert.equal(displayedRowTotal(a,8),'0.00 *');
+  assert.equal(displayedRowTotal(a,6),'—');
+});
+test('row totals exclude withdrawn income while daily gains still include withdrawals', async () => {
+  const a=app({version:4,products,records:{'2026-09-30':{p_a:100},'2026-10-01':{p_a:120}}});
+  a.changePrincipal('2026-10-01',{}, {p_a:30});
+  assert.equal(displayedRowTotal(a,1),'90.00 *');
+  assert.equal(a.node('#month-total').textContent,'20.00');
+  assert.equal(a.node('#return-total').textContent,'120.00');
+  assert.match(await a.csv(),/"90","20","30",""/);
 });
