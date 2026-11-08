@@ -122,10 +122,34 @@
   }
   let data = load();
   function notify(text) { $('#toast').textContent = text; $('#toast').hidden = false; clearTimeout(timer); timer = setTimeout(() => { $('#toast').hidden = true; },4500); }
+  const HISTORY_KEY = KEY + '-history-v1';
+  function readHistory() {
+    const entries = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (!Array.isArray(entries) || entries.some(e => !e || typeof e.raw !== 'string' || typeof e.id !== 'string' || typeof e.day !== 'string' || typeof e.at !== 'string' || !['daily','change'].includes(e.kind))) throw Error('备份记录无法读取，请先导出当前账本');
+    return entries;
+  }
+  function snapshot(beforeChange = false) {
+    const raw = localStorage.getItem(KEY);
+    if (raw === null) return;
+    let entries = readHistory();
+    const day = localDate(), at = new Date().toISOString();
+    const add = kind => entries.push({id:uid(),kind,day,at,raw});
+    if (!entries.some(e => e.kind === 'daily' && e.day === day)) add('daily');
+    if (beforeChange && entries.filter(e=>e.kind==='change').at(-1)?.raw !== raw) add('change');
+    const retained = new Set([...entries.filter(e=>e.kind==='daily').slice(-30), ...entries.filter(e=>e.kind==='change').slice(-20)]);
+    entries = entries.filter(e=>retained.has(e));
+    const serialized = JSON.stringify(entries);
+    if (serialized !== localStorage.getItem(HISTORY_KEY)) localStorage.setItem(HISTORY_KEY, serialized);
+    $('#backup-status').textContent = '自动备份已就绪 · ' + day + '（北京时间）';
+  }
+  function autoBackup() {
+    try { snapshot(); }
+    catch { $('#backup-status').textContent = '自动备份失败，请导出备份'; }
+  }
   function commit(next) {
     if (storageBroken) { notify('本地数据读取失败。请先导出原始数据，检查浏览器存储后刷新。'); return false; }
-    try { localStorage.setItem(KEY,JSON.stringify(next)); data = next; $('#save-status').textContent = '已保存到本机'; return true; }
-    catch { $('#save-status').textContent = '保存失败'; notify('保存失败：请检查浏览器存储权限或空间，并导出备份。'); return false; }
+    try { snapshot(true); localStorage.setItem(KEY,JSON.stringify(next)); data = next; $('#save-status').textContent = '已保存到本机'; return true; }
+    catch { $('#save-status').textContent = '保存失败'; notify('保存或修改前备份失败，本次修改未保存。请检查浏览器存储权限或空间，并导出备份。'); return false; }
   }
   const dates = () => Object.keys(data.records).sort();
   const principalAt = (product,date) => cents(product.principal) + Object.entries(data.principalChanges || {}).filter(([d,row]) => d <= date && Object.hasOwn(row,product.id)).reduce((sum,[,row]) => sum + cents(row[product.id]),0);
@@ -177,8 +201,11 @@
         html += `<td class="entry editable ${color(value)}" data-edit-date="${date}" data-edit-product="${p.id}" tabindex="0" aria-haspopup="dialog" aria-label="${esc(p.name)} ${date} 剩余收益 ${value===null?'未记录':money(value)} 元，双击或按 Enter 修改" title="双击修改截至当天的剩余收益">${value===null?'—':money(value)}</td><td class="delta ${color(change)}" title="涨幅 = 当天剩余收益 − 上一日剩余收益 + 当天取出收益；任一天未记录时不计算">${change===null?'—':signedMoney(change)}</td>`;
       });
       const total = products.reduce((s,p) => s+lastValue(p,date),0);
-      const tooltip = recorded && recorded < products.length ? '部分产品已记录，未填产品沿用上次累计收益' : '';
-      html += `<td class="total ${recorded?color(total):'muted'}" title="${tooltip}">${recorded?money(total)+(recorded<products.length?' *':''):'—'}</td><td class="total ${recorded?color(daily(date)):'muted'}">${daily(date)!==null?money(daily(date)):'—'}</td>`;
+      const tooltip = '累计总收益包含已取出收益；空白不等于零。\n' + products.map(p => {
+        const source = dates().filter(d=>d<=date && Object.hasOwn(data.records[d],p.id)).at(-1);
+        return `${p.name}：${money(lastValue(p,date))}（${source === date ? '当天记录' : source ? '沿用 '+source : '期初收益'}；截至当天已取出 ${money(withdrawnAt(p,date))}）`;
+      }).join('\n');
+      html += `<td class="total ${recorded?color(total):'muted'}" title="${esc(tooltip)}">${recorded?money(total)+(recorded<products.length?' *':''):'—'}</td><td class="total ${recorded?color(daily(date)):'muted'}">${daily(date)!==null?money(daily(date)):'—'}</td>`;
       if (i===0 || day===1) {
         const count = Math.min(day===0?1:8-day,days.length-i), group = days.slice(i,i+count);
         const known = group.map(d => daily(d)).filter(value => value !== null), sum = known.reduce((s,value) => s+value,0), has = known.length > 0;
@@ -306,7 +333,7 @@
     } } catch(error) { $('#cell-error').textContent=error.message; }
   };
   $('#clear-all').onclick = () => {
-    if (!confirm('清空全部产品、所有收益记录、本息变动、持仓明细、大金库和规划设置及本浏览器旧版账本？此操作不能撤销。')) return;
+    if (!confirm('清空全部产品、所有收益记录、本息变动、持仓明细、大金库和规划设置及本浏览器旧版账本？可从自动备份恢复，备份仍保留在本浏览器。')) return;
     const wasBroken=storageBroken; storageBroken=false;
     if (!commit({version:9,vault:emptyVault(),products:[],records:{},principalChanges:{},incomeWithdrawals:{},lots:[],planning:{salary:0,expenses:0,reserve:0,cash:0,target:0}})) { storageBroken=wasBroken; return; }
     try { localStorage.removeItem('fangcun-ledger-v1'); $('#legacy-backup').hidden=true; }
@@ -387,6 +414,41 @@
   };
   function download(content,type,name) { const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000); }
   $('#backup').onclick = () => download(storageBroken ? (localStorage.getItem(KEY) || '{}') : JSON.stringify({...data,exportedAt:new Date().toISOString()},null,2),'application/json',`收益记录备份-${localDate()}.json`);
+  $('#recalculate').onclick = () => {
+    const latest = load();
+    if (storageBroken) { notify('本地数据读取失败，请先导出原始数据或恢复备份'); return; }
+    data = latest;
+    autoBackup();
+    render();
+    notify('已按最新保存记录重新计算涨幅及汇总。空白沿用历史值，累计总收益含已取出收益。');
+  };
+  let displayedHistory = [];
+  $('#history').onclick = () => {
+    try {
+      autoBackup();
+      displayedHistory = readHistory().reverse();
+      $('#history-select').innerHTML = displayedHistory.map((e,i)=>`<option value="${i}">${esc(e.at.replace('T',' ').replace('Z',' UTC'))} · ${e.kind==='daily'?'每日首次快照':'修改前快照'}</option>`).join('');
+      $('#history-select').value = displayedHistory.length ? '0' : '';
+      $('#history-restore').disabled = $('#history-export').disabled = !displayedHistory.length;
+      $('#history-dialog').showModal();
+    } catch(error) { notify(error.message); }
+  };
+  $('#close-history').onclick = () => $('#history-dialog').close();
+  $('#history-export').onclick = () => {
+    const entry = displayedHistory[Number($('#history-select').value)];
+    if (entry) download(entry.raw,'application/json',`账本快照-${entry.day}-${entry.id}.json`);
+  };
+  $('#history-restore').onclick = () => {
+    const entry = displayedHistory[Number($('#history-select').value)];
+    if (!entry) return;
+    try {
+      const next = validate(JSON.parse(entry.raw));
+      if (!confirm('恢复此快照将替换整个账本。当前版本会先备份，恢复后可在修改前快照中找回。继续？')) return;
+      const wasBroken = storageBroken; storageBroken = false;
+      if (commit(next)) { render(); $('#history-dialog').close(); notify('已恢复快照并重新计算'); }
+      else storageBroken = wasBroken;
+    } catch(error) { notify('无法恢复：'+error.message); }
+  };
   $('#restore').onclick = () => $('#import-file').click();
   $('#import-file').onchange = async event => {
     const file=event.target.files?.[0];if(!file)return;
@@ -433,7 +495,7 @@
     if(clear?.dataset.vaultClear){
       const date=clear.dataset.vaultClear;
       if(!Object.keys(data.vault.balances[date]||{}).length)return;
-      if(!confirm(`清除 ${date} 这一行所有机构的资产余额？其他日期不受影响，此操作不能撤销。`))return;
+      if(!confirm(`清除 ${date} 这一行所有机构的资产余额？其他日期不受影响，可从自动备份恢复，备份仍保留在本浏览器。`))return;
       const next=structuredClone(data);
       delete next.vault.balances[date];
       if(commit(next)){render();notify(`${date} 整行余额已清除`);}
@@ -564,6 +626,10 @@
   };
   try {if(localStorage.getItem('fangcun-ledger-v1')){$('#legacy-backup').hidden=false;$('#legacy-backup').onclick=()=>download(localStorage.getItem('fangcun-ledger-v1'),'application/json',`旧版账本备份-${localDate()}.json`);}}catch{}
   window.addEventListener('storage',event=>{if(event.key===KEY){data=load();render();notify('已同步此浏览器另一窗口的修改');}});
+  autoBackup();
+  function backupTick() { autoBackup(); setTimeout(backupTick,60000); }
+  setTimeout(backupTick,60000);
+  window.addEventListener('focus',autoBackup);
   render();
   if (location.hash === '#trends') switchPage('trends');
   if (location.hash === '#vault') switchPage('vault');

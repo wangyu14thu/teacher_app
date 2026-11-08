@@ -6,7 +6,9 @@ const source = readFileSync(`${__dirname}/../app.js`, 'utf8');
 const KEY = 'fangcun-returns-v2';
 const products = [{id:'p_a',name:'产品 A',principal:1000,baseline:10}, {id:'p_b',name:'产品 B',principal:500,baseline:0}];
 function app(initial, options = {}) {
-  const nodes = new Map(), storage = new Map([[KEY, JSON.stringify(initial)]]);
+  const nodes = new Map(), storage = options.storage || new Map([[KEY, JSON.stringify(initial)]]);
+  let now = '2026-10-30T08:00:00Z';
+  const events = {};
   let inputs = [], exported;
   const node = selector => {
     if (!nodes.has(selector)) nodes.set(selector, {value:'',textContent:'',innerHTML:'',hidden:false,
@@ -14,15 +16,16 @@ function app(initial, options = {}) {
     return nodes.get(selector);
   };
   vm.runInNewContext(source, {document:{querySelector:node,querySelectorAll:selector=>selector==='[data-income-withdrawal]'?inputs.filter(i=>i.dataset.incomeWithdrawal):selector==='[data-principal-product]'?inputs.filter(i=>i.dataset.principalProduct):inputs,createElement:()=>node('download')},
-    localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
-    window:{addEventListener(){}},location:{hash:'',search:'',protocol:'file:'},navigator:{},
+    localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>{if(options.failHistory && k.includes('history'))throw Error('QuotaExceeded');storage.set(k,v);},removeItem:k=>storage.delete(k)},
+    window:{addEventListener(name,fn){events[name]=fn;}},location:{hash:'',search:'',protocol:'file:'},navigator:{},
     URL:{createObjectURL:blob=>(exported=blob,'blob:test'),revokeObjectURL(){}},Blob,URLSearchParams,
-    structuredClone,Intl,Date:class extends Date {constructor(...args){super(...(args.length?args:['2026-10-30T08:00:00Z']));}},setTimeout:()=>0,clearTimeout(){},confirm:options.confirm||(()=>true)});
-  return {node,read:()=>JSON.parse(storage.get(KEY)),
+    structuredClone,Intl,Date:class extends Date {constructor(...args){super(...(args.length?args:[now]));}},setTimeout:()=>0,clearTimeout(){},confirm:options.confirm||(()=>true)});
+  return {node,storage,advance:date=>{now=date;events.focus();},read:()=>JSON.parse(storage.get(KEY)),
     save(date, values){node('#record-date').value=date;inputs=Object.entries(values).map(([id,value])=>({dataset:{recordProduct:id},value:String(value)}));node('#record-form').onsubmit({preventDefault(){}});},
     changePrincipal(date, values, withdrawals={}){node('#principal-change-date').value=date;node('#principal-change-date').onchange();inputs=Object.entries(values).map(([id,value])=>({dataset:{principalProduct:id},value:String(value)})).concat(Object.entries(withdrawals).map(([id,value])=>({dataset:{incomeWithdrawal:id},value:String(value)})));node('#principal-change-form').onsubmit({preventDefault(){}});},
     fields(date){node('#record-date').value=date;node('#record-date').onchange();return node('#record-fields').innerHTML;},
     async csv(){node('#csv').onclick();return exported.text();},
+    async historyExport(){node('#history-export').onclick();return JSON.parse(await exported.text());},
     async backup(){node('#backup').onclick();return JSON.parse(await exported.text());}};
 }
 test('records are cumulative income; daily rise is the difference from yesterday', async () => {
@@ -354,4 +357,77 @@ test('invalid income withdrawals and historical edits cannot corrupt balances',a
     await a.node('#import-file').onchange({target:{files:[{size:100,text:async()=>JSON.stringify(invalid)}],value:'file'}});
     assert.deepEqual(a.read(),before);assert.match(a.node('#toast').textContent,/无法导入/);
   }
+});
+
+const HISTORY_KEY = KEY + '-history-v1';
+test('daily snapshots survive reload, roll over by Beijing day, and retain 30 usage days', () => {
+  const a=app({version:4,products,records:{}});
+  assert.equal(JSON.parse(a.storage.get(HISTORY_KEY)).length,1);
+  a.advance('2026-10-30T15:59:00Z');
+  assert.equal(JSON.parse(a.storage.get(HISTORY_KEY)).length,1);
+  a.advance('2026-10-30T16:01:00Z');
+  assert.equal(JSON.parse(a.storage.get(HISTORY_KEY)).length,2);
+  const b=app(null,{storage:a.storage});
+  assert.equal(JSON.parse(b.storage.get(HISTORY_KEY)).length,2);
+  for(let i=1;i<=30;i++)b.advance(`2026-11-${String(i).padStart(2,'0')}T08:00:00Z`);
+  const history=JSON.parse(b.storage.get(HISTORY_KEY));
+  assert.equal(history.length,30);
+  assert.equal(history[0].day,'2026-11-01');
+});
+test('restore backs up current ledger, recalculates totals, and exports selected snapshot', async () => {
+  const a=app({version:4,products,records:{'2026-10-01':{p_a:20,p_b:5}}});
+  a.save('2026-10-01',{p_a:90,p_b:5});
+  a.node('#history').onclick();
+  assert.equal((await a.historyExport()).records['2026-10-01'].p_a,20);
+  a.node('#history-restore').onclick();
+  assert.equal(a.read().records['2026-10-01'].p_a,20);
+  assert.equal(a.node('#return-total').textContent,'25.00');
+  a.node('#history').onclick();
+  a.node('#history-restore').onclick();
+  assert.equal(a.read().records['2026-10-01'].p_a,90);
+  const before=a.read();
+  a.node('#return-total').textContent='wrong';
+  a.node('#recalculate').onclick();
+  assert.equal(a.node('#return-total').textContent,'95.00');
+  assert.deepEqual(a.read(),before);
+  for(let i=0;i<25;i++)a.save('2026-10-01',{p_a:i,p_b:5});
+  assert.equal(JSON.parse(a.storage.get(HISTORY_KEY)).filter(e=>e.kind==='change').length,20);
+  assert.equal(JSON.parse(a.storage.get(HISTORY_KEY)).filter(e=>e.kind==='daily').length,1);
+});
+test('backup failure blocks edits and leaves saved data intact', () => {
+  const a=app({version:4,products,records:{}},{failHistory:true});
+  const before=a.read();
+  a.save('2026-10-01',{p_a:100});
+  assert.deepEqual(a.read(),before);
+  assert.match(a.node('#toast').textContent,/未保存/);
+});
+test('recalculate reads latest saved data, retains missing entries and accounts for withdrawals', () => {
+  const a=app({version:4,products,records:{'2026-10-01':{p_a:100}}});
+  a.changePrincipal('2026-10-01',{}, {p_a:30});
+  const before=a.read();
+  a.node('#recalculate').onclick();
+  assert.equal(a.node('#return-total').textContent,'100.00');
+  assert.match(a.fields('2026-10-01'),/value="70.00"/);
+  assert.deepEqual(a.read(),before);
+  const updated=a.read();updated.records['2026-10-01'].p_a=110;
+  a.storage.set(KEY,JSON.stringify(updated));
+  a.node('#recalculate').onclick();
+  assert.equal(a.node('#return-total').textContent,'110.00');
+  assert.match(a.node('#ledger').innerHTML,/期初收益/);
+});
+
+test('clear and import preserve recoverable snapshots; cancelling restore is read-only', async () => {
+  const initial={version:4,products,records:{'2026-10-01':{p_a:20}}};
+  const a=app(initial);
+  a.node('#clear-all').onclick();
+  assert.equal(a.read().products.length,0);
+  a.node('#history').onclick();a.node('#history-restore').onclick();
+  assert.equal(a.read().records['2026-10-01'].p_a,20);
+  await a.node('#import-file').onchange({target:{files:[{size:100,text:async()=>JSON.stringify({...initial,records:{}})}],value:'file'}});
+  assert.deepEqual(a.read().records,{});
+  a.node('#history').onclick();a.node('#history-restore').onclick();
+  assert.equal(a.read().records['2026-10-01'].p_a,20);
+  const b=app(initial,{confirm:()=>false});b.save('2026-10-01',{p_a:99});
+  const before=b.read();b.node('#history').onclick();b.node('#history-restore').onclick();
+  assert.deepEqual(b.read(),before);
 });
