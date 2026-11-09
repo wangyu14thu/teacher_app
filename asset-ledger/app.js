@@ -478,12 +478,11 @@
     let previousTotal=null;
     $('#vault-table').innerHTML=`<thead><tr><th scope="col">日期</th>${institutions.map(i=>`<th scope="col"><span class="vault-bank">${vaultIcon(i)}${esc(i.name)}</span></th>`).join('')}<th scope="col" class="vault-total">总计（元）</th><th scope="col" class="vault-change">涨幅（元）</th></tr></thead><tbody>${Array.from({length:12},(_,n)=>{
       const m=year+'-'+String(n+1).padStart(2,'0');
-      return [m+'-01',monthEnd(m)].map((date,index)=>{
+      const date=m+'-01';
         const row=balances[date]||{}, values=Object.values(row), total=values.reduce((sum,v)=>sum+cents(v),0);
         const change=values.length && previousTotal!==null ? total-previousTotal : null;
         previousTotal=values.length ? total : null;
-        return `<tr class="vault-${index?'month-end':'month-start'}"><th scope="row">${n+1} 月 ${index?'月末':'月初'} · ${Number(date.slice(8))} 日<button type="button" class="vault-clear-row" data-vault-clear="${date}" aria-label="清除 ${date} 所有机构余额" ${values.length?'':'disabled'}>清除整行</button></th>${institutions.map(i=>`<td><button class="vault-cell" data-vault-date="${date}" data-vault-id="${i.id}" aria-label="${date} ${esc(i.name)} 余额，点击编辑">${Object.hasOwn(row,i.id)?money(cents(row[i.id])):'—'}</button></td>`).join('')}<td class="vault-total">${values.length?money(total):'—'}${values.length && values.length<institutions.length?'<small>部分已录入</small>':''}</td><td class="vault-change ${change===null?'':color(change)}">${change===null?'—':(change>0?'+':'')+money(change)}</td></tr>`;
-      }).join('');
+        return `<tr class="vault-month-start"><th scope="row">${n+1} 月 月初 · 1 日<button type="button" class="vault-clear-row" data-vault-clear="${date}" aria-label="清除 ${date} 所有机构余额" ${values.length?'':'disabled'}>清除整行</button></th>${institutions.map(i=>`<td><button class="vault-cell" data-vault-date="${date}" data-vault-id="${i.id}" aria-label="${date} ${esc(i.name)} 余额，点击编辑">${Object.hasOwn(row,i.id)?money(cents(row[i.id])):'—'}</button></td>`).join('')}<td class="vault-total">${values.length?money(total):'—'}${values.length && values.length<institutions.length?'<small>部分已录入</small>':''}</td><td class="vault-change ${change===null?'':color(change)}">${change===null?'—':(change>0?'+':'')+money(change)}</td></tr>`;
     }).join('')}</tbody>`;
   }
   $('#vault-year').onchange=()=>{const y=Number($('#vault-year').value);if(Number.isInteger(y)&&y>=1900&&y<=9999){month=y+'-'+month.slice(5);render();}else $('#vault-year').value=month.slice(0,4);};

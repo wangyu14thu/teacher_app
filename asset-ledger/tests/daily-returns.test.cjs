@@ -206,10 +206,12 @@ test('vault snapshots migrate, save independently, round-trip and reject invalid
     a.node('#vault-amount').value=amount;submit(a,'#vault-cell-form');
   };
   assert.match(a.node('#vault-table').innerHTML,/<th scope="col">日期<\/th>/);
-  assert.match(a.node('#vault-table').innerHTML,/2 月 月末 · 28 日/);
-  edit('2026-10-01','p_abc','123.45');edit('2026-10-31','p_cash','0');edit('2026-11-30','p_abc','200');
+  assert.match(a.node('#vault-table').innerHTML,/2 月 月初 · 1 日/);
+  assert.equal((a.node('#vault-table').innerHTML.match(/<tr class="vault-month-start">/g)||[]).length,12);
+  assert.doesNotMatch(a.node('#vault-table').innerHTML,/月末|vault-month-end/);
+  edit('2026-10-01','p_abc','123.45');edit('2026-11-01','p_cash','0');edit('2026-12-01','p_abc','200');
   assert.equal(a.read().vault.balances['2026-10-01'].p_abc,123.45);
-  assert.equal(a.read().vault.balances['2026-10-31'].p_cash,0);
+  assert.equal(a.read().vault.balances['2026-11-01'].p_cash,0);
   assert.deepEqual(a.read().records,{});
   edit('2026-10-01','p_abc','-1');assert.equal(a.read().vault.balances['2026-10-01'].p_abc,123.45);
   const backup=await a.backup(),restored=app(backup);
@@ -277,7 +279,7 @@ test('vault and trends hide footer notes and switching back restores them',()=>{
   }
 });
 
-test('vault changes compare adjacent row totals, preserving zero and missing values',()=>{
+test('vault compares month starts only, ignoring retained month ends and preserving gaps',()=>{
   const initial=assets([]);initial.version=8;
   initial.vault={institutions:[{id:'p_cash',name:'现金',icon:'cash'}],balances:{
     '2026-01-01':{p_cash:100.10},'2026-01-31':{p_cash:120.30},
@@ -285,11 +287,11 @@ test('vault changes compare adjacent row totals, preserving zero and missing val
   }};
   const a=app(initial);
   const changes=()=>[...a.node('#vault-table').innerHTML.matchAll(/<td class="vault-change [^"]*">([^<]*)<\/td>/g)].map(m=>m[1]);
-  assert.deepEqual(changes().slice(0,7),['—','+20.20','-120.30','0.00','—','—','—']);
-  a.node('#vault-table').onclick({target:{closest:selector=>selector==='[data-vault-id]'?{dataset:{vaultDate:'2026-01-31',vaultId:'p_cash'}}:null}});
+  assert.deepEqual(changes().slice(0,7),['—','-100.10','—','—','—','—','—']);
+  a.node('#vault-table').onclick({target:{closest:selector=>selector==='[data-vault-id]'?{dataset:{vaultDate:'2026-01-01',vaultId:'p_cash'}}:null}});
   a.node('#vault-amount').value='110.10';submit(a,'#vault-cell-form');
-  assert.deepEqual(changes().slice(0,3),['—','+10.00','-110.10']);
-  a.node('#vault-table').onclick({target:{closest:selector=>selector==='[data-vault-clear]'?{dataset:{vaultClear:'2026-01-31'}}:null}});
+  assert.deepEqual(changes().slice(0,3),['—','-110.10','—']);
+  a.node('#vault-table').onclick({target:{closest:selector=>selector==='[data-vault-clear]'?{dataset:{vaultClear:'2026-01-01'}}:null}});
   assert.deepEqual(changes().slice(0,3),['—','—','—']);
 });
 
