@@ -1,5 +1,5 @@
 (() => {
-  const $=s=>document.querySelector(s), panel=$('#sprite-chat'), toggle=$('#sprite-toggle'), log=$('#chat-log'), input=$('#chat-input');
+  const $=s=>document.querySelector(s), log=$('#chat-log'), input=$('#chat-input');
   let messages=[],busy=false,apiKey='',testing=false;
   const keyDialog=$('#key-dialog'),keyInput=$('#deepseek-key'),keyState=$('#key-state');
   function validKey(value){return /^[\x21-\x7e]{8,512}$/.test(value);}
@@ -37,9 +37,6 @@
     finally{testing=false;$('#key-test').disabled=false;$('#key-clear').disabled=false;}
   };
   function bubble(role,text){const div=document.createElement('div');div.className=`chat-bubble ${role}`;div.textContent=text;log.append(div);log.scrollTop=log.scrollHeight;return div;}
-  function open(show){panel.hidden=!show;toggle.setAttribute('aria-expanded',String(show));if(show)input.focus();else toggle.focus();}
-  toggle.onclick=()=>open(panel.hidden);$('#chat-close').onclick=()=>open(false);
-  panel.addEventListener('keydown',e=>{if(e.key==='Escape')open(false);});
   $('#chat-clear').onclick=()=>{if(busy)return;messages=[];log.replaceChildren();bubble('assistant','你好呀，我是发财芽 🌱 今天也一起把小日子记清楚吧！');};
   $('#chat-form').onsubmit=async e=>{
     e.preventDefault();const text=input.value.trim();if(!text||busy)return;

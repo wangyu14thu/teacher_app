@@ -249,19 +249,25 @@
     }).join('') : '<div class="empty-state"><h3>还没有理财产品</h3><p>先在「管理产品」中添加产品，再通过「新增记录」录入金额。</p></div>';
   }
   function switchPage(page) {
-    for (const name of ['ledger','trends','assets','vault']) {
+    if(location.hash !== `#${page}`) history.replaceState(null,'',`${location.pathname}${location.search}#${page}`);
+    for (const name of ['ledger','trends','assets','vault','butler']) {
       $(`#${name}-page`).hidden = name !== page;
       $(`#show-${name}`).setAttribute('aria-pressed',String(name === page));
     }
-    $('.summary').hidden = ['assets','vault'].includes(page);
-    $('.toolbar').hidden = page === 'vault';
+    $('.summary').hidden = ['assets','vault','butler'].includes(page);
+    $('.toolbar').hidden = ['vault','butler'].includes(page);
+    $('[aria-label="数据维护"]').hidden = page === 'butler';
+    $('#sprite-toggle').hidden = page === 'butler';
     $('#vault-toolbar').hidden = page !== 'vault';
-    $('footer').hidden = ['trends','vault'].includes(page);
+    $('footer').hidden = ['trends','vault','butler'].includes(page);
   }
   $('#show-ledger').onclick=()=>switchPage('ledger');
   $('#show-trends').onclick=()=>switchPage('trends');
   $('#show-vault').onclick=()=>switchPage('vault');
   $('#show-assets').onclick=()=>switchPage('assets');
+  $('#show-butler').onclick=()=>switchPage('butler');
+  $('#sprite-toggle').onclick=()=>{switchPage('butler');$('#chat-input').focus();};
+  window.addEventListener('hashchange',()=>switchPage(['trends','assets','vault','butler'].includes(location.hash.slice(1))?location.hash.slice(1):'ledger'));
   $('#trend-range').onchange=renderTrends;
   function renderRecordFields() {
     const date = $('#record-date').value;
@@ -533,12 +539,11 @@
     try{const clean=validate(next);if(commit(clean)){render();$('#institution-dialog').close();notify('资产机构已添加');}}catch(error){$('#institution-error').textContent=error.message;}
   };
   // Lots describe existing positions; recording them never books a second purchase.
-  let editingLot = null, selectedMaturity = '', simulation = null;
+  let editingLot = null, selectedMaturity = '';
   const monthOffset = (start,n) => {
     const date = new Date(`${start}-01T12:00:00Z`); date.setUTCMonth(date.getUTCMonth()+n);
     return date.toISOString().slice(0,7);
   };
-  const daysBetween = (a,b) => Math.round((Date.parse(b)-Date.parse(a))/86400000);
   function assetMonths() {
     const today=localDate(), start=today.slice(0,7), count=Number($('#asset-horizon').value)||18;
     return Array.from({length:count},(_,i)=>{
@@ -563,45 +568,12 @@
     const column = m=>`<button class="maturity-column ${!m.principal?'empty-month':''} ${selectedMaturity===m.key?'selected':''}" data-maturity="${m.key}" aria-pressed="${selectedMaturity===m.key}" aria-label="${m.key} 到期本金 ${money(m.principal)} 元，缺口 ${money(m.gap)} 元"><span class="maturity-value">${m.principal?money(m.principal/10000)+' 万':'无到期'}</span><span class="maturity-track"><span class="maturity-bar" style="height:${m.principal/max*100}%"></span>${data.planning.target>0?`<span class="maturity-target" style="bottom:${cents(data.planning.target)/max*100}%"></span>`:''}</span><strong>${m.key.slice(2).replace('-',' / ')}</strong><small>${m.gap?'缺 '+money(m.gap/10000)+' 万':m.principal?'已覆盖':'待安排'}</small></button>`;
     $('#maturity-chart').innerHTML=`<section class="maturity-year"><div class="maturity-year-months">${visibleMonths.map(column).join('')}</div></section>`;
     const selected=months.find(m=>m.key===selectedMaturity);
-    $('#maturity-detail').innerHTML=`<h3>${selected.key} · 到期明细</h3><p>本金 ${money(selected.principal)} 元${data.planning.target>0?` · 距月目标还差 ${money(selected.gap)} 元`:' · 设置月目标后计算缺口'}</p>${selected.lots.length?`<ul>${selected.lots.map(l=>`<li>${esc(data.products.find(p=>p.id===l.productId).name)} · ${l.maturityDate} · 本金 ${money(cents(l.amount))} 元${l.expected!==null?` · 预计本息 ${money(cents(l.expected))} 元`:''}</li>`).join('')}</ul>`:'<p>本月尚无已登记产品到期，可在下方试算适合的投资期限。</p>'}`;
+    $('#maturity-detail').innerHTML=`<h3>${selected.key} · 到期明细</h3><p>本金 ${money(selected.principal)} 元${data.planning.target>0?` · 距月目标还差 ${money(selected.gap)} 元`:''}</p>${selected.lots.length?`<ul>${selected.lots.map(l=>`<li>${esc(data.products.find(p=>p.id===l.productId).name)} · ${l.maturityDate} · 本金 ${money(cents(l.amount))} 元${l.expected!==null?` · 预计本息 ${money(cents(l.expected))} 元`:''}</li>`).join('')}</ul>`:'<p>本月尚无已登记产品到期。</p>'}`;
     $('#asset-lots').innerHTML=data.lots.length?`<table><thead><tr><th>产品 / 批次</th><th>买入日</th><th>本金（元）</th><th>到期日</th><th>预计本息（元）</th><th>状态</th><th>操作</th></tr></thead><tbody>${[...data.lots].sort((a,b)=>(a.maturityDate||'9999').localeCompare(b.maturityDate||'9999')).map(l=>`<tr><th>${esc(data.products.find(p=>p.id===l.productId).name)}</th><td>${l.buyDate}</td><td>${money(cents(l.amount))}</td><td>${l.maturityDate||'活期 / 未定'}</td><td>${l.expected===null?'未填写':money(cents(l.expected))}</td><td>${l.status==='received'?'已到账':l.buyDate>today?'未来买入':l.maturityDate && l.maturityDate<today?'到期待核实':'持有中'}</td><td><button data-edit-lot="${l.id}">编辑</button> <button data-delete-lot="${l.id}">删除</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty-state"><h3>把每一笔钱的到期日排清楚</h3><p>先添加产品，再登记买入批次；同一产品可有多笔持仓。现有本金和收益不会被重复记账。</p></div>';
-    for (const key of ['salary','expenses','reserve','cash','target']) $(`#plan-${key}`).value=data.planning[key];
-    $('#plan-target-month').innerHTML=months.map(m=>`<option value="${m.key}" ${m.key===selectedMaturity?'selected':''}>${m.key}${!m.principal?' · 无到期':m.gap?' · 未达目标':''}</option>`).join('');
-    $('#plan-target-month').value=selectedMaturity;
-    if (!$('#plan-buy-date').value) $('#plan-buy-date').value=today;
-    renderPlan();
-  }
-  function renderPlan() {
-    simulation=null;
-    const p=data.planning, budget=Math.max(0,cents(p.salary)+cents(p.cash)-cents(p.expenses)-cents(p.reserve));
-    const m=assetMonths().find(m=>m.key===$('#plan-target-month').value);
-    $('#plan-budget').textContent=`本次可投入 ${money(budget)} 元 = 工资 + 已可用资金 − 本月支出 − 需补留备用金。未来到期资金不提前计入。`;
-    const buy=$('#plan-buy-date').value;
-    if (!m || !validDate(buy)) {$('#plan-advice').textContent='请选择有效的计划买入日期。';return;}
-    const first=Math.max(1,daysBetween(buy,m.key+'-01')), last=daysBetween(buy,monthEnd(m.key));
-    $('#plan-advice').textContent=last<1?'该月份已早于计划买入日，请选择更晚的空缺月份。':`填补 ${m.key}：寻找从 ${buy} 起约 ${first}–${last} 天后到期的产品。${p.target>0?`按目标，本月还差 ${money(m.gap)} 元，本次可安排不超过 ${money(Math.min(budget,m.gap))} 元。`:'请先设置每月到期本金目标，再确定分配金额。'} 优先补最近的空档，剩余资金再分配到下一空档。`;
-    simulation={budget,month:m,buy,last};
-    $('#plan-result').textContent='填写候选产品的实际到期日和计划金额，查看投放前后变化。';
   }
   $('#maturity-year').onchange=renderAssets;
   $('#asset-horizon').onchange=renderAssets;
   $('#maturity-chart').onclick=event=>{const button=event.target.closest('[data-maturity]');if(button){selectedMaturity=button.dataset.maturity;renderAssets();}};
-  $('#plan-target-month').onchange=()=>{selectedMaturity=$('#plan-target-month').value;$('#maturity-year').value=selectedMaturity.slice(0,4);renderAssets();};
-  $('#plan-buy-date').onchange=renderPlan;
-  $('#planning-form').onsubmit=event=>{
-    event.preventDefault(); const next=structuredClone(data);
-    next.planning=Object.fromEntries(['salary','expenses','reserve','cash','target'].map(k=>[k,Number($(`#plan-${k}`).value)]));
-    try {if(commit(validate(next))){renderAssets();notify('规划设置已保存');}}catch(error){notify(error.message);}
-  };
-  $('#simulate-form').onsubmit=event=>{
-    event.preventDefault();renderPlan(); const amount=Number($('#candidate-amount').value), date=$('#candidate-date').value;
-    if(!simulation || !validDate(simulation.buy) || !validDate(date) || date<=simulation.buy || !validAmount(amount) || amount<=0){$('#plan-result').textContent='请输入有效日期和大于 0 的金额，到期日必须晚于买入日。';return;}
-    const {budget,month:m,buy}=simulation;
-    if(cents(amount)>budget){$('#plan-result').textContent='计划金额超过本次可投入资金，请降低金额或调整预算。';return;}
-    if(!date.startsWith(m.key)){$('#plan-result').textContent=`该产品在 ${date.slice(0,7)} 到期，无法填补所选 ${m.key} 空档。`;return;}
-    const after=m.principal+cents(amount), gap=Math.max(0,cents(data.planning.target)-after);
-    $('#plan-result').textContent=`试算：持有 ${daysBetween(buy,date)} 天，${m.key} 到期本金由 ${money(m.principal)} → ${money(after)} 元；目标缺口 ${money(gap)} 元，本次剩余资金 ${money(budget-cents(amount))} 元。${after>cents(data.planning.target) && data.planning.target>0?'已超过月目标，可将多余部分分给其他空档。':''} 此试算未买入、未写入持仓。`;
-  };
   function openLot(id=null) {
     if(!data.products.length){$('#manage').click();notify('请先添加理财产品');return;}
     editingLot=id;const l=data.lots.find(l=>l.id===id);
@@ -635,6 +607,7 @@
   if (location.hash === '#trends') switchPage('trends');
   if (location.hash === '#vault') switchPage('vault');
   if (location.hash === '#assets') switchPage('assets');
+  if (location.hash === '#butler') switchPage('butler');
   // A reset link is explicit user intent; ordinary visits never clear saved records.
   if (new URLSearchParams(location.search).get('reset') === '1') {
     history.replaceState(null,'',location.pathname + location.hash);

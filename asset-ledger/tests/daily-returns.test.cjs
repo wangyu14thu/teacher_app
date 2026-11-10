@@ -17,7 +17,7 @@ function app(initial, options = {}) {
   };
   vm.runInNewContext(source, {document:{querySelector:node,querySelectorAll:selector=>selector==='[data-income-withdrawal]'?inputs.filter(i=>i.dataset.incomeWithdrawal):selector==='[data-principal-product]'?inputs.filter(i=>i.dataset.principalProduct):inputs,createElement:()=>node('download')},
     localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>{if(options.failHistory && k.includes('history'))throw Error('QuotaExceeded');storage.set(k,v);},removeItem:k=>storage.delete(k)},
-    window:{addEventListener(name,fn){events[name]=fn;}},location:{hash:'',search:'',protocol:'file:'},navigator:{},
+    window:{addEventListener(name,fn){events[name]=fn;}},location:{hash:'',search:'',pathname:'/',protocol:'file:'},history:{replaceState(){}},navigator:{},
     URL:{createObjectURL:blob=>(exported=blob,'blob:test'),revokeObjectURL(){}},Blob,URLSearchParams,
     structuredClone,Intl,Date:class extends Date {constructor(...args){super(...(args.length?args:[now]));}},setTimeout:()=>0,clearTimeout(){},confirm:options.confirm||(()=>true)});
   return {node,storage,advance:date=>{now=date;events.focus();},read:()=>JSON.parse(storage.get(KEY)),
@@ -165,20 +165,6 @@ test('maturity ladder groups purchase batches, excludes received, overdue and un
   assert.match(a.node('#maturity-chart').innerHTML,/2028-02 到期本金 20,000.00 元/);
   assert.deepEqual((await a.backup()).lots,assets([lot('p_1','2027-01-06',250000),lot('p_2','2027-01-08',100000),lot('p_3','2026-10-01'),lot('p_4',''),lot('p_5','2027-04-01',10000,{status:'received'}),lot('p_6','2028-02-18',20000),lot('p_7','2027-04-01',10000,{buyDate:'2027-01-01'})]).lots);
 });
-test('payday simulation respects budget, selected maturity month, exact days and does not book a purchase',async()=>{
-  const a=app(assets([lot('p_1','2027-04-05',5000)]));
-  a.node('#plan-target-month').value='2027-04';a.node('#plan-target-month').onchange();
-  a.node('#plan-buy-date').value='2026-10-30';a.node('#plan-buy-date').onchange();
-  assert.match(a.node('#plan-advice').textContent,/153–182 天/);
-  a.node('#candidate-date').value='2027-04-15';a.node('#candidate-amount').value='20000';submit(a,'#simulate-form');
-  assert.match(a.node('#plan-result').textContent,/5,000.00 → 25,000.00/);
-  assert.match(a.node('#plan-result').textContent,/目标缺口 5,000.00/);
-  assert.equal((await a.backup()).lots.length,1);
-  a.node('#candidate-amount').value='20000.01';submit(a,'#simulate-form');
-  assert.match(a.node('#plan-result').textContent,/超过/);
-  a.node('#candidate-amount').value='10000';a.node('#candidate-date').value='2027-03-15';submit(a,'#simulate-form');
-  assert.match(a.node('#plan-result').textContent,/无法填补/);
-});
 test('recording and editing a lot preserves principal and returns; invalid dates cannot overwrite it',async()=>{
   const a=app({version:5,products,records:{'2026-10-30':{p_a:20}},principalChanges:{}});
   a.node('#add-lot').onclick();a.node('#lot-product').value='p_a';a.node('#lot-buy').value='2026-10-01';a.node('#lot-maturity').value='2027-04-01';a.node('#lot-amount').value='1000';a.node('#lot-expected').value='';a.node('#lot-status').value='holding';submit(a,'#lot-form');
@@ -248,7 +234,7 @@ test('maturity calendar selects one year and keeps detail in the selected year',
  assert.equal((a.node('#maturity-chart').innerHTML.match(/data-maturity=/g)||[]).length,12);
  assert.doesNotMatch(a.node('#maturity-chart').innerHTML,/data-maturity="2026/);
  assert.match(a.node('#maturity-detail').innerHTML,/2027-01/);
- a.node('#plan-target-month').value='2028-01';a.node('#plan-target-month').onchange();
+ a.node('#maturity-year').value='2028';a.node('#maturity-year').onchange();
  assert.equal(a.node('#maturity-year').value,'2028');
  a.node('#asset-horizon').value='12';a.node('#asset-horizon').onchange();
  assert.equal(a.node('#maturity-year').value,'2026');
@@ -470,4 +456,21 @@ test('row totals exclude withdrawn income while daily gains still include withdr
   assert.equal(a.node('#month-total').textContent,'20.00');
   assert.equal(a.node('#return-total').textContent,'120.00');
   assert.match(await a.csv(),/"90","20","30",""/);
+});
+
+test('butler tab and sprite open the full chat page and other tabs restore ledger controls',()=>{
+  const a=app(assets([]));
+  for(const entry of ['#show-butler','#sprite-toggle']) {
+    a.node(entry).onclick();
+    assert.equal(a.node('#butler-page').hidden,false);
+    assert.equal(a.node('#vault-page').hidden,true);
+    assert.equal(a.node('.summary').hidden,true);
+    assert.equal(a.node('.toolbar').hidden,true);
+    assert.equal(a.node('#sprite-toggle').hidden,true);
+    a.node('#show-assets').onclick();
+    assert.equal(a.node('#butler-page').hidden,true);
+    assert.equal(a.node('#assets-page').hidden,false);
+    assert.equal(a.node('.toolbar').hidden,false);
+    assert.equal(a.node('#sprite-toggle').hidden,false);
+  }
 });

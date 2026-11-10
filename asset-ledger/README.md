@@ -57,7 +57,7 @@ GitHub Pages 只能展示静态页面，不能运行此接口。线上 AI 对话
 
 ### 网页配置 API Key
 
-打开发财芽 →「设置」，输入 DeepSeek API Key，可测试连接并应用到本次页面。网页 Key 优先于服务器的 `DEEPSEEK_API_KEY`，仅在页面内存中保留，刷新即清除；清除后回退服务器默认配置。请求经本站 `/api/chat` 转发到 DeepSeek，不写入服务器配置、不进入备份。线上必须使用 HTTPS；测试连接会产生少量 API 用量。纯 GitHub Pages 仍需部署同源后端接口，填写 Key 本身不能代替后端部署。
+打开「发财管家」→「设置」（也可点击右下角发财芽进入），输入 DeepSeek API Key，可测试连接并应用到本次页面。网页 Key 优先于服务器的 `DEEPSEEK_API_KEY`，仅在页面内存中保留，刷新即清除；清除后回退服务器默认配置。请求经本站 `/api/chat` 转发到 DeepSeek，不写入服务器配置、不进入备份。线上必须使用 HTTPS；测试连接会产生少量 API 用量。纯 GitHub Pages 仍需部署同源后端接口，填写 Key 本身不能代替后端部署。
 
 ## GitHub Pages 在线版
 
